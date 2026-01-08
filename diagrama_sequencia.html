@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Diagrama de Sequencia - Precifex Juridico</title>
+  <style>
+    :root {
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #1d4ed8;
+      --line: #cbd5f5;
+      --box: #f8fafc;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 48px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: #ffffff;
+    }
+    h1 { font-size: 22px; margin: 0 0 8px 0; }
+    p { margin: 0 0 16px 0; color: var(--muted); }
+    .diagram {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .legend {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    @media print {
+      body { padding: 24px 32px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Diagrama de Sequencia - Fluxos principais</h1>
+  <p>Fluxo de acesso ao dashboard, operacoes AJAX e buscador processual.</p>
+
+  <div class="diagram">
+    <svg width="1000" height="520" viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill="#1d4ed8"></path>
+        </marker>
+        <style>
+          .actor { font: 12px "Segoe UI", Arial, sans-serif; fill: #111827; }
+          .box { fill: #f8fafc; stroke: #e5e7eb; }
+          .lifeline { stroke: #cbd5f5; stroke-dasharray: 4 4; }
+          .msg { stroke: #1d4ed8; stroke-width: 1.5; marker-end: url(#arrow); }
+          .label { font: 11px "Segoe UI", Arial, sans-serif; fill: #111827; }
+        </style>
+      </defs>
+
+      <!-- Actors -->
+      <rect class="box" x="40" y="20" width="140" height="40" rx="6"></rect>
+      <text class="actor" x="110" y="45" text-anchor="middle">Usuario</text>
+
+      <rect class="box" x="220" y="20" width="140" height="40" rx="6"></rect>
+      <text class="actor" x="290" y="45" text-anchor="middle">Browser</text>
+
+      <rect class="box" x="400" y="20" width="180" height="40" rx="6"></rect>
+      <text class="actor" x="490" y="45" text-anchor="middle">PHP (index.php)</text>
+
+      <rect class="box" x="620" y="20" width="140" height="40" rx="6"></rect>
+      <text class="actor" x="690" y="45" text-anchor="middle">MySQL</text>
+
+      <rect class="box" x="800" y="20" width="160" height="40" rx="6"></rect>
+      <text class="actor" x="880" y="45" text-anchor="middle">ajax/handler.php</text>
+
+      <!-- Lifelines -->
+      <line class="lifeline" x1="110" y1="70" x2="110" y2="500"></line>
+      <line class="lifeline" x1="290" y1="70" x2="290" y2="500"></line>
+      <line class="lifeline" x1="490" y1="70" x2="490" y2="500"></line>
+      <line class="lifeline" x1="690" y1="70" x2="690" y2="500"></line>
+      <line class="lifeline" x1="880" y1="70" x2="880" y2="500"></line>
+
+      <!-- Messages -->
+      <line class="msg" x1="110" y1="110" x2="290" y2="110"></line>
+      <text class="label" x="200" y="100" text-anchor="middle">Acessa /index.php</text>
+
+      <line class="msg" x1="290" y1="140" x2="490" y2="140"></line>
+      <text class="label" x="390" y="130" text-anchor="middle">GET /index.php</text>
+
+      <line class="msg" x1="490" y1="170" x2="690" y2="170"></line>
+      <text class="label" x="590" y="160" text-anchor="middle">Conectar e criar tabelas</text>
+
+      <line class="msg" x1="690" y1="200" x2="490" y2="200"></line>
+      <text class="label" x="590" y="190" text-anchor="middle">OK</text>
+
+      <line class="msg" x1="490" y1="230" x2="690" y2="230"></line>
+      <text class="label" x="590" y="220" text-anchor="middle">Consultar estatisticas</text>
+
+      <line class="msg" x1="690" y1="260" x2="490" y2="260"></line>
+      <text class="label" x="590" y="250" text-anchor="middle">stats</text>
+
+      <line class="msg" x1="490" y1="290" x2="290" y2="290"></line>
+      <text class="label" x="390" y="280" text-anchor="middle">HTML dashboard</text>
+
+      <line class="msg" x1="290" y1="320" x2="110" y2="320"></line>
+      <text class="label" x="200" y="310" text-anchor="middle">Renderiza pagina</text>
+
+      <!-- AJAX flow -->
+      <line class="msg" x1="290" y1="360" x2="490" y2="360"></line>
+      <text class="label" x="390" y="350" text-anchor="middle">POST action + csrf</text>
+
+      <line class="msg" x1="490" y1="390" x2="880" y2="390"></line>
+      <text class="label" x="685" y="380" text-anchor="middle">Delegar para handler</text>
+
+      <line class="msg" x1="880" y1="420" x2="690" y2="420"></line>
+      <text class="label" x="785" y="410" text-anchor="middle">INSERT/UPDATE</text>
+
+      <line class="msg" x1="690" y1="450" x2="880" y2="450"></line>
+      <text class="label" x="785" y="440" text-anchor="middle">OK</text>
+
+      <line class="msg" x1="880" y1="480" x2="290" y2="480"></line>
+      <text class="label" x="585" y="470" text-anchor="middle">JSON success</text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    Observacao: o fluxo do buscador processual abaixo inclui chamadas externas ao TJGO Projudi.
+  </div>
+
+  <div class="diagram" style="margin-top: 20px;">
+    <svg width="1000" height="520" viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill="#1d4ed8"></path>
+        </marker>
+        <style>
+          .actor { font: 12px "Segoe UI", Arial, sans-serif; fill: #111827; }
+          .box { fill: #f8fafc; stroke: #e5e7eb; }
+          .lifeline { stroke: #cbd5f5; stroke-dasharray: 4 4; }
+          .msg { stroke: #1d4ed8; stroke-width: 1.5; marker-end: url(#arrow2); }
+          .label { font: 11px "Segoe UI", Arial, sans-serif; fill: #111827; }
+        </style>
+      </defs>
+
+      <rect class="box" x="40" y="20" width="140" height="40" rx="6"></rect>
+      <text class="actor" x="110" y="45" text-anchor="middle">Usuario</text>
+
+      <rect class="box" x="220" y="20" width="160" height="40" rx="6"></rect>
+      <text class="actor" x="300" y="45" text-anchor="middle">Browser</text>
+
+      <rect class="box" x="420" y="20" width="160" height="40" rx="6"></rect>
+      <text class="actor" x="500" y="45" text-anchor="middle">buscador.php</text>
+
+      <rect class="box" x="620" y="20" width="180" height="40" rx="6"></rect>
+      <text class="actor" x="710" y="45" text-anchor="middle">buscadores/tjgo</text>
+
+      <rect class="box" x="840" y="20" width="120" height="40" rx="6"></rect>
+      <text class="actor" x="900" y="45" text-anchor="middle">TJGO</text>
+
+      <line class="lifeline" x1="110" y1="70" x2="110" y2="500"></line>
+      <line class="lifeline" x1="300" y1="70" x2="300" y2="500"></line>
+      <line class="lifeline" x1="500" y1="70" x2="500" y2="500"></line>
+      <line class="lifeline" x1="710" y1="70" x2="710" y2="500"></line>
+      <line class="lifeline" x1="900" y1="70" x2="900" y2="500"></line>
+
+      <line class="msg" x1="110" y1="110" x2="300" y2="110"></line>
+      <text class="label" x="205" y="100" text-anchor="middle">Acessa /buscador.php</text>
+
+      <line class="msg" x1="300" y1="140" x2="500" y2="140"></line>
+      <text class="label" x="400" y="130" text-anchor="middle">GET /buscador.php</text>
+
+      <line class="msg" x1="500" y1="170" x2="300" y2="170"></line>
+      <text class="label" x="400" y="160" text-anchor="middle">HTML + CSRF token</text>
+
+      <line class="msg" x1="300" y1="210" x2="500" y2="210"></line>
+      <text class="label" x="400" y="200" text-anchor="middle">POST busca + csrf</text>
+
+      <line class="msg" x1="500" y1="240" x2="710" y2="240"></line>
+      <text class="label" x="605" y="230" text-anchor="middle">buscarProcessos()</text>
+
+      <line class="msg" x1="710" y1="270" x2="900" y2="270"></line>
+      <text class="label" x="805" y="260" text-anchor="middle">HTTP request</text>
+
+      <line class="msg" x1="900" y1="300" x2="710" y2="300"></line>
+      <text class="label" x="805" y="290" text-anchor="middle">HTML resposta</text>
+
+      <line class="msg" x1="710" y1="330" x2="500" y2="330"></line>
+      <text class="label" x="605" y="320" text-anchor="middle">Extrair dados</text>
+
+      <line class="msg" x1="500" y1="360" x2="300" y2="360"></line>
+      <text class="label" x="400" y="350" text-anchor="middle">JSON resultados</text>
+
+      <line class="msg" x1="300" y1="390" x2="110" y2="390"></line>
+      <text class="label" x="205" y="380" text-anchor="middle">Renderiza resultados</text>
+    </svg>
+  </div>
+</body>
+</html>

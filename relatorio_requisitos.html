@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatorio de Requisitos - Precifex Juridico</title>
+  <style>
+    :root {
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #1d4ed8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 48px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.45;
+      background: #ffffff;
+    }
+    h1, h2, h3 { margin: 0 0 12px 0; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    h3 { font-size: 14px; margin-top: 16px; color: var(--accent); }
+    p { margin: 0 0 10px 0; }
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .section {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+    ul { margin: 8px 0 0 18px; padding: 0; }
+    li { margin: 4px 0; }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-right: 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .box h3 { margin-top: 0; }
+    .small { font-size: 12px; color: var(--muted); }
+    @media print {
+      body { padding: 24px 32px; }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Relatorio de Requisitos - Precifex Juridico</h1>
+  <div class="meta">
+    <span class="tag">Projeto PHP</span>
+    <span class="tag">Versao atual</span>
+    <span class="tag">Gerado automaticamente</span>
+  </div>
+
+  <div class="section">
+    <h2>Resumo executivo</h2>
+    <p>
+      O sistema Precifex Juridico e uma aplicacao web para gestao de escritorio
+      de advocacia, com foco em clientes, processos, prazos e financeiro. O acesso
+      e protegido por sessao e autenticacao externa, com operacoes via AJAX e
+      persistencia em MySQL.
+    </p>
+  </div>
+
+  <div class="section">
+    <h2>Requisitos funcionais</h2>
+    <div class="grid">
+      <div class="box">
+        <h3>Dashboard</h3>
+        <ul>
+          <li>Exibir total de clientes ativos e processos em andamento.</li>
+          <li>Exibir prazos proximos (7 dias) e contas pendentes/vencidas.</li>
+          <li>Listar prazos urgentes, recebimentos e processos recentes.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Clientes</h3>
+        <ul>
+          <li>Cadastrar e excluir clientes.</li>
+          <li>Listar e filtrar por nome, tipo e status.</li>
+          <li>Capturar endereco por CEP (ViaCEP).</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Processos e prazos</h3>
+        <ul>
+          <li>Cadastrar processos e vincular clientes.</li>
+          <li>Adicionar eventos/prazos (uteis/corridos, inclui/exclui inicio).</li>
+          <li>Marcar prazos como cumpridos e excluir processos.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Financeiro</h3>
+        <ul>
+          <li>Cadastrar honorarios e gerar parcelas.</li>
+          <li>Listar contas a receber e filtrar por status.</li>
+          <li>Registrar pagamento de parcelas.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Buscador processual</h3>
+        <ul>
+          <li>Buscar por numero de processo ou nome da parte.</li>
+          <li>Filtrar movimentacoes por termos.</li>
+          <li>Integracao TJGO Projudi.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Calculadoras</h3>
+        <ul>
+          <li>Acesso a calculadoras externas.</li>
+          <li>Calculo de data final de prazos com feriados.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Requisitos nao funcionais</h2>
+    <ul>
+      <li>PHP 7.4+ com extensoes PDO, pdo_mysql, curl, mbstring, xml e json.</li>
+      <li>MySQL 5.7+ (utf8mb4) com tabelas criadas automaticamente.</li>
+      <li>Interface responsiva baseada em Bootstrap 5.</li>
+      <li>Seguranca: CSRF, prepared statements e validacao por usuario.</li>
+      <li>Integracoes externas: TJGO Projudi e ViaCEP.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Dados e persistencia</h2>
+    <div class="grid">
+      <div class="box">
+        <h3>Tabelas principais</h3>
+        <ul>
+          <li>clientes</li>
+          <li>processos</li>
+          <li>eventos</li>
+          <li>honorarios</li>
+          <li>parcelas</li>
+          <li>despesas</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Chaves e integridade</h3>
+        <ul>
+          <li>processos.cliente_id referencia clientes.id</li>
+          <li>eventos.processo_id referencia processos.id</li>
+          <li>parcelas.honorario_id referencia honorarios.id</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small">
+      Observacao: o calculo de feriados consulta um banco externo da calculadora.
+    </p>
+  </div>
+
+  <div class="section">
+    <h2>Seguranca e auditoria</h2>
+    <ul>
+      <li>Autenticacao via sistema de membros e sessao dedicada.</li>
+      <li>CSRF token validado em todas as requisicoes POST.</li>
+      <li>Sanitizacao de dados na saida HTML.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Pontos de atencao</h2>
+    <ul>
+      <li>Dependencia de integracoes externas (tribunais e calculadora).</li>
+      <li>Busca por nome pode sofrer bloqueio anti-bot.</li>
+      <li>Sem paginacao em listagens grandes.</li>
+    </ul>
+  </div>
+</body>
+</html>

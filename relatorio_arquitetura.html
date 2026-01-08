@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatorio de Arquitetura - Precifex Juridico</title>
+  <style>
+    :root {
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #1d4ed8;
+      --bg: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 48px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.45;
+      background: #ffffff;
+    }
+    h1, h2, h3 { margin: 0 0 12px 0; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    h3 { font-size: 14px; margin-top: 16px; color: var(--accent); }
+    p { margin: 0 0 10px 0; }
+    .section {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      overflow: auto;
+      font-size: 12px;
+    }
+    ul { margin: 8px 0 0 18px; padding: 0; }
+    li { margin: 4px 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    @media print {
+      body { padding: 24px 32px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Relatorio de Arquitetura - Precifex Juridico</h1>
+  <p>Visao geral da estrutura, camadas e pontos de entrada do sistema.</p>
+
+  <div class="section">
+    <h2>Estrutura de diretorios</h2>
+    <pre>
+juridico/
+  ajax/handler.php
+  buscadores/tjgo_projudi.php
+  config/database.php
+  includes/CalculadoraDatas.php
+  includes/functions.php
+  includes/header.php
+  public/css/style.css
+  public/js/app.js
+  views/calculadoras.php
+  views/clientes.php
+  views/dashboard.php
+  views/financeiro.php
+  views/processos.php
+  buscador.php
+  index.php
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>Pontos de entrada e fluxo</h2>
+    <div class="grid">
+      <div class="box">
+        <h3>index.php</h3>
+        <ul>
+          <li>Autenticacao e sessao.</li>
+          <li>Conexao com banco e criacao de tabelas.</li>
+          <li>Carrega views por aba.</li>
+          <li>Delegacao de POST para ajax/handler.php.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>buscador.php</h3>
+        <ul>
+          <li>Pagina standalone de busca processual.</li>
+          <li>POST recebe parametros e executa buscadores.</li>
+          <li>Retorna JSON via AJAX.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Camadas e responsabilidades</h2>
+    <div class="grid">
+      <div class="box">
+        <h3>Apresentacao (Views)</h3>
+        <ul>
+          <li>Views PHP em `views/` com HTML + PHP.</li>
+          <li>Componentes compartilhados em `includes/`.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Logica (Controller)</h3>
+        <ul>
+          <li>Regras em `ajax/handler.php`.</li>
+          <li>Orquestracao em `index.php` e `buscador.php`.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Dados (Model)</h3>
+        <ul>
+          <li>PDO com prepared statements.</li>
+          <li>Funcoes utilitarias em `includes/functions.php`.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Integracoes</h3>
+        <ul>
+          <li>TJGO Projudi via `buscadores/`.</li>
+          <li>Calculadora de feriados via banco externo.</li>
+          <li>ViaCEP no frontend.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
