@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apresentação v2 — Aprovação de Telas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; }
+    .card { @apply bg-white rounded-xl shadow-sm ring-1 ring-gray-200; }
+    .card-header { @apply px-5 pt-5; }
+    .card-body { @apply px-5 pb-5; }
+    .badge { @apply inline-flex items-center px-2 py-1 rounded text-xs font-semibold; }
+    .status-pendente { @apply bg-gray-100 text-gray-700; }
+    .status-aprovado { @apply bg-green-100 text-green-700; }
+    .status-reprovado { @apply bg-red-100 text-red-700; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-8">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-900">Apresentação de Telas (v2)</h1>
+        <p class="text-slate-600">Precifex Jurídico • Marque aprovação durante a reunião</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="btnAprovarTodos" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Aprovar todos
+        </button>
+        <button id="btnLimpar" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582M20 20v-5h-.581M5.418 9C7 15 12 18 12 18s5-3 6.582-9M15 6h.01"/></svg>
+          Limpar aprovações
+        </button>
+        <button id="btnExportar" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-4-8l-4 4h8l-4-4z"/></svg>
+          Exportar aprovadas
+        </button>
+      </div>
+    </div>
+
+    
+
+    <!-- Resumo -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="p-4 rounded-lg bg-blue-50">
+        <p class="text-sm text-slate-600">Total de telas</p>
+        <p class="text-2xl font-bold text-blue-700">7</p>
+      </div>
+      <div class="p-4 rounded-lg bg-emerald-50">
+        <p class="text-sm text-slate-600">Aprovadas</p>
+        <p id="countAprovadas" class="text-2xl font-bold text-emerald-700">0</p>
+      </div>
+      <div class="p-4 rounded-lg bg-red-50">
+        <p class="text-sm text-slate-600">Reprovadas</p>
+        <p id="countReprovadas" class="text-2xl font-bold text-red-700">0</p>
+      </div>
+      <div class="p-4 rounded-lg bg-slate-50">
+        <p class="text-sm text-slate-600">Pendentes</p>
+        <p id="countPendentes" class="text-2xl font-bold text-slate-700">7</p>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Template cards: repeat for each screen -->
+      <!-- Dashboard -->
+      <div class="card" id="item-1" data-id="dashboard">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">1</span>
+              <h3 class="text-lg font-semibold text-slate-900">Dashboard</h3>
+            </div>
+            <a href="views/dashboard.php" class="text-indigo-600 hover:text-indigo-700 text-sm">Abrir arquivo</a>
+          </div>
+          <p class="text-slate-600 text-sm">Visão geral do escritório: estatísticas, prazos e recebimentos.</p>
+        </div>
+        <div class="card-body">
+          <div class="flex items-center gap-2">
+            <span class="badge status-pendente" data-status>Não avaliado</span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm" data-aprovar>Aprovar</button>
+            <button class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm" data-reprovar>Reprovar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clientes -->
+      <div class="card" id="item-2" data-id="clientes">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">2</span>
+              <h3 class="text-lg font-semibold text-slate-900">Clientes</h3>
+            </div>
+            <a href="views/clientes.php" class="text-indigo-600 hover:text-indigo-700 text-sm">Abrir arquivo</a>
+          </div>
+          <p class="text-slate-600 text-sm">Cadastro e listagem de clientes com filtros.</p>
+        </div>
+        <div class="card-body">
+          <div class="flex items-center gap-2">
+            <span class="badge status-pendente" data-status>Não avaliado</span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm" data-aprovar>Aprovar</button>
+            <button class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm" data-reprovar>Reprovar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processos -->
+      <div class="card" id="item-3" data-id="processos">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">3</span>
+              <h3 class="text-lg font-semibold text-slate-900">Processos</h3>
+            </div>
+            <a href="views/processos.php" class="text-indigo-600 hover:text-indigo-700 text-sm">Abrir arquivo</a>
+          </div>
+          <p class="text-slate-600 text-sm">Cadastro de processos e gestão de prazos.</p>
+        </div>
+        <div class="card-body">
+          <div class="flex items-center gap-2">
+            <span class="badge status-pendente" data-status>Não avaliado</span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm" data-aprovar>Aprovar</button>
+            <button class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm" data-reprovar>Reprovar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financeiro -->
+      <div class="card" id="item-4" data-id="financeiro">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">4</span>
+              <h3 class="text-lg font-semibold text-slate-900">Financeiro</h3>
+            </div>
+            <a href="views/financeiro.php" class="text-indigo-600 hover:text-indigo-700 text-sm">Abrir arquivo</a>
+          </div>
+          <p class="text-slate-600 text-sm">Honorários e contas a receber (parcelas).</p>
+        </div>
+        <div class="card-body">
+          <div class="flex items-center gap-2">
+            <span class="badge status-pendente" data-status>Não avaliado</span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm" data-aprovar>Aprovar</button>
+            <button class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm" data-reprovar>Reprovar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculadoras -->
+      <div class="card" id="item-5" data-id="calculadoras">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">5</span>
+              <h3 class="text-lg font-semibold text-slate-900">Calculadoras</h3>
+            </div>
+            <a href="views/calculadoras.php" class="text-indigo-600 hover:text-indigo-700 text-sm">Abrir arquivo</a>
+          </div>
+          <p class="text-slate-600 text-sm">Links para ferramentas externas (datas, atualizador etc.).</p>
+        </div>
+        <div class="card-body">
+          <div class="flex items-center gap-2">
+            <span class="badge status-pendente" data-status>Não avaliado</span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm" data-aprovar>Aprovar</button>
+            <button class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm" data-reprovar>Reprovar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buscador Processual -->
+      <div class="card" id="item-6" data-id="buscador">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">6</span>
+              <h3 class="text-lg font-semibold text-slate-900">Buscador Processual</h3>
+            </div>
+            <a href="buscador.php" class="text-indigo-600 hover:text-indigo-700 text-sm">Abrir arquivo</a>
+          </div>
+          <p class="text-slate-600 text-sm">Consulta por número/parte, com tribunais suportados.</p>
+        </div>
+        <div class="card-body">
+          <div class="flex items-center gap-2">
+            <span class="badge status-pendente" data-status>Não avaliado</span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm" data-aprovar>Aprovar</button>
+            <button class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm" data-reprovar>Reprovar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login -->
+      <div class="card" id="item-7" data-id="login">
+        <div class="card-header">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-semibold">7</span>
+              <h3 class="text-lg font-semibold text-slate-900">Login</h3>
+            </div>
+            <a href="login.php" class="text-indigo-600 hover:text-indigo-700 text-sm">Abrir arquivo</a>
+          </div>
+          <p class="text-slate-600 text-sm">Autenticação com CSRF e redirecionamento.</p>
+        </div>
+        <div class="card-body">
+          <div class="flex items-center gap-2">
+            <span class="badge status-pendente" data-status>Não avaliado</span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm" data-aprovar>Aprovar</button>
+            <button class="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 text-sm" data-reprovar>Reprovar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-10 text-center text-slate-500 text-sm">
+      © 2026 Precifex Jurídico — v2 com aprovação interativa
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'apresentacaoAprovacoes';
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function updateCardUI(card, status) {
+      const badge = card.querySelector('[data-status]');
+      badge.classList.remove('status-pendente', 'status-aprovado', 'status-reprovado');
+      if (status === 'aprovado') {
+        badge.textContent = 'Aprovado';
+        badge.classList.add('status-aprovado');
+      } else if (status === 'reprovado') {
+        badge.textContent = 'Reprovado';
+        badge.classList.add('status-reprovado');
+      } else {
+        badge.textContent = 'Não avaliado';
+        badge.classList.add('status-pendente');
+      }
+    }
+
+    function updateSummary(state) {
+      const total = 7;
+      const values = Object.values(state);
+      const aprovadas = values.filter(v => v === 'aprovado').length;
+      const reprovadas = values.filter(v => v === 'reprovado').length;
+      const pendentes = total - aprovadas - reprovadas;
+      document.getElementById('countAprovadas').textContent = aprovadas;
+      document.getElementById('countReprovadas').textContent = reprovadas;
+      document.getElementById('countPendentes').textContent = pendentes;
+    }
+
+    function exportApproved(state) {
+      const aprovadas = Object.entries(state)
+        .filter(([k, v]) => v === 'aprovado')
+        .map(([k]) => k)
+        .join(', ');
+      const text = aprovadas ? `Aprovadas: ${aprovadas}` : 'Nenhuma tela aprovada.';
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Lista copiada para a área de transferência.');
+      });
+    }
+
+    // Initialize
+    const state = loadState();
+    document.querySelectorAll('.card').forEach(card => {
+      const id = card.getAttribute('data-id');
+      updateCardUI(card, state[id]);
+
+      const btnAprovar = card.querySelector('[data-aprovar]');
+      const btnReprovar = card.querySelector('[data-reprovar]');
+      btnAprovar.addEventListener('click', () => {
+        state[id] = 'aprovado';
+        saveState(state);
+        updateCardUI(card, state[id]);
+        updateSummary(state);
+      });
+      btnReprovar.addEventListener('click', () => {
+        state[id] = 'reprovado';
+        saveState(state);
+        updateCardUI(card, state[id]);
+        updateSummary(state);
+      });
+    });
+    updateSummary(state);
+
+    // Actions: approve all, clear, export
+    document.getElementById('btnAprovarTodos')?.addEventListener('click', () => {
+      document.querySelectorAll('.card').forEach(card => {
+        const id = card.getAttribute('data-id');
+        state[id] = 'aprovado';
+        updateCardUI(card, 'aprovado');
+      });
+      saveState(state);
+      updateSummary(state);
+    });
+
+    document.getElementById('btnLimpar')?.addEventListener('click', () => {
+      document.querySelectorAll('.card').forEach(card => {
+        const id = card.getAttribute('data-id');
+        state[id] = undefined;
+        updateCardUI(card, undefined);
+      });
+      saveState(state);
+      updateSummary(state);
+    });
+
+    document.getElementById('btnExportar')?.addEventListener('click', () => exportApproved(state));
+  </script>
+</body>
+</html>
