@@ -20,7 +20,7 @@ $DB_CONFIG = [
     'host' => 'localhost',
     'port' => 3306,
     'database' => 'juridico',
-    'username' => '',
+    'username' => 'root',
     'password' => '',
     'charset' => 'utf8mb4'
 ];

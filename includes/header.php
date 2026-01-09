@@ -36,7 +36,7 @@ $base_url = $is_buscador ? 'index.php' : '';
             <div class="col-md-3 text-end">
                 <div class="user-info">
                     <span class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuário') ?></span>
-                    <a href="../sistemas/logout.php" class="btn btn-sm btn-outline-danger ms-2">
+                    <a href="sistemas/logout.php" class="btn btn-sm btn-outline-danger ms-2">
                         <i class="bi bi-box-arrow-right"></i> Sair
                     </a>
                 </div>

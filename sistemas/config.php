@@ -19,22 +19,53 @@ if (!defined('SISTEMA_MEMBROS')) {
 // Configuração de timezone
 date_default_timezone_set('America/Sao_Paulo');
 
-// Configurações do banco de dados (mesmas do webhook)
-define('DB_HOST', '77.37.126.7');
-define('DB_PORT', '3306');
-define('DB_NAME', 'clientes');
-define('DB_USER', '');
-define('DB_PASS', '');
+// Configurações do banco de dados
+// Ambiente local
+if ($__isLocal) {
+    define('DB_HOST', 'localhost');
+    define('DB_PORT', '3306');
+    // Use o banco local onde as tabelas serão criadas
+    define('DB_NAME', 'juridico');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+} else {
+    // Produção (ajuste conforme necessário)
+    define('DB_HOST', '77.37.126.7');
+    define('DB_PORT', '3306');
+    define('DB_NAME', 'clientes');
+    define('DB_USER', '');
+    define('DB_PASS', '');
+}
 
 // Configurações de segurança
 define('SALT_SENHA', 'JLP_SISTEMAS_2025_SALT_HASH');
 define('TOKEN_EXPIRY', 24 * 60 * 60); // 24 horas para token de criação de senha
 
-// URLs do sistema
-define('BASE_URL', 'https://precifex.com/sistemas');
-define('LOGIN_URL', BASE_URL . '/index.php');
-define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
-define('LOGOUT_URL', BASE_URL . '/logout.php');
+// URLs do sistema (ajuste para ambiente local vs produção)
+$__host = $_SERVER['HTTP_HOST'] ?? '';
+$__isLocal = preg_match('/^(localhost|127\\.0\\.0\\.1)(:\\d+)?$/', $__host) === 1;
+
+if ($__isLocal) {
+    // Base local: ajuste conforme seu DocumentRoot
+    // Estrutura detectada: c:\xampp\htdocs\www\juridico-php -> http://localhost/www/juridico-php
+    $__scheme = 'http://';
+    $__baseLocal = $__scheme . $__host . '/www/juridico-php';
+    define('BASE_URL', $__baseLocal);
+    define('LOGIN_URL', BASE_URL . '/login.php');
+    // Dashboard acessa via index com aba
+    define('DASHBOARD_URL', BASE_URL . '/index.php?aba=dashboard');
+    // Endpoint de logout dedicado
+    define('LOGOUT_URL', BASE_URL . '/sistemas/logout.php');
+    // Habilitar modo debug em ambiente local
+    if (!defined('DEBUG_MODE')) {
+        define('DEBUG_MODE', true);
+    }
+} else {
+    define('BASE_URL', 'https://precifex.com/sistemas');
+    define('LOGIN_URL', BASE_URL . '/login.php');
+    define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
+    define('LOGOUT_URL', BASE_URL . '/logout.php');
+}
 
 // Produtos disponíveis
 $PRODUTOS_SISTEMA = [
@@ -440,7 +471,9 @@ function iniciarSessao() {
     if (session_status() === PHP_SESSION_NONE) {
         // Configurações de sessão (movida para dentro da função, para que as configurações só sejam aplicadas quando a sessão ainda não foi iniciada)
         ini_set('session.cookie_httponly', 1);
-        ini_set('session.cookie_secure', 1);
+        // Em ambiente local (HTTP), não usar cookie_secure
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+        ini_set('session.cookie_secure', $https ? 1 : 0);
         ini_set('session.use_strict_mode', 1);
         session_name('MEMBROS_SESSION');
         session_start();

@@ -738,4 +738,29 @@ function criarTabelaLogsEmails() {
 // Criar tabelas automaticamente
 criarTabelaUsuarios();
 criarTabelaLogsEmails();
+// Criar tabela licencas necessária para validação de acesso
+try {
+    $pdoTmp = getDBConnection();
+    if ($pdoTmp) {
+        $sqlLicencas = "
+            CREATE TABLE IF NOT EXISTS licencas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                produto_id VARCHAR(32) NOT NULL,
+                produto_nome VARCHAR(255) NULL,
+                status_licenca ENUM('ativa','inativa') DEFAULT 'ativa',
+                data_expiracao DATE NULL,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_email (email),
+                INDEX idx_produto (produto_id),
+                INDEX idx_status (status_licenca),
+                INDEX idx_expira (data_expiracao)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ";
+        $pdoTmp->exec($sqlLicencas);
+    }
+} catch (Exception $e) {
+    // silencioso em local
+}
 ?>
