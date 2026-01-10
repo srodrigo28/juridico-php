@@ -21,9 +21,16 @@ $tribunais = $calculadora->obterTribunais();
 </div>
 
 <!-- Lista de Processos -->
+<?php
+// Total de processos para badge
+$stmt_total_proc = $pdo->prepare("SELECT COUNT(*) FROM processos WHERE usuario_id = ?");
+$stmt_total_proc->execute([$_SESSION['user_id']]);
+$total_processos = (int)$stmt_total_proc->fetchColumn();
+?>
 <div class="card mb-4">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Meus Processos</h5>
+        <span class="badge bg-primary">Total: <?= $total_processos ?></span>
     </div>
     <div class="card-body">
         <?php
@@ -83,10 +90,10 @@ $tribunais = $calculadora->obterTribunais();
                                 </span>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-info" onclick="verPrazos(<?= $proc['id'] ?>)">
-                                    <i class="bi bi-calendar"></i>
+                                <button type="button" class="btn btn-sm btn-info" onclick="visualizarProcesso(<?= $proc['id'] ?>)" title="Visualizar">
+                                    <i class="bi bi-eye"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-danger" onclick="excluirProcesso(<?= $proc['id'] ?>)">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="excluirProcesso(<?= $proc['id'] ?>)" title="Excluir">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </td>
@@ -166,6 +173,39 @@ if (!empty($prazos_urgentes)):
 </div>
 <?php endif; ?>
 
+<!-- Modal Visualizar/Editar Processo -->
+<div class="modal fade" id="modalVisualizarProcesso" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Processo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formVisualizarEditarProcesso">
+                    <input type="hidden" name="action" value="atualizar_processo">
+                    <input type="hidden" name="processo_id" id="processoIdEdicao">
+                    <div id="detalhesProcesso">
+                        <!-- Conteúdo via AJAX -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger me-auto" id="btnExcluirProcesso" style="display:none" onclick="excluirProcesso(document.getElementById('processoIdEdicao').value)">
+                    <i class="bi bi-trash"></i> Excluir
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-outline-primary" id="btnEditarProcesso" onclick="toggleEdicaoProcesso(true)">
+                    <i class="bi bi-pencil"></i> Editar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnSalvarProcesso" style="display:none" onclick="salvarEdicaoProcesso()">
+                    <i class="bi bi-check2"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Novo Processo -->
 <div class="modal fade" id="modalNovoProcesso" tabindex="-1">
     <div class="modal-dialog modal-xl">
@@ -231,6 +271,14 @@ if (!empty($prazos_urgentes)):
 
 <script>
 let contadorEventos = 0;
+
+// Dados auxiliares no front (tribunais e clientes) para montar selects na edição
+const TRIBUNAIS = ['NACIONAL', <?php foreach ($tribunais as $t) { echo "'" . $t['abrangencia'] . "',"; } ?>];
+const CLIENTES_ATIVOS = [
+    <?php foreach ($lista_clientes as $cli) { 
+        echo '{id:'.(int)$cli['id'].',nome:"'.addslashes($cli['nome']).'"},';
+    } ?>
+];
 
 function adicionarEvento() {
     contadorEventos++;
@@ -360,10 +408,148 @@ async function marcarComoCumprido(eventoId) {
     }
 }
 
+// Máscara para Valor da Causa (formato brasileiro 1.234,56)
+function __onlyDigits(v){ return (v||'').replace(/\D/g,''); }
+function maskCurrencyBR(v){
+    let d = __onlyDigits(v);
+    if (!d) return '';
+    if (d.length === 1) d = '0' + d;
+    const cents = d.slice(-2);
+    let ints = d.slice(0, -2);
+    ints = ints.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (ints || '0') + ',' + cents;
+}
+function attachProcessMasks(formEl){
+    if (!formEl) return;
+    const valorInput = formEl.querySelector('input[name="valor_causa"]');
+    if (valorInput){
+        valorInput.addEventListener('input', (e)=>{
+            e.target.value = maskCurrencyBR(e.target.value);
+            e.target.selectionStart = e.target.selectionEnd = e.target.value.length;
+        });
+    }
+}
+
 // Adicionar primeiro evento automaticamente
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('modalNovoProcesso')) {
         adicionarEvento();
+        attachProcessMasks(document.getElementById('formNovoProcesso'));
     }
 });
+
+async function visualizarProcesso(id){
+    const fd = new FormData();
+    fd.append('action','obter_processo');
+    fd.append('processo_id', id);
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try {
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (!j.success) throw new Error(j.error||'Falha ao obter processo');
+        const p = j.processo;
+        document.getElementById('processoIdEdicao').value = p.id;
+        // Montar HTML com campos readonly inicialmente
+        const clienteOptions = ['<option value="">Sem cliente vinculado</option>']
+            .concat(CLIENTES_ATIVOS.map(c=>`<option value="${c.id}">${c.nome}</option>`)).join('');
+        const tribunalOptions = TRIBUNAIS.map(t=>`<option value="${t}">${t}</option>`).join('');
+        const html = `
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Número do Processo</label>
+                    <input type="text" class="form-control" name="numero_processo" value="${p.numero_processo||''}" disabled>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Tribunal</label>
+                    <select class="form-select" name="tribunal" disabled>
+                        ${tribunalOptions}
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Cliente</label>
+                    <select class="form-select" name="cliente_id" disabled>
+                        ${clienteOptions}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Vara</label>
+                    <input type="text" class="form-control" name="vara" value="${p.vara||''}" disabled>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo de Ação</label>
+                    <input type="text" class="form-control" name="tipo_acao" value="${p.tipo_acao||''}" disabled>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Parte Contrária</label>
+                    <input type="text" class="form-control" name="parte_contraria" value="${p.parte_contraria||''}" disabled>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Valor da Causa</label>
+                    <input type="text" class="form-control" name="valor_causa" value="${p.valor_causa||''}" disabled>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status" disabled>
+                        <option value="em_andamento">Em andamento</option>
+                        <option value="suspenso">Suspenso</option>
+                        <option value="arquivado">Arquivado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Observações</label>
+                <textarea class="form-control" name="observacoes" rows="3" disabled>${p.observacoes||''}</textarea>
+            </div>
+        `;
+        document.getElementById('detalhesProcesso').innerHTML = html;
+        // Selecionar valores atuais em selects
+        const form = document.getElementById('formVisualizarEditarProcesso');
+        form.querySelector('[name="tribunal"]').value = p.tribunal||'';
+        if (p.cliente_id) form.querySelector('[name="cliente_id"]').value = p.cliente_id;
+        form.querySelector('[name="status"]').value = p.status||'em_andamento';
+        // aplicar máscara no campo de valor
+        attachProcessMasks(form);
+        // Mostrar modal
+        document.getElementById('btnEditarProcesso').style.display = '';
+        document.getElementById('btnSalvarProcesso').style.display = 'none';
+        document.getElementById('btnExcluirProcesso').style.display = 'none';
+        const modal = new bootstrap.Modal(document.getElementById('modalVisualizarProcesso'));
+        modal.show();
+    } catch(e){
+        mostrarErro(e.message||'Erro ao visualizar processo');
+    }
+}
+
+function toggleEdicaoProcesso(ativar){
+    const form = document.getElementById('formVisualizarEditarProcesso');
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.name === 'processo_id' || el.name === 'action') return;
+        el.disabled = !ativar;
+    });
+    document.getElementById('btnEditarProcesso').style.display = ativar ? 'none' : '';
+    document.getElementById('btnSalvarProcesso').style.display = ativar ? '' : 'none';
+    document.getElementById('btnExcluirProcesso').style.display = ativar ? '' : 'none';
+}
+
+async function salvarEdicaoProcesso(){
+    const form = document.getElementById('formVisualizarEditarProcesso');
+    const fd = new FormData(form);
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try {
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            mostrarSucesso('Processo atualizado com sucesso!');
+            setTimeout(()=> location.reload(), 1200);
+        } else {
+            mostrarErro('Erro: ' + (j.error||'Falha ao atualizar'));
+        }
+    } catch(e){
+        mostrarErro('Erro ao salvar alterações');
+    }
+}
 </script>

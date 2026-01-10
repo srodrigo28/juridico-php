@@ -184,6 +184,53 @@ try {
             $pdo->commit();
             echo json_encode(['success' => true, 'message' => 'Processo cadastrado com sucesso', 'processo_id' => $processo_id]);
             break;
+
+        case 'obter_processo':
+            $processo_id = (int)($_POST['processo_id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT * FROM processos WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$processo_id, $usuario_id]);
+            $proc = $stmt->fetch();
+            if (!$proc) {
+                throw new Exception('Processo não encontrado ou sem permissão');
+            }
+            echo json_encode(['success' => true, 'processo' => $proc]);
+            break;
+
+        case 'atualizar_processo':
+            $processo_id = (int)($_POST['processo_id'] ?? 0);
+            // Verificar se pertence ao usuário
+            $stmt = $pdo->prepare("SELECT id FROM processos WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$processo_id, $usuario_id]);
+            if (!$stmt->fetch()) {
+                throw new Exception('Processo não encontrado ou sem permissão');
+            }
+
+            $stmt = $pdo->prepare("UPDATE processos SET 
+                cliente_id = ?, numero_processo = ?, tribunal = ?, vara = ?, tipo_acao = ?, parte_contraria = ?,
+                valor_causa = ?, status = ?, observacoes = ?
+                WHERE id = ? AND usuario_id = ?
+            ");
+            // Normalizar valor_causa
+            $valor_causa = $_POST['valor_causa'] ?? null;
+            if (is_string($valor_causa)) {
+                $valor_causa = (float)str_replace(['.', ','], ['', '.'], $valor_causa);
+            }
+            $stmt->execute([
+                (!empty($_POST['cliente_id']) ? (int)$_POST['cliente_id'] : null),
+                $_POST['numero_processo'] ?? '',
+                $_POST['tribunal'] ?? '',
+                $_POST['vara'] ?? null,
+                $_POST['tipo_acao'] ?? null,
+                $_POST['parte_contraria'] ?? null,
+                $valor_causa,
+                $_POST['status'] ?? 'em_andamento',
+                $_POST['observacoes'] ?? null,
+                $processo_id,
+                $usuario_id
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Processo atualizado com sucesso']);
+            break;
             
         case 'excluir_processo':
             $processo_id = (int)($_POST['processo_id'] ?? 0);

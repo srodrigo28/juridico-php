@@ -177,6 +177,19 @@ function formatarCNPJ($cnpj) {
 }
 
 /**
+ * Formatar CPF ou CNPJ conforme o tamanho
+ */
+function formatarCpfCnpj($valor) {
+    if ($valor === null) return '';
+    $digitos = preg_replace('/\D/', '', (string)$valor);
+    if ($digitos === '') return '';
+    if (strlen($digitos) <= 11) {
+        return formatarCPF($digitos);
+    }
+    return formatarCNPJ($digitos);
+}
+
+/**
  * Sanitizar string
  */
 function sanitizar($string) {

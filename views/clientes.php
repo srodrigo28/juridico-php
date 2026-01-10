@@ -87,7 +87,7 @@ $total_clientes = (int)$stmtCount->fetchColumn();
                                     <?= $cliente['tipo'] === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica' ?>
                                 </span>
                             </td>
-                            <td><?= sanitizar($cliente['cpf_cnpj'] ?: 'N/A') ?></td>
+                            <td><?= $cliente['cpf_cnpj'] ? sanitizar(formatarCpfCnpj($cliente['cpf_cnpj'])) : 'N/A' ?></td>
                             <td>
                                 <?php if ($cliente['email']): ?>
                                     <i class="bi bi-envelope"></i> <?= sanitizar($cliente['email']) ?><br>
@@ -266,7 +266,8 @@ document.getElementById('filtroStatus')?.addEventListener('change', function() {
 });
 
 function filtrarClientes() {
-    const busca = document.getElementById('buscarCliente').value.toLowerCase();
+    const busca = (document.getElementById('buscarCliente').value || '').toLowerCase();
+    const buscaDigits = busca.replace(/\D/g,'');
     const tipo = document.getElementById('filtroTipo').value;
     const status = document.getElementById('filtroStatus').value;
     const linhas = document.querySelectorAll('#tabelaClientes tbody tr');
@@ -277,11 +278,16 @@ function filtrarClientes() {
         const statusCol = linha.querySelector('td:nth-child(5) .badge');
         const tipoCliente = (tipoCol?.textContent || '').toLowerCase().includes('física') ? 'pf' : 'pj';
         const statusCliente = (statusCol?.textContent || '').trim().toLowerCase();
+        const docCol = linha.querySelector('td:nth-child(3)');
+        const docDigits = (docCol?.textContent || '').replace(/\D/g,'');
         
         let mostrar = true;
         
         if (busca && !texto.includes(busca)) {
-            mostrar = false;
+            // Se busca for numérica, também comparar contra CPF/CNPJ sem máscara
+            if (buscaDigits && !docDigits.includes(buscaDigits)) {
+                mostrar = false;
+            }
         }
         
         if (tipo && tipoCliente !== tipo) {
@@ -426,7 +432,7 @@ async function visualizarCliente(id) {
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">CPF / CNPJ</label>
-                    <input type="text" class="form-control" name="cpf_cnpj" value="${c.cpf_cnpj ?? ''}" disabled>
+                    <input type="text" class="form-control" name="cpf_cnpj" value="${maskCpfCnpj(c.cpf_cnpj ?? '')}" disabled>
                 </div>
             </div>
             <div class="row mb-3">
