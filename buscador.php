@@ -3,8 +3,9 @@ session_name('MEMBROS_SESSION');
 
 // Proteção do sistema de membros
 define('SISTEMA_MEMBROS', true);
-require_once __DIR__ . '/../sistemas/config.php';
-require_once __DIR__ . '/../sistemas/auth.php';
+// Corrigir caminho para arquivos do sistema (estão dentro da pasta atual)
+require_once __DIR__ . '/sistemas/config.php';
+require_once __DIR__ . '/sistemas/auth.php';
 
 // Proteger a página - ID do produto Buscador Processual
 protegerPagina('5776734');
