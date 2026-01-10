@@ -93,7 +93,9 @@ body {
 /* Main Content */
 .main-content {
     flex: 1;
-    padding: 2rem 0;
+    padding: 2rem 2rem; /* adicionar padding lateral */
+    max-width: 1320px; /* limitar largura máxima para melhor leitura em telas grandes */
+    margin: 0 auto; /* centralizar conteúdo */
 }
 
 /* Page Title */
@@ -111,6 +113,9 @@ body {
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     overflow: hidden;
+    min-height: 140px; /* garantir altura mínima uniforme */
+    display: flex;
+    flex-direction: column;
 }
 
 .stat-card:hover {
@@ -120,6 +125,7 @@ body {
 
 .stat-card .card-body {
     padding: 1.5rem;
+    flex: 1; /* preencher altura para equalizar */
 }
 
 .stat-icon {
@@ -343,6 +349,11 @@ body {
     .user-info {
         flex-direction: column;
         gap: 0.5rem;
+    }
+
+    .main-content {
+        padding: 1.5rem 1rem; /* reduzir padding lateral em telas pequenas */
+        max-width: 100%;
     }
 }
 

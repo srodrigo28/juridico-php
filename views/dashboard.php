@@ -6,9 +6,9 @@
 </div>
 
 <!-- Cards de Estatísticas -->
-<div class="row mb-4">
+<div class="row mb-4 align-items-stretch g-3">
     <div class="col-md-3">
-        <div class="card stat-card stat-primary">
+        <div class="card h-100 stat-card stat-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -24,7 +24,7 @@
     </div>
     
     <div class="col-md-3">
-        <div class="card stat-card stat-info">
+        <div class="card h-100 stat-card stat-info">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -40,7 +40,7 @@
     </div>
     
     <div class="col-md-3">
-        <div class="card stat-card stat-warning">
+        <div class="card h-100 stat-card stat-warning">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -57,7 +57,7 @@
     </div>
     
     <div class="col-md-3">
-        <div class="card stat-card stat-success">
+        <div class="card h-100 stat-card stat-success">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -106,10 +106,10 @@
 <?php endif; ?>
 
 <!-- Gráficos e Listas -->
-<div class="row">
+<div class="row align-items-stretch">
     <!-- Prazos Urgentes -->
     <div class="col-md-6 mb-4">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-alarm"></i> Prazos Urgentes (Próximos 7 dias)</h5>
             </div>
@@ -162,7 +162,7 @@
     
     <!-- Contas a Receber -->
     <div class="col-md-6 mb-4">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header">
                 <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Próximos Recebimentos</h5>
             </div>

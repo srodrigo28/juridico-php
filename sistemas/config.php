@@ -19,6 +19,10 @@ if (!defined('SISTEMA_MEMBROS')) {
 // Configuração de timezone
 date_default_timezone_set('America/Sao_Paulo');
 
+// Detectar ambiente (local vs produção) antes de usar $__isLocal
+$__host = $_SERVER['HTTP_HOST'] ?? '';
+$__isLocal = preg_match('/^(localhost|127\\.0\\.0\\.1)(:\\d+)?$/', $__host) === 1;
+
 // Configurações do banco de dados
 // Ambiente local
 if ($__isLocal) {
