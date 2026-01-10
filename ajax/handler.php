@@ -46,6 +46,56 @@ try {
             
             echo json_encode(['success' => true, 'message' => 'Cliente cadastrado com sucesso']);
             break;
+
+        case 'obter_cliente':
+            $cliente_id = (int)($_POST['cliente_id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT * FROM clientes WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$cliente_id, $usuario_id]);
+            $cliente = $stmt->fetch();
+            if (!$cliente) {
+                throw new Exception('Cliente não encontrado ou sem permissão');
+            }
+            echo json_encode(['success' => true, 'cliente' => $cliente]);
+            break;
+
+        case 'atualizar_cliente':
+            $cliente_id = (int)($_POST['cliente_id'] ?? 0);
+
+            // Verificar se pertence ao usuário
+            $stmt = $pdo->prepare("SELECT id FROM clientes WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$cliente_id, $usuario_id]);
+            if (!$stmt->fetch()) {
+                throw new Exception('Cliente não encontrado ou sem permissão');
+            }
+
+            $stmt = $pdo->prepare("UPDATE clientes SET 
+                tipo = ?, nome = ?, cpf_cnpj = ?, email = ?, telefone = ?, celular = ?,
+                cep = ?, endereco = ?, numero = ?, complemento = ?, bairro = ?, cidade = ?, estado = ?,
+                status = ?, observacoes = ?
+                WHERE id = ? AND usuario_id = ?
+            ");
+            $stmt->execute([
+                $_POST['tipo'] ?? 'pf',
+                $_POST['nome'] ?? '',
+                $_POST['cpf_cnpj'] ?? null,
+                $_POST['email'] ?? null,
+                $_POST['telefone'] ?? null,
+                $_POST['celular'] ?? null,
+                $_POST['cep'] ?? null,
+                $_POST['endereco'] ?? null,
+                $_POST['numero'] ?? null,
+                $_POST['complemento'] ?? null,
+                $_POST['bairro'] ?? null,
+                $_POST['cidade'] ?? null,
+                $_POST['estado'] ?? null,
+                $_POST['status'] ?? 'ativo',
+                $_POST['observacoes'] ?? null,
+                $cliente_id,
+                $usuario_id
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Cliente atualizado com sucesso']);
+            break;
             
         case 'excluir_cliente':
             $cliente_id = (int)($_POST['cliente_id'] ?? 0);
