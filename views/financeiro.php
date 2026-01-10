@@ -164,7 +164,7 @@ $lista_clientes = $stmt_clientes->fetchAll();
 
 <!-- Modal Novo Honorário -->
 <div class="modal fade" id="modalNovoHonorario" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Novo Honorário</h5>
@@ -222,7 +222,7 @@ $lista_clientes = $stmt_clientes->fetchAll();
 
 <!-- Modal Unificado: Parcela/Honorário -->
 <div class="modal fade" id="modalFinanceiro" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalFinanceiroTitulo">Detalhes</h5>

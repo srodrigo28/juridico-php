@@ -169,6 +169,23 @@ function criarTabelas($pdo) {
             INDEX idx_vencimento (data_vencimento),
             INDEX idx_status (status)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        // Tabela de perfil do usuário
+        $pdo->exec("CREATE TABLE IF NOT EXISTS usuarios_perfil (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            usuario_id VARCHAR(100) NOT NULL UNIQUE,
+            email VARCHAR(255) NOT NULL,
+            nome VARCHAR(150) NULL,
+            telefone VARCHAR(20) NULL,
+            oab VARCHAR(50) NULL,
+            escritorio VARCHAR(150) NULL,
+            cep VARCHAR(9) NULL,
+            endereco VARCHAR(255) NULL,
+            cidade VARCHAR(100) NULL,
+            estado VARCHAR(2) NULL,
+            atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_email (email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         
     } catch (PDOException $e) {
         // Silenciar erro se tabelas já existem

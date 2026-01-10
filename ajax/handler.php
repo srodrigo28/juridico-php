@@ -16,6 +16,60 @@ try {
     $usuario_id = $_SESSION['user_id'];
     
     switch ($action) {
+        // ========== USUÁRIO (Perfil) ==========
+        case 'obter_usuario':
+            // Buscar perfil do usuário (se não existir, retornar defaults)
+            $stmt = $pdo->prepare("SELECT * FROM usuarios_perfil WHERE usuario_id = ?");
+            $stmt->execute([$usuario_id]);
+            $perfil = $stmt->fetch();
+            if (!$perfil) {
+                $perfil = [
+                    'usuario_id' => $usuario_id,
+                    'email' => $_SESSION['user_email'] ?? '',
+                    'nome' => $_SESSION['user_name'] ?? '',
+                    'telefone' => null,
+                    'oab' => null,
+                    'escritorio' => null,
+                    'cep' => null,
+                    'endereco' => null,
+                    'cidade' => null,
+                    'estado' => null,
+                ];
+            }
+            echo json_encode(['success' => true, 'usuario' => $perfil]);
+            break;
+
+        case 'atualizar_usuario':
+            // Upsert de perfil do usuário
+            $email = $_SESSION['user_email'] ?? '';
+            $nome = $_POST['nome'] ?? null;
+            $telefone = $_POST['telefone'] ?? null;
+            $oab = $_POST['oab'] ?? null;
+            $escritorio = $_POST['escritorio'] ?? null;
+            $cep = $_POST['cep'] ?? null;
+            $endereco = $_POST['endereco'] ?? null;
+            $cidade = $_POST['cidade'] ?? null;
+            $estado = $_POST['estado'] ?? null;
+
+            // Garantir que a coluna CEP exista (migração leve)
+            try {
+                $check = $pdo->query("SHOW COLUMNS FROM usuarios_perfil LIKE 'cep'");
+                if ($check->rowCount() === 0) {
+                    $pdo->exec("ALTER TABLE usuarios_perfil ADD COLUMN cep VARCHAR(9) NULL AFTER escritorio");
+                }
+            } catch (Exception $e) { /* ignore */ }
+
+            $stmt = $pdo->prepare("INSERT INTO usuarios_perfil (usuario_id, email, nome, telefone, oab, escritorio, cep, endereco, cidade, estado)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE email = VALUES(email), nome = VALUES(nome), telefone = VALUES(telefone), oab = VALUES(oab), escritorio = VALUES(escritorio), cep = VALUES(cep), endereco = VALUES(endereco), cidade = VALUES(cidade), estado = VALUES(estado)");
+            $stmt->execute([$usuario_id, $email, $nome, $telefone, $oab, $escritorio, $cep, $endereco, $cidade, $estado]);
+
+            // Atualizar nome na sessão (se fornecido)
+            if (!empty($nome)) {
+                $_SESSION['user_name'] = $nome;
+            }
+            echo json_encode(['success' => true, 'message' => 'Perfil atualizado com sucesso']);
+            break;
         // ========== CLIENTES ==========
         case 'cadastrar_cliente':
             $stmt = $pdo->prepare("

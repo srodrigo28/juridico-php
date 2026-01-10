@@ -269,9 +269,33 @@ body {
     font-weight: 700;
     color: var(--dark-text);
 }
+/* Ícones/Badges do plano no título do modal */
+.plan-icons i {
+    font-size: 1.1rem;
+}
+
+.modal-title .badge {
+    font-size: 0.75rem;
+    vertical-align: middle;
+}
 
 .modal-body {
     padding: 1.5rem;
+}
+/* Modais responsivos e roláveis */
+.modal-dialog.modal-xl {
+    max-width: 1200px;
+}
+
+.modal-dialog-scrollable .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+@media (max-width: 576px) {
+    .modal-content {
+        border-radius: 0; /* fullscreen fica mais fluido em mobile */
+    }
 }
 
 .modal-footer {
