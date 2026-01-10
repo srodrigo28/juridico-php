@@ -365,6 +365,122 @@ try {
             
             echo json_encode(['success' => true, 'message' => 'Pagamento registrado']);
             break;
+
+        case 'obter_honorario':
+            $honorario_id = (int)($_POST['honorario_id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT h.*, c.nome AS cliente_nome FROM honorarios h LEFT JOIN clientes c ON h.cliente_id=c.id WHERE h.id = ? AND h.usuario_id = ?");
+            $stmt->execute([$honorario_id, $usuario_id]);
+            $hon = $stmt->fetch();
+            if (!$hon) { throw new Exception('Honorário não encontrado ou sem permissão'); }
+            // Resumos
+            $stmt2 = $pdo->prepare("SELECT COUNT(*) AS qtd, COALESCE(SUM(valor),0) AS soma, COALESCE(SUM(CASE WHEN status='pago' THEN valor ELSE 0 END),0) AS soma_paga FROM parcelas WHERE honorario_id = ?");
+            $stmt2->execute([$honorario_id]);
+            $resumos = $stmt2->fetch();
+            echo json_encode(['success'=>true, 'honorario'=>$hon, 'resumos'=>$resumos]);
+            break;
+
+        case 'atualizar_honorario':
+            $honorario_id = (int)($_POST['honorario_id'] ?? 0);
+            // Permissão
+            $stmt = $pdo->prepare("SELECT id FROM honorarios WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$honorario_id, $usuario_id]);
+            if (!$stmt->fetch()) { throw new Exception('Honorário não encontrado ou sem permissão'); }
+            // Por segurança, permitir editar apenas a descrição neste momento
+            $descricao = $_POST['descricao'] ?? '';
+            $stmt = $pdo->prepare("UPDATE honorarios SET descricao = ? WHERE id = ?");
+            $stmt->execute([$descricao, $honorario_id]);
+            echo json_encode(['success'=>true, 'message'=>'Honorário atualizado com sucesso']);
+            break;
+
+        case 'excluir_honorario':
+            $honorario_id = (int)($_POST['honorario_id'] ?? 0);
+            // Bloquear se houver parcelas pagas
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM parcelas p INNER JOIN honorarios h ON p.honorario_id=h.id WHERE h.id = ? AND h.usuario_id = ? AND p.status='pago'");
+            $stmt->execute([$honorario_id, $usuario_id]);
+            if ((int)$stmt->fetchColumn() > 0) {
+                throw new Exception('Não é possível excluir: existem parcelas pagas');
+            }
+            // Excluir honorário (CASCADE remove parcelas)
+            $stmt = $pdo->prepare("DELETE FROM honorarios WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$honorario_id, $usuario_id]);
+            if ($stmt->rowCount() === 0) { throw new Exception('Honorário não encontrado ou sem permissão'); }
+            echo json_encode(['success'=>true, 'message'=>'Honorário excluído com sucesso']);
+            break;
+
+        case 'obter_parcela':
+            $parcela_id = (int)($_POST['parcela_id'] ?? 0);
+            $stmt = $pdo->prepare("
+                SELECT par.*, h.descricao AS honorario_descricao, c.nome AS cliente_nome
+                FROM parcelas par
+                INNER JOIN honorarios h ON par.honorario_id = h.id
+                LEFT JOIN clientes c ON h.cliente_id = c.id
+                WHERE par.id = ? AND h.usuario_id = ?
+            ");
+            $stmt->execute([$parcela_id, $usuario_id]);
+            $parcela = $stmt->fetch();
+            if (!$parcela) {
+                throw new Exception('Parcela não encontrada ou sem permissão');
+            }
+            echo json_encode(['success' => true, 'parcela' => $parcela]);
+            break;
+
+        case 'atualizar_parcela':
+            $parcela_id = (int)($_POST['parcela_id'] ?? 0);
+            // Verificar permissão
+            $stmt = $pdo->prepare("
+                SELECT par.id FROM parcelas par
+                INNER JOIN honorarios h ON par.honorario_id = h.id
+                WHERE par.id = ? AND h.usuario_id = ?
+            ");
+            $stmt->execute([$parcela_id, $usuario_id]);
+            if (!$stmt->fetch()) {
+                throw new Exception('Parcela não encontrada ou sem permissão');
+            }
+
+            $valor = $_POST['valor'] ?? null;
+            if (is_string($valor)) {
+                $valor = (float)str_replace(['.', ','], ['', '.'], $valor);
+            }
+            $data_vencimento = $_POST['data_vencimento'] ?? null; // yyyy-mm-dd
+            $status = $_POST['status'] ?? 'pendente';
+            $data_pagamento = $_POST['data_pagamento'] ?? null;
+            $observacoes = $_POST['observacoes'] ?? null;
+
+            // Regras para data_pagamento
+            if ($status === 'pago' && empty($data_pagamento)) {
+                $data_pagamento = date('Y-m-d');
+            }
+            if ($status !== 'pago') {
+                $data_pagamento = null;
+            }
+
+            $stmt = $pdo->prepare("UPDATE parcelas SET valor = ?, data_vencimento = ?, status = ?, data_pagamento = ?, observacoes = ? WHERE id = ?");
+            $stmt->execute([$valor, $data_vencimento, $status, $data_pagamento, $observacoes, $parcela_id]);
+
+            echo json_encode(['success' => true, 'message' => 'Parcela atualizada com sucesso']);
+            break;
+
+        case 'excluir_parcela':
+            $parcela_id = (int)($_POST['parcela_id'] ?? 0);
+            // Bloquear exclusão se já paga
+            $stmt = $pdo->prepare("
+                SELECT par.status FROM parcelas par
+                INNER JOIN honorarios h ON par.honorario_id = h.id
+                WHERE par.id = ? AND h.usuario_id = ?
+            ");
+            $stmt->execute([$parcela_id, $usuario_id]);
+            $row = $stmt->fetch();
+            if (!$row) {
+                throw new Exception('Parcela não encontrada ou sem permissão');
+            }
+            if ($row['status'] === 'pago') {
+                throw new Exception('Não é possível excluir uma parcela já paga');
+            }
+
+            $stmt = $pdo->prepare("DELETE FROM parcelas WHERE id = ?");
+            $stmt->execute([$parcela_id]);
+            echo json_encode(['success' => true, 'message' => 'Parcela excluída com sucesso']);
+            break;
             
         default:
             throw new Exception('Ação não reconhecida');
