@@ -10,10 +10,18 @@
     </div>
 </div>
 
+<?php
+// Total de clientes para badge
+$stmtCount = $pdo->prepare("SELECT COUNT(*) FROM clientes WHERE usuario_id = ?");
+$stmtCount->execute([$_SESSION['user_id']]);
+$total_clientes = (int)$stmtCount->fetchColumn();
+?>
+
 <!-- Lista de Clientes -->
 <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Lista de Clientes</h5>
+        <span class="badge bg-primary">Total: <?= $total_clientes ?></span>
     </div>
     <div class="card-body">
         <!-- Filtros -->
@@ -265,8 +273,10 @@ function filtrarClientes() {
     
     linhas.forEach(linha => {
         const texto = linha.textContent.toLowerCase();
-        const tipoCliente = linha.querySelector('td:nth-child(2)').textContent.includes('Física') ? 'pf' : 'pj';
-        const statusCliente = linha.querySelector('td:nth-child(5) .badge').textContent.toLowerCase();
+        const tipoCol = linha.querySelector('td:nth-child(2)');
+        const statusCol = linha.querySelector('td:nth-child(5) .badge');
+        const tipoCliente = (tipoCol?.textContent || '').toLowerCase().includes('física') ? 'pf' : 'pj';
+        const statusCliente = (statusCol?.textContent || '').trim().toLowerCase();
         
         let mostrar = true;
         
