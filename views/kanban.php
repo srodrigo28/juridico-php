@@ -97,7 +97,7 @@
 
 <style>
 /* Estilos mínimos para Kanban */
-.kanban-column { height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; }
+.kanban-column { height: 60vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: .5rem; }
 .kanban-card { background: #fff; border: 1px solid var(--border-color); border-radius: .5rem; padding: .5rem .75rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); cursor: grab; }
 .kanban-card:active { cursor: grabbing; }
 .kanban-column.drag-over { background: rgba(37,99,235,.06); outline: 2px dashed var(--border-color); }
@@ -125,6 +125,21 @@
 .count-badge-tarefas{ background: #dcfce7; color: #065f46; }
 .count-badge-doing{ background: #dbeafe; color: #1e40af; }
 .count-badge-done{ background: #e0f2fe; color: #0c4a6e; }
+
+/* Scrollbar temático por coluna */
+.kanban-column{ scrollbar-width: thin; }
+.kanban-column[data-column="tarefas"]{ --scroll-track: #ecfdf5; --scroll-thumb: #065f46; --scroll-thumb-hover: #064e3b; }
+.kanban-column[data-column="doing"]{ --scroll-track: #eff6ff; --scroll-thumb: #1e40af; --scroll-thumb-hover: #1e3a8a; }
+.kanban-column[data-column="done"]{ --scroll-track: #e0f2fe; --scroll-thumb: #0c4a6e; --scroll-thumb-hover: #0a3a56; }
+
+/* WebKit-based browsers (Chrome, Edge) */
+.kanban-column::-webkit-scrollbar{ width: 10px; height: 10px; }
+.kanban-column::-webkit-scrollbar-track{ background: var(--scroll-track); border-radius: 8px; }
+.kanban-column::-webkit-scrollbar-thumb{ background-color: var(--scroll-thumb); border-radius: 8px; border: 2px solid var(--scroll-track); }
+.kanban-column::-webkit-scrollbar-thumb:hover{ background-color: var(--scroll-thumb-hover); }
+
+/* Firefox */
+.kanban-column{ scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
 
 </style>
 
