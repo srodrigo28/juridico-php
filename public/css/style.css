@@ -40,6 +40,29 @@ body {
     z-index: 1000;
 }
 
+/* Header Bar: single-line, three zones */
+.header-bar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    white-space: nowrap;
+    gap: 0.5rem;
+    overflow: visible; /* garantir que badges e ícones não sejam cortados */
+}
+
+.header-start { justify-self: start; }
+.header-center { justify-self: center; min-width: 0; }
+.header-end { justify-self: end; }
+
+/* Visibilidade e contraste do sino de notificações no header */
+.header .btn-outline-light {
+    color: #fff;
+    border-color: rgba(255,255,255,0.6);
+}
+.header .btn-outline-light:hover {
+    border-color: #fff;
+}
+
 .logo {
     font-size: 1.5rem;
     font-weight: 700;
@@ -359,6 +382,7 @@ body {
     .nav-tabs-custom {
         flex-wrap: wrap;
     }
+    /* Em mobile, o menu central está oculto via d-none d-md-flex */
     
     .nav-tabs-custom .nav-link {
         padding: 0.5rem 1rem;

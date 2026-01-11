@@ -17,12 +17,12 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
 ?>
 <!-- Header -->
 <header class="header">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-8 col-md-3">
+    <div class="container-fluid ps-3 ps-md-4 pe-1 pe-md-0 position-relative">
+        <div class="header-bar container">
+            <div class="header-start d-flex align-items-center">
                 <h1 class="logo">⚖️ Precifex Jurídico</h1>
             </div>
-            <div class="col-md-6 d-none d-md-block">
+            <div class="header-center">
                 <!-- Menu de Navegação -->
                 <nav class="nav-tabs-custom d-none d-md-flex">
                     <a href="<?= $base_url ?>?aba=dashboard" class="nav-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>">
@@ -36,15 +36,17 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
                     </a>
                 </nav>
             </div>
-            <div class="col-4 col-md-3 text-end">
+            <div class="header-end d-flex align-items-center justify-content-end">
                 <div class="user-info">
                     <!-- Botão de menu (apenas mobile) -->
                     <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2 d-inline-flex d-md-none" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
                         <i class="bi bi-list"></i>
                     </button>
-                    <!-- Controles (apenas desktop) -->
-                    <!-- Perfil do usuário apenas no menu drawer -->
-                    <!-- Sair apenas no menu drawer -->
+                    <!-- Notificações (apenas desktop) -->
+                    <button type="button" class="btn btn-sm btn-outline-light d-inline-flex position-relative" title="Notificações">
+                        <i class="bi bi-bell"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">7</span>
+                    </button>
                 </div>
             </div>
         </div>
