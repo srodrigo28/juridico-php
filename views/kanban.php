@@ -10,6 +10,9 @@
         </div>
     </div>
 
+    <!-- Aviso quando não houver cards para o usuário -->
+    <div id="kanbanEmpty" class="alert alert-info d-none">Nenhum card para este usuário.</div>
+
     <div class="row g-3" id="kanbanBoard">
         <!-- Coluna: Tarefas -->
         <div class="col-md-4">
@@ -150,6 +153,7 @@
     const resetBtn = document.getElementById('resetKanbanBtn');
     const modalEl = document.getElementById('modalNovoCard');
     const formEl = document.getElementById('formNovoCard');
+        const emptyEl = document.getElementById('kanbanEmpty');
     const inputTitulo = document.getElementById('novoTitulo');
     const selectPrioridade = document.getElementById('novoPrioridade');
     const inputPrevista = document.getElementById('novoPrevista');
@@ -294,9 +298,26 @@
             // Ordenar e contar
             columns.forEach(sortColumn);
             updateCounts();
+            // Mostrar aviso se não houver cards
+            if(cards.length === 0){
+                if(emptyEl){
+                    emptyEl.textContent = 'Nenhum card para este usuário.';
+                    emptyEl.classList.remove('d-none');
+                    emptyEl.classList.remove('alert-warning');
+                    emptyEl.classList.add('alert-info');
+                }
+            } else {
+                emptyEl?.classList.add('d-none');
+            }
         }catch(e){
             // Silencioso no primeiro load
             console.warn('Falha ao carregar Kanban:', e.message);
+            if(emptyEl){
+                emptyEl.textContent = 'Erro ao carregar Kanban: ' + e.message;
+                emptyEl.classList.remove('d-none');
+                emptyEl.classList.remove('alert-info');
+                emptyEl.classList.add('alert-warning');
+            }
         }
     })();
 

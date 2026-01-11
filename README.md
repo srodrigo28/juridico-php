@@ -2,6 +2,12 @@
 
 Para rodar o projeto localmente sem redirecionar para produção, foi necessário ajustar `sistemas/config.php` em dois pontos. Abaixo seguem a referência de arquivo e linhas com o antes/depois.
 
+## rotas
+> * Criar novo usuário
+```
+http://localhost/www/juridico-php/index.php?aba=novo_usuario
+```
+
 ## Ajuste de URLs base
 
 - Arquivo: [sistemas/config.php](sistemas/config.php#L30-L60)
