@@ -14,7 +14,10 @@
         <!-- Coluna: Tarefas -->
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light fw-bold tarefas">Tarefas</div>
+                <div class="card-header bg-light fw-bold tarefas d-flex justify-content-between align-items-center">
+                    <span>Tarefas</span>
+                    <span class="badge rounded-pill count-badge count-badge-tarefas" id="count-tarefas">0</span>
+                </div>
                 <div class="card-body kanban-column" data-column="tarefas">
                     <div class="kanban-card priority-alta" draggable="true" data-priority="alta" data-date="2026-01-11">
                         <div class="d-flex justify-content-between align-items-center">
@@ -37,7 +40,10 @@
         <!-- Coluna: Em Progresso -->
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light fw-bold doing">Em Progresso</div>
+                <div class="card-header bg-light fw-bold doing d-flex justify-content-between align-items-center">
+                    <span>Em Progresso</span>
+                    <span class="badge rounded-pill count-badge count-badge-doing" id="count-doing">0</span>
+                </div>
                 <div class="card-body kanban-column" data-column="doing">
                     <div class="kanban-card priority-media" draggable="true" data-priority="media" data-date="2026-01-11">
                         <div class="d-flex justify-content-between align-items-center">
@@ -53,7 +59,10 @@
         <!-- Coluna: Concluído -->
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light fw-bold done">Concluído</div>
+                <div class="card-header bg-light fw-bold done d-flex justify-content-between align-items-center">
+                    <span>Concluído</span>
+                    <span class="badge rounded-pill count-badge count-badge-done" id="count-done">0</span>
+                </div>
                 <div class="card-body kanban-column" data-column="done">
                     <div class="kanban-card priority-baixa" draggable="true" data-priority="baixa" data-date="2026-01-09">
                         <div class="d-flex justify-content-between align-items-center">
@@ -107,6 +116,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-danger d-none" id="deleteFromEditBtn"><i class="bi bi-trash"></i> Excluir</button>
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Adicionar</button>
                 </div>
@@ -118,7 +128,7 @@
 
 <style>
 /* Estilos mínimos para Kanban */
-.kanban-column { min-height: 240px; display: flex; flex-direction: column; gap: .5rem; }
+.kanban-column { height: 90vh; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; }
 .kanban-card { background: #fff; border: 1px solid var(--border-color); border-radius: .5rem; padding: .5rem .75rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); cursor: grab; }
 .kanban-card:active { cursor: grabbing; }
 .kanban-column.drag-over { background: rgba(37,99,235,.06); outline: 2px dashed var(--border-color); }
@@ -140,6 +150,13 @@
 
 /* Descrição resumida no card */
 .card-desc{ font-size: .875rem; color: var(--secondary-color); margin-top: .25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Contadores por coluna */
+.count-badge{ font-weight: 600; }
+.count-badge-tarefas{ background: #dcfce7; color: #065f46; }
+.count-badge-doing{ background: #dbeafe; color: #1e40af; }
+.count-badge-done{ background: #e5e7eb; color: #334155; }
+
 </style>
 
 <script>
@@ -153,6 +170,15 @@
     const selectPrioridade = document.getElementById('novoPrioridade');
     const inputData = document.getElementById('novoData');
     const inputDesc = document.getElementById('novoDescricao');
+        let editingCard = null;
+        const deleteBtnEdit = document.getElementById('deleteFromEditBtn');
+
+        // Mapeamento dos badges de contagem
+        const countEls = {
+            tarefas: document.getElementById('count-tarefas'),
+            doing: document.getElementById('count-doing'),
+            done: document.getElementById('count-done')
+        };
 
   // Utilidades
   const priWeight = (p) => ({ alta: 3, media: 2, baixa: 1 }[p] || 0);
@@ -168,7 +194,7 @@
   function handleDrop(e){
     e.preventDefault();
     this.classList.remove('drag-over');
-    if(dragSrc){ this.appendChild(dragSrc); sortColumn(this); dragSrc = null; }
+        if(dragSrc){ this.appendChild(dragSrc); sortColumn(this); updateCounts(); dragSrc = null; }
   }
 
   function initCards(root){
@@ -176,6 +202,7 @@
       c.addEventListener('dragstart', handleDragStart);
       const dateSpan = c.querySelector('.card-date');
       if(dateSpan){ dateSpan.textContent = formatBR(dateSpan.dataset.date || dateSpan.textContent); }
+            injectActions(c);
     });
   }
 
@@ -192,6 +219,15 @@
     cards.forEach(c => column.appendChild(c));
   }
 
+    function updateCounts(){
+        columns.forEach(col => {
+            const key = col.dataset.column;
+            const count = col.querySelectorAll('.kanban-card').length;
+            const el = countEls[key];
+            if(el) el.textContent = count;
+        });
+    }
+
   columns.forEach(col => {
     col.addEventListener('dragover', handleDragOver);
     col.addEventListener('dragleave', handleDragLeave);
@@ -199,6 +235,7 @@
     sortColumn(col);
   });
   initCards(document);
+    updateCounts();
 
     // Abrir modal ao clicar em Novo card
     addBtn?.addEventListener('click', () => {
@@ -213,6 +250,15 @@
     });
 
     // Validar e criar card via modal
+    // reset modal texts on hide
+    modalEl?.addEventListener('hidden.bs.modal', () => {
+        document.getElementById('modalNovoCardLabel').textContent = 'Novo Card';
+        const submitBtn = formEl?.querySelector('button[type="submit"]');
+        if(submitBtn) submitBtn.textContent = 'Adicionar';
+        editingCard = null;
+        deleteBtnEdit?.classList.add('d-none');
+    });
+
     formEl?.addEventListener('submit', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -231,7 +277,40 @@
         const priLabel = { '1': 'Alta', '2': 'Média', '3': 'Baixa' };
         const prioridade = priMap[priSel] || 'media';
         const badgeClass = prioridade==='alta' ? 'badge-priority-alta' : prioridade==='media' ? 'badge-priority-media' : 'badge-priority-baixa';
+        if(editingCard){
+            // Atualizar card existente
+            const titleEl = editingCard.querySelector('.card-title');
+            const descEl = editingCard.querySelector('.card-desc');
+            const badgeEl = editingCard.querySelector('.badge');
+            const dateEl = editingCard.querySelector('.card-date');
 
+            // Atualiza dados
+            titleEl.textContent = title;
+            if(descEl) descEl.textContent = desc; else {
+                const newDesc = document.createElement('div');
+                newDesc.className = 'card-desc';
+                newDesc.textContent = desc;
+                editingCard.insertBefore(newDesc, editingCard.querySelector('.small.text-secondary.mt-1'));
+            }
+            badgeEl.textContent = priLabel[priSel];
+            badgeEl.className = `badge ${badgeClass}`;
+            editingCard.dataset.priority = prioridade;
+            editingCard.dataset.date = data;
+            dateEl.dataset.date = data;
+            dateEl.textContent = formatBR(data);
+
+            // Atualiza classes de prioridade
+            editingCard.classList.remove('priority-alta','priority-media','priority-baixa');
+            editingCard.classList.add(`priority-${prioridade}`);
+
+            const parentCol = editingCard.parentElement;
+            sortColumn(parentCol);
+            editingCard = null;
+            bootstrap.Modal.getInstance(modalEl)?.hide();
+            return;
+        }
+
+        // Criar novo card
         const card = document.createElement('div');
         card.className = `kanban-card priority-${prioridade}`;
         card.setAttribute('draggable', 'true');
@@ -242,7 +321,7 @@
             <div class=\"d-flex justify-content-between align-items-center\">\n        <span class=\"card-title\"></span>\n        <span class=\"badge ${badgeClass}\">${priLabel[priSel]}\</span>
             </div>
             <div class=\"card-desc\"></div>
-            <div class=\"small text-secondary mt-1\">Criado: <span class=\"card-date\" data-date=\"${data}\"></span></div>`;
+            <div class=\"small text-secondary mt-1 d-flex align-items-center justify-content-between\">\n              <span>Criado: <span class=\"card-date\" data-date=\"${data}\"></span></span>\n              <button type=\"button\" class=\"btn btn-sm btn-light view-card-btn\" title=\"Detalhes\"><i class=\"bi bi-eye\"></i></button>\n            </div>`;
 
         card.querySelector('.card-title').textContent = title;
         card.querySelector('.card-desc').textContent = desc;
@@ -250,15 +329,62 @@
         dateSpan.textContent = formatBR(data);
 
         card.addEventListener('dragstart', handleDragStart);
+        injectActions(card);
         const tarefas = document.querySelector('[data-column=\"tarefas\"]');
         tarefas.appendChild(card);
         sortColumn(tarefas);
+        updateCounts();
 
         // Fechar modal após adicionar
         bootstrap.Modal.getInstance(modalEl)?.hide();
     });
 
   resetBtn?.addEventListener('click', () => { location.reload(); });
+
+    // Injeta ou vincula o botão "olho" ao lado direito da data
+    function injectActions(card){
+        // Se já existe botão, apenas vincula o evento
+        let viewBtn = card.querySelector('.view-card-btn');
+        const dateRow = card.querySelector('.small.text-secondary.mt-1');
+        if(!viewBtn && dateRow){
+            dateRow.classList.add('d-flex','align-items-center','justify-content-between');
+            viewBtn = document.createElement('button');
+            viewBtn.type = 'button';
+            viewBtn.className = 'btn btn-sm btn-light view-card-btn';
+            viewBtn.title = 'Detalhes';
+            viewBtn.innerHTML = '<i class="bi bi-eye"></i>';
+            dateRow.appendChild(viewBtn);
+        }
+        viewBtn?.addEventListener('click', () => openEdit(card));
+    }
+
+    function openEdit(card){
+        // Preencher modal de edição diretamente
+        inputTitulo.value = card.querySelector('.card-title')?.textContent || '';
+        inputDesc.value = card.querySelector('.card-desc')?.textContent || '';
+        inputData.value = card.dataset.date || todayISO();
+        const priKey = (card.dataset.priority||'media');
+        const priToSel = { alta: '1', media: '2', baixa: '3' };
+        selectPrioridade.value = priToSel[priKey] || '2';
+        document.getElementById('modalNovoCardLabel').textContent = 'Editar Card';
+        const submitBtn = formEl?.querySelector('button[type="submit"]');
+        if(submitBtn) submitBtn.textContent = 'Salvar';
+        formEl.classList.remove('was-validated');
+        editingCard = card;
+        deleteBtnEdit?.classList.remove('d-none');
+        new bootstrap.Modal(modalEl).show();
+    }
+
+    deleteBtnEdit?.addEventListener('click', () => {
+        if(!editingCard) return;
+        if(confirm('Deseja excluir este card?')){
+            const parent = editingCard.parentElement;
+            editingCard.remove();
+            editingCard = null;
+            bootstrap.Modal.getInstance(modalEl)?.hide();
+            if(parent) { sortColumn(parent); updateCounts(); }
+        }
+    });
 })();
 </script>
 
