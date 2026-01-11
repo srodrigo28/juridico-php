@@ -320,6 +320,148 @@ try {
             
             echo json_encode(['success' => true, 'message' => 'Status atualizado']);
             break;
+
+        case 'cadastrar_evento':
+            // Adicionar movimentação (evento/prazo) a um processo existente do usuário
+            $processo_id = (int)($_POST['processo_id'] ?? 0);
+            $descricao = trim($_POST['descricao'] ?? '');
+            $data_inicial_str = trim($_POST['data_inicial'] ?? ''); // dd/mm/yyyy
+            $prazo_dias = (int)($_POST['prazo_dias'] ?? 0);
+            $tipo_contagem = ($_POST['tipo_contagem'] ?? 'uteis') === 'corridos' ? 'corridos' : 'uteis';
+            $metodologia = ($_POST['metodologia'] ?? 'exclui_inicio') === 'inclui_inicio' ? 'inclui_inicio' : 'exclui_inicio';
+            $data_final_str = trim($_POST['data_final'] ?? ''); // opcional dd/mm/yyyy
+
+            if (!$processo_id || !$descricao || !$data_inicial_str || $prazo_dias <= 0) {
+                throw new Exception('Dados insuficientes para cadastrar a movimentação');
+            }
+
+            // Verificar permissão: processo pertence ao usuário
+            $stmt = $pdo->prepare("SELECT id, tribunal FROM processos WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$processo_id, $usuario_id]);
+            $procRow = $stmt->fetch();
+            if (!$procRow) { throw new Exception('Processo não encontrado ou sem permissão'); }
+
+            // Converter data_inicial
+            $data_inicial_obj = DateTime::createFromFormat('d/m/Y', $data_inicial_str);
+            if (!$data_inicial_obj) { throw new Exception('Data inicial inválida'); }
+
+            // Calcular data_final se não informada
+            if ($data_final_str) {
+                $data_final_obj = DateTime::createFromFormat('d/m/Y', $data_final_str);
+                if (!$data_final_obj) { throw new Exception('Data final inválida'); }
+            } else {
+                $calculadora = new CalculadoraDatas($pdo);
+                $tipoConst = ($tipo_contagem === 'corridos') ? CalculadoraDatas::CONTAGEM_CORRIDOS : CalculadoraDatas::CONTAGEM_UTEIS;
+                $metodoConst = ($metodologia === 'inclui_inicio') ? CalculadoraDatas::METODOLOGIA_INICIO_INCLUSO : CalculadoraDatas::METODOLOGIA_INICIO_EXCLUSO;
+                $resultado = $calculadora->calcularDataFinal(
+                    $data_inicial_str,
+                    $prazo_dias,
+                    $tipoConst,
+                    $metodoConst,
+                    $procRow['tribunal'] ?? 'NACIONAL'
+                );
+                $data_final_obj = $resultado['data_final'];
+            }
+
+            // Ordem: próximo índice
+            $stmtOrd = $pdo->prepare("SELECT COALESCE(MAX(ordem),0)+1 AS prox FROM eventos WHERE processo_id = ?");
+            $stmtOrd->execute([$processo_id]);
+            $ordem = (int)$stmtOrd->fetchColumn();
+
+            // Inserir evento
+            $stmtIns = $pdo->prepare("INSERT INTO eventos (processo_id, descricao, data_inicial, prazo_dias, tipo_contagem, metodologia, data_final, status, ordem) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendente', ?)");
+            $stmtIns->execute([
+                $processo_id,
+                $descricao,
+                $data_inicial_obj->format('Y-m-d'),
+                $prazo_dias,
+                $tipo_contagem,
+                $metodologia,
+                $data_final_obj->format('Y-m-d'),
+                $ordem
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Movimentação cadastrada com sucesso']);
+            break;
+
+        case 'obter_evento':
+            $evento_id = (int)($_POST['evento_id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT e.*, p.tribunal, p.usuario_id FROM eventos e INNER JOIN processos p ON e.processo_id = p.id WHERE e.id = ? AND p.usuario_id = ?");
+            $stmt->execute([$evento_id, $usuario_id]);
+            $ev = $stmt->fetch();
+            if (!$ev) { throw new Exception('Evento não encontrado ou sem permissão'); }
+            $di = new DateTime($ev['data_inicial']);
+            $df = new DateTime($ev['data_final']);
+            echo json_encode(['success' => true, 'evento' => [
+                'id' => (int)$ev['id'],
+                'processo_id' => (int)$ev['processo_id'],
+                'descricao' => $ev['descricao'],
+                'data_inicial' => $di->format('d/m/Y'),
+                'prazo_dias' => (int)$ev['prazo_dias'],
+                'tipo_contagem' => $ev['tipo_contagem'],
+                'metodologia' => $ev['metodologia'],
+                'data_final' => $df->format('d/m/Y'),
+                'status' => $ev['status'],
+                'tribunal' => $ev['tribunal']
+            ]]);
+            break;
+
+        case 'atualizar_evento':
+            $evento_id = (int)($_POST['evento_id'] ?? 0);
+            // Permissão
+            $stmt = $pdo->prepare("SELECT e.id, p.tribunal FROM eventos e INNER JOIN processos p ON e.processo_id = p.id WHERE e.id = ? AND p.usuario_id = ?");
+            $stmt->execute([$evento_id, $usuario_id]);
+            $row = $stmt->fetch();
+            if (!$row) { throw new Exception('Evento não encontrado ou sem permissão'); }
+
+            $descricao = trim($_POST['descricao'] ?? '');
+            $data_inicial_str = trim($_POST['data_inicial'] ?? '');
+            $prazo_dias = (int)($_POST['prazo_dias'] ?? 0);
+            $tipo_contagem = ($_POST['tipo_contagem'] ?? 'uteis') === 'corridos' ? 'corridos' : 'uteis';
+            $metodologia = ($_POST['metodologia'] ?? 'exclui_inicio') === 'inclui_inicio' ? 'inclui_inicio' : 'exclui_inicio';
+            $data_final_str = trim($_POST['data_final'] ?? '');
+            if (!$descricao || !$data_inicial_str || $prazo_dias <= 0) { throw new Exception('Dados insuficientes'); }
+            $data_inicial_obj = DateTime::createFromFormat('d/m/Y', $data_inicial_str);
+            if (!$data_inicial_obj) { throw new Exception('Data inicial inválida'); }
+            if ($data_final_str) {
+                $data_final_obj = DateTime::createFromFormat('d/m/Y', $data_final_str);
+                if (!$data_final_obj) { throw new Exception('Data final inválida'); }
+            } else {
+                $calculadora = new CalculadoraDatas($pdo);
+                $tipoConst = ($tipo_contagem === 'corridos') ? CalculadoraDatas::CONTAGEM_CORRIDOS : CalculadoraDatas::CONTAGEM_UTEIS;
+                $metodoConst = ($metodologia === 'inclui_inicio') ? CalculadoraDatas::METODOLOGIA_INICIO_INCLUSO : CalculadoraDatas::METODOLOGIA_INICIO_EXCLUSO;
+                $resultado = $calculadora->calcularDataFinal(
+                    $data_inicial_str,
+                    $prazo_dias,
+                    $tipoConst,
+                    $metodoConst,
+                    $row['tribunal'] ?? 'NACIONAL'
+                );
+                $data_final_obj = $resultado['data_final'];
+            }
+            $stmtU = $pdo->prepare("UPDATE eventos SET descricao = ?, data_inicial = ?, prazo_dias = ?, tipo_contagem = ?, metodologia = ?, data_final = ? WHERE id = ?");
+            $stmtU->execute([
+                $descricao,
+                $data_inicial_obj->format('Y-m-d'),
+                $prazo_dias,
+                $tipo_contagem,
+                $metodologia,
+                $data_final_obj->format('Y-m-d'),
+                $evento_id
+            ]);
+            echo json_encode(['success' => true, 'message' => 'Evento atualizado com sucesso']);
+            break;
+
+        case 'excluir_evento':
+            $evento_id = (int)($_POST['evento_id'] ?? 0);
+            // Permissão
+            $stmt = $pdo->prepare("SELECT e.id FROM eventos e INNER JOIN processos p ON e.processo_id = p.id WHERE e.id = ? AND p.usuario_id = ?");
+            $stmt->execute([$evento_id, $usuario_id]);
+            if (!$stmt->fetch()) { throw new Exception('Evento não encontrado ou sem permissão'); }
+            $stmtDel = $pdo->prepare("DELETE FROM eventos WHERE id = ?");
+            $stmtDel->execute([$evento_id]);
+            echo json_encode(['success' => true, 'message' => 'Evento excluído']);
+            break;
             
         case 'calcular_data':
             $calculadora = new CalculadoraDatas($pdo);
@@ -343,6 +485,80 @@ try {
             $data_formatada = $data_final_obj->format('d/m/Y') . ' (' . $diaSemana . ')';
             
             echo json_encode(['success' => true, 'data_final' => $data_formatada]);
+            break;
+
+        case 'obter_resumo_processo':
+            // Retorna contagens de eventos do processo (total, pendentes, cumpridos, urgentes)
+            $processo_id = (int)($_POST['processo_id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT id FROM processos WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$processo_id, $usuario_id]);
+            if (!$stmt->fetch()) { throw new Exception('Processo não encontrado ou sem permissão'); }
+
+            $stmt2 = $pdo->prepare("SELECT 
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN status='pendente' THEN 1 ELSE 0 END) AS pendentes,
+                    SUM(CASE WHEN status='cumprido' THEN 1 ELSE 0 END) AS cumpridos,
+                    SUM(CASE WHEN status='pendente' AND data_final <= DATE_ADD(CURDATE(), INTERVAL 14 DAY) THEN 1 ELSE 0 END) AS urgentes
+                FROM eventos WHERE processo_id = ?
+            ");
+            $stmt2->execute([$processo_id]);
+            $res = $stmt2->fetch();
+
+            // Próximo vencimento pendente
+            $stmt3 = $pdo->prepare("SELECT id, descricao, data_final FROM eventos WHERE processo_id = ? AND status = 'pendente' ORDER BY data_final ASC LIMIT 1");
+            $stmt3->execute([$processo_id]);
+            $prox = $stmt3->fetch();
+            $proximo = null;
+            if ($prox) {
+                $hoje = new DateTime();
+                $df = new DateTime($prox['data_final']);
+                $diff = $hoje->diff($df);
+                $dias_restantes = ($df < $hoje) ? -$diff->days : $diff->days;
+                $diasSemana = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+                $dia_semana = $diasSemana[(int)$df->format('w')];
+                $proximo = [
+                    'id' => (int)$prox['id'],
+                    'descricao' => $prox['descricao'],
+                    'data_final' => $df->format('d/m/Y'),
+                    'dias_restantes' => $dias_restantes,
+                    'dia_semana' => $dia_semana
+                ];
+            }
+            echo json_encode(['success' => true, 'resumo' => [
+                'total' => (int)($res['total'] ?? 0),
+                'pendentes' => (int)($res['pendentes'] ?? 0),
+                'cumpridos' => (int)($res['cumpridos'] ?? 0),
+                'urgentes' => (int)($res['urgentes'] ?? 0),
+            ], 'proximo' => $proximo]);
+            break;
+
+        case 'obter_eventos_processo':
+            // Lista completa de eventos/prazos do processo, ordenados por data_final
+            $processo_id = (int)($_POST['processo_id'] ?? 0);
+            $stmt = $pdo->prepare("SELECT id FROM processos WHERE id = ? AND usuario_id = ?");
+            $stmt->execute([$processo_id, $usuario_id]);
+            if (!$stmt->fetch()) { throw new Exception('Processo não encontrado ou sem permissão'); }
+
+            $stmt2 = $pdo->prepare("SELECT id, descricao, data_inicial, prazo_dias, tipo_contagem, metodologia, data_final, status
+                                     FROM eventos WHERE processo_id = ? ORDER BY data_final ASC, ordem ASC, id ASC");
+            $stmt2->execute([$processo_id]);
+            $rows = $stmt2->fetchAll();
+            $eventos = [];
+            foreach ($rows as $ev) {
+                $di = new DateTime($ev['data_inicial']);
+                $df = new DateTime($ev['data_final']);
+                $eventos[] = [
+                    'id' => (int)$ev['id'],
+                    'descricao' => $ev['descricao'],
+                    'data_inicial' => $di->format('d/m/Y'),
+                    'prazo_dias' => (int)$ev['prazo_dias'],
+                    'tipo_contagem' => $ev['tipo_contagem'],
+                    'metodologia' => $ev['metodologia'],
+                    'data_final' => $df->format('d/m/Y'),
+                    'status' => $ev['status']
+                ];
+            }
+            echo json_encode(['success' => true, 'eventos' => $eventos]);
             break;
             
         // ========== FINANCEIRO ==========

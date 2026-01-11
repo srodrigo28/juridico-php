@@ -8,6 +8,11 @@ http://localhost/www/juridico-php/scripts/criar_admin.php
 http://localhost/www/juridico-php/scripts/seed-start.php
 ```
 
+## Copilot
+´´´
+https://github.com/settings/billing/budgets
+´´´
+
 OK: Admin criado/atualizado.
 Login: admin@local.test
 Senha: Admin123!

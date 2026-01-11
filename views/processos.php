@@ -81,7 +81,7 @@ $total_processos = (int)$stmt_total_proc->fetchColumn();
                     </thead>
                     <tbody>
                         <?php foreach ($processos as $proc): ?>
-                        <tr>
+                        <tr data-proc-id="<?= $proc['id'] ?>" class="proc-row">
                             <td>
                                 <strong><?= sanitizar($proc['numero_processo']) ?></strong>
                                 <?php if ($proc['prazos_urgentes'] > 0): ?>
@@ -101,6 +101,11 @@ $total_processos = (int)$stmt_total_proc->fetchColumn();
                             <td>
                                 <button type="button" class="btn btn-sm btn-info" onclick="visualizarProcesso(<?= $proc['id'] ?>)" title="Visualizar">
                                     <i class="bi bi-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" title="Adicionar movimentação"
+                                        data-bs-toggle="modal" data-bs-target="#modalNovaMovimentacao"
+                                        data-proc-id="<?= $proc['id'] ?>" data-proc-numero="<?= addslashes($proc['numero_processo']) ?>">
+                                    <i class="bi bi-plus-lg"></i>
                                 </button>
                                 <?php 
                                     $wa_raw = $proc['cliente_celular'] ?? ($proc['cliente_whatsapp'] ?? ($proc['cliente_telefone'] ?? ''));
@@ -216,6 +221,9 @@ if (!empty($prazos_urgentes)):
                 <button type="button" class="btn btn-danger me-auto" id="btnExcluirProcesso" style="display:none" onclick="excluirProcesso(document.getElementById('processoIdEdicao').value)">
                     <i class="bi bi-trash"></i> Excluir
                 </button>
+                <button type="button" class="btn btn-outline-secondary" id="btnAbrirMovimentacoes">
+                    <i class="bi bi-list-task"></i> Movimentações
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                 <button type="button" class="btn btn-outline-primary" id="btnEditarProcesso" onclick="toggleEdicaoProcesso(true)">
                     <i class="bi bi-pencil"></i> Editar
@@ -301,92 +309,52 @@ if (!empty($prazos_urgentes)):
     </div>
 </div>
 
+
+<?php include __DIR__ . '/eventos.php'; ?>
+
 <script>
 let contadorEventos = 0;
 
+
+// --- Garantir que salvarNovoEvento está no escopo global ---
+
+
 // Dados auxiliares no front (tribunais e clientes) para montar selects na edição
-const TRIBUNAIS = ['NACIONAL', <?php foreach ($tribunais as $t) { echo "'" . $t['abrangencia'] . "',"; } ?>];
-const CLIENTES_ATIVOS = [
-    <?php foreach ($lista_clientes as $cli) { 
-        echo '{id:'.(int)$cli['id'].',nome:"'.addslashes($cli['nome']).'"},';
-    } ?>
-];
+// Garantir strings JS válidas usando json_encode
+const TRIBUNAIS = <?= json_encode(array_merge(['NACIONAL'], array_map(function($t){return $t['abrangencia'];}, $tribunais))) ?>;
+const CLIENTES_ATIVOS = <?= json_encode(array_map(function($cli){return ['id'=>(int)$cli['id'],'nome'=>$cli['nome']];}, $lista_clientes)) ?>;
 
 function adicionarEvento() {
     contadorEventos++;
-    const html = `
-        <div class="card mb-2" id="evento-${contadorEventos}">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <label class="form-label">Descrição</label>
-                        <input type="text" class="form-control" name="eventos[${contadorEventos}][descricao]" placeholder="Ex: Contestação">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Data Inicial</label>
-                        <input type="text" class="form-control" name="eventos[${contadorEventos}][data_inicial]" placeholder="dd/mm/aaaa">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Prazo (dias)</label>
-                        <input type="number" class="form-control" name="eventos[${contadorEventos}][prazo_dias]" min="1">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Contagem</label>
-                        <select class="form-select" name="eventos[${contadorEventos}][tipo_contagem]">
-                            <option value="uteis">Úteis</option>
-                            <option value="corridos">Corridos</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Metodologia</label>
-                        <select class="form-select" name="eventos[${contadorEventos}][metodologia]">
-                            <option value="exclui_inicio">Exclui início</option>
-                            <option value="inclui_inicio">Inclui início</option>
-                        </select>
-                    </div>
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="button" class="btn btn-sm btn-danger" onclick="removerEvento(${contadorEventos})">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
+    const id = `evento-${contadorEventos}`;
+    const container = document.getElementById('eventosContainer');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'card mb-2';
+    div.id = id;
+    div.innerHTML = `
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" name="eventos[${contadorEventos}][descricao]" placeholder="Descrição" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" name="eventos[${contadorEventos}][data_inicial]" value="${getTodayISO()}" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" name="eventos[${contadorEventos}][prazo_dias]" min="1" placeholder="Prazo" required>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <select class="form-select" name="eventos[${contadorEventos}][tipo_contagem]">
+                        <option value="uteis">Dias úteis</option>
+                        <option value="corridos">Dias corridos</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-danger" onclick="document.getElementById('${id}').remove()">Remover</button>
                 </div>
             </div>
         </div>
     `;
-    document.getElementById('eventosContainer').insertAdjacentHTML('beforeend', html);
-}
-
-function removerEvento(id) {
-    document.getElementById(`evento-${id}`).remove();
-}
-
-async function salvarProcesso() {
-    const form = document.getElementById('formNovoProcesso');
-    const formData = new FormData(form);
-    formData.append('action', 'cadastrar_processo');
-    formData.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
-    // normalizar valor da causa para formato numérico com ponto
-    if (formData.has('valor_causa')){
-        formData.set('valor_causa', normalizeCurrencyToEN(formData.get('valor_causa')));
-    }
-    
-    try {
-        const response = await fetch('', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            mostrarSucesso('Processo cadastrado com sucesso!');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            mostrarErro('Erro: ' + result.error);
-        }
-    } catch (error) {
-        mostrarErro('Erro ao salvar processo');
-    }
+    container.appendChild(div);
 }
 
 async function excluirProcesso(id) {
@@ -538,18 +506,398 @@ function initClienteSearch(context){
 
 // Adicionar primeiro evento automaticamente
 document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('modalNovoProcesso')) {
-        adicionarEvento();
-        attachProcessMasks(document.getElementById('formNovoProcesso'));
-        initClienteSearch(document.getElementById('formNovoProcesso'));
+    const novoEvtModalEl = document.getElementById('modalNovoEvento');
+    if (novoEvtModalEl) {
+        novoEvtModalEl.addEventListener('show.bs.modal', function(){
+            const pid = document.getElementById('movProcessoId')?.value || '';
+            const trib = document.getElementById('movTribunal')?.value || 'NACIONAL';
+            const procIdEl = document.getElementById('novoEvtProcessoId');
+            const tribEl = document.getElementById('novoEvtTribunal');
+            if (procIdEl) procIdEl.value = pid;
+            if (tribEl) tribEl.value = trib;
+            const form = document.getElementById('formNovoEvento');
+            if (form) {
+                form.reset();
+                const di = form.querySelector('input[name="data_inicial"]');
+                if (di) di.value = getTodayISO();
+                const df = form.querySelector('input[name="data_final"]');
+                if (df) attachDateMaskBR(df);
+            }
+        });
     }
-    const buscarProcInput = document.getElementById('buscarProcessoCliente');
-    if (buscarProcInput){
-        buscarProcInput.addEventListener('input', filtrarProcessosPorCliente);
-    }
-});
+    document.getElementById('movProcessoId').value = processoId;
+    document.getElementById('movProcNumero').textContent = numeroProcesso ? `(${numeroProcesso})` : '';
+    // Buscar tribunal do processo para cálculo preciso (para uso no modal de Novo Evento)
+    (async () => {
+        try {
+            const fd = new FormData();
+            fd.append('action','obter_processo');
+            fd.append('processo_id', processoId);
+            fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+            const r = await fetch('', { method:'POST', body: fd });
+            const j = await r.json();
+            if (j.success && j.processo) {
+                document.getElementById('movTribunal').value = j.processo.tribunal || 'NACIONAL';
+            } else {
+                document.getElementById('movTribunal').value = 'NACIONAL';
+            }
+        } catch(e){
+            document.getElementById('movTribunal').value = 'NACIONAL';
+        }
+    })();
+    // Carregar eventos existentes
+    carregarEventosProcesso(processoId);
+    // Não abre aqui; o modal será aberto pelo Bootstrap via data attributes
+}
 
-function filtrarProcessosPorCliente(){
+// Abertura programática (compatibilidade)
+function abrirModalMovimentacao(processoId, numeroProcesso){
+    popularModalMovimentacao(processoId, numeroProcesso);
+    const modal = new bootstrap.Modal(document.getElementById('modalNovaMovimentacao'));
+    modal.show();
+}
+
+function initNovoEventoDatePicker(){ /* não utilizado com type=date */ }
+
+function isoToBR(iso){
+    // iso: yyyy-mm-dd → dd/mm/yyyy
+    const parts = String(iso||'').split('-');
+    if (parts.length !== 3) return '';
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+function getTodayISO(){
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+function brToISO(br){
+    // br: dd/mm/yyyy → yyyy-mm-dd
+    const v = String(br||'').trim();
+    const m = v.match(/^([0-3]\d)\/([0-1]\d)\/(\d{4})$/);
+    if (!m) return '';
+    const dd = m[1], mm = m[2], yyyy = m[3];
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function escapeHtml(s){
+    return String(s||'').replace(/[&<>"]/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]); });
+}
+
+function carregarEventosProcesso(processoId){
+    const container = document.getElementById('movEventosContainer');
+    if (!container) return;
+    container.innerHTML = '<tr><td colspan="7" class="text-muted">Carregando eventos...</td></tr>';
+    (async () => {
+        try {
+            const fd = new FormData();
+            fd.append('action','obter_eventos_processo');
+            fd.append('processo_id', processoId);
+            const csrfEl = document.querySelector('[name="csrf_token"]');
+            if (csrfEl) fd.append('csrf_token', csrfEl.value);
+            const r = await fetch('', { method:'POST', body: fd });
+            const j = await r.json();
+            if (j.success){
+                renderEventosLista(j.eventos||[]);
+            } else {
+                container.innerHTML = '<tr><td colspan="7" class="text-danger">Erro ao carregar eventos</td></tr>';
+            }
+        } catch(e){
+            container.innerHTML = '<tr><td colspan="7" class="text-danger">Erro ao carregar eventos</td></tr>';
+        }
+    })();
+}
+
+function renderEventosLista(lista){
+    const container = document.getElementById('movEventosContainer');
+    if (!container) return;
+    if (!lista.length){
+        container.innerHTML = '<tr><td colspan="7" class="text-muted">Nenhum evento cadastrado</td></tr>';
+        return;
+    }
+    container.innerHTML = lista.map(ev => {
+        const statusClass = ev.status === 'pendente' ? 'bg-primary' : (ev.status === 'cumprido' ? 'bg-success' : 'bg-danger');
+        const contagemLabel = ev.tipo_contagem === 'corridos' ? 'Corridos' : 'Úteis';
+        const metodoLabel = ev.metodologia === 'inclui_inicio' ? 'Inclui início' : 'Exclui início';
+        const toggleLabel = ev.status === 'pendente' ? 'Cumprir' : 'Pendente';
+        const toggleNext = ev.status === 'pendente' ? 'cumprido' : 'pendente';
+        return `
+            <tr>
+                <td>${escapeHtml(ev.descricao||'')}</td>
+                <td>${ev.data_inicial||''}</td>
+                <td>${ev.prazo_dias||0} dia(s)</td>
+                <td>${contagemLabel}</td>
+                <td>${metodoLabel}</td>
+                <td>${ev.data_final||''}</td>
+                <td>
+                    <span class="badge ${statusClass}">${formatStatusLabel(ev.status||'pendente')}</span>
+                    <div class="btn-group btn-group-sm ms-2" role="group">
+                        <button type="button" class="btn btn-outline-secondary" title="Editar" onclick="abrirEditarEvento(${ev.id})"><i class="bi bi-pencil"></i></button>
+                        <button type="button" class="btn btn-outline-success" title="${toggleLabel}" onclick="atualizarStatusEvento(${ev.id}, '${toggleNext}')"><i class="bi bi-check2"></i></button>
+                        <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="excluirEvento(${ev.id})"><i class="bi bi-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function focusMovForm(){
+    const modal = new bootstrap.Modal(document.getElementById('modalNovoEvento'));
+    // Preencher ids ocultos
+    document.getElementById('novoEvtProcessoId').value = document.getElementById('movProcessoId').value;
+    document.getElementById('novoEvtTribunal').value = document.getElementById('movTribunal').value || 'NACIONAL';
+    // reset e máscaras
+    const form = document.getElementById('formNovoEvento');
+    if (form) { form.reset();
+        const df = form.querySelector('input[name="data_final"]');
+        if (df) attachDateMaskBR(df);
+    }
+    modal.show();
+}
+
+function calcularDataFinalNovoEvento(){
+    const form = document.getElementById('formNovoEvento');
+    const fd = new FormData();
+    fd.append('action','calcular_data');
+    fd.append('data_inicial', isoToBR(form.data_inicial.value));
+    fd.append('prazo_dias', form.prazo_dias.value);
+    fd.append('tipo_contagem', form.tipo_contagem.value);
+    fd.append('metodologia', form.metodologia.value);
+    fd.append('tribunal', document.getElementById('novoEvtTribunal').value || 'NACIONAL');
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    (async ()=>{
+        try {
+            const r = await fetch('', { method:'POST', body: fd });
+            const j = await r.json();
+            if (j.success) {
+                // j.data_final já vem em dd/mm/aaaa; converter para yyyy-mm-dd para o input type=date
+                document.getElementById('novoEvtDataFinal').value = brToISO(j.data_final);
+            }
+            else { mostrarErro(j.error||'Falha ao calcular'); }
+        } catch(e){ mostrarErro('Erro ao calcular data'); }
+    })();
+}
+
+
+
+function carregarResumoPrazos(processoId){
+    (async ()=>{
+        try {
+            const fdr = new FormData();
+            fdr.append('action','obter_resumo_processo');
+            fdr.append('processo_id', processoId);
+            fdr.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+            const rr = await fetch('', { method:'POST', body: fdr });
+            const jr = await rr.json();
+            if (jr.success && jr.resumo){
+                const res = jr.resumo;
+                const contEl = document.getElementById('movInfoPrazosResumo');
+                if (contEl){
+                    contEl.innerHTML = `
+                        <span class=\"badge bg-light text-dark me-1\">Total: ${res.total}</span>
+                        <span class=\"badge bg-primary me-1\">Pendentes: ${res.pendentes}</span>
+                        <span class=\"badge bg-success me-1\">Cumpridos: ${res.cumpridos}</span>
+                        <span class=\"badge bg-danger\">Urgentes: ${res.urgentes}</span>
+                    `;
+                }
+                const proxEl = document.getElementById('movInfoProximo');
+                if (proxEl){
+                    const p = jr.proximo;
+                    if (p){
+                        const badgeClass = (p.dias_restantes < 0) ? 'bg-danger' : (p.dias_restantes <= 3 ? 'bg-warning text-dark' : 'bg-info');
+                        const diaSemana = p.dia_semana ? ` (${p.dia_semana})` : '';
+                        proxEl.innerHTML = `
+                            <span class=\"small text-muted\">Próximo vencimento</span>
+                            <div>
+                                <span class=\"badge ${badgeClass} me-1\">${p.data_final}${diaSemana}</span>
+                                <span class=\"small\">${escapeHtml(p.descricao || '')}</span>
+                            </div>
+                        `;
+                    } else {
+                        proxEl.innerHTML = `<span class=\"small text-muted\">Próximo vencimento</span><div>—</div>`;
+                    }
+                }
+            }
+        } catch(e){}
+    })();
+}
+
+async function abrirEditarEvento(eventoId){
+    const fd = new FormData();
+    fd.append('action','obter_evento');
+    fd.append('evento_id', eventoId);
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try {
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            const ev = j.evento;
+            const form = document.getElementById('formEditarEvento');
+            document.getElementById('editarEvtId').value = ev.id;
+            form.descricao.value = ev.descricao||'';
+            form.data_inicial.value = ev.data_inicial||'';
+            form.prazo_dias.value = ev.prazo_dias||'';
+            form.tipo_contagem.value = ev.tipo_contagem||'uteis';
+            form.metodologia.value = ev.metodologia||'exclui_inicio';
+            form.data_final.value = ev.data_final||'';
+            // máscara
+            const di = form.querySelector('input[name="data_inicial"]');
+            const df = form.querySelector('input[name="data_final"]');
+            [di, df].forEach(inp => { if (inp) attachDateMaskBR(inp); });
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarEvento'));
+            modal.show();
+        } else { mostrarErro(j.error||'Falha ao obter evento'); }
+    } catch(e){ mostrarErro('Erro ao obter evento'); }
+}
+
+function calcularDataFinalEditarEvento(){
+    const form = document.getElementById('formEditarEvento');
+    const fd = new FormData();
+    fd.append('action','calcular_data');
+    fd.append('data_inicial', form.data_inicial.value);
+    fd.append('prazo_dias', form.prazo_dias.value);
+    fd.append('tipo_contagem', form.tipo_contagem.value);
+    fd.append('metodologia', form.metodologia.value);
+    fd.append('tribunal', document.getElementById('movTribunal').value || 'NACIONAL');
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    (async ()=>{
+        try {
+            const r = await fetch('', { method:'POST', body: fd });
+            const j = await r.json();
+            if (j.success) { document.getElementById('editarEvtDataFinal').value = j.data_final; }
+            else { mostrarErro(j.error||'Falha ao calcular'); }
+        } catch(e){ mostrarErro('Erro ao calcular data'); }
+    })();
+}
+
+async function salvarEdicaoEvento(){
+    const form = document.getElementById('formEditarEvento');
+    if (!form.descricao.value.trim() || !form.data_inicial.value.trim() || !form.prazo_dias.value.trim()){
+        mostrarErro('Preencha descrição, data inicial e prazo.');
+        return;
+    }
+    const fd = new FormData(form);
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try {
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            mostrarSucesso('Evento atualizado!');
+            const pid = document.getElementById('movProcessoId').value;
+            carregarEventosProcesso(pid);
+            carregarResumoPrazos(pid);
+            bootstrap.Modal.getInstance(document.getElementById('modalEditarEvento')).hide();
+        } else { mostrarErro(j.error||'Falha ao salvar'); }
+    } catch(e){ mostrarErro('Erro ao salvar'); }
+}
+
+async function atualizarStatusEvento(eventoId, status){
+    const fd = new FormData();
+    fd.append('action','atualizar_status_evento');
+    fd.append('evento_id', eventoId);
+    fd.append('status', status);
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try {
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            const pid = document.getElementById('movProcessoId').value;
+            carregarEventosProcesso(pid);
+            carregarResumoPrazos(pid);
+        } else { mostrarErro(j.error||'Falha ao atualizar'); }
+    } catch(e){ mostrarErro('Erro ao atualizar'); }
+}
+
+async function excluirEvento(eventoId){
+    if (!confirm('Excluir este evento?')) return;
+    const fd = new FormData();
+    fd.append('action','excluir_evento');
+    fd.append('evento_id', eventoId);
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try {
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            const pid = document.getElementById('movProcessoId').value;
+            carregarEventosProcesso(pid);
+            carregarResumoPrazos(pid);
+        } else { mostrarErro(j.error||'Falha ao excluir'); }
+    } catch(e){ mostrarErro('Erro ao excluir'); }
+}
+
+async function calcularDataFinalMovimentacao(){
+    const form = document.getElementById('formNovaMovimentacao');
+    const fd = new FormData();
+    fd.append('action','calcular_data');
+    fd.append('data_inicial', form.data_inicial.value);
+    fd.append('prazo_dias', form.prazo_dias.value);
+    fd.append('tipo_contagem', form.tipo_contagem.value);
+    fd.append('metodologia', form.metodologia.value);
+    // Usar tribunal do processo
+    fd.append('tribunal', document.getElementById('movTribunal').value || 'NACIONAL');
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try{
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            document.getElementById('movDataFinal').value = j.data_final;
+        } else {
+            mostrarErro(j.error||'Falha ao calcular data final');
+        }
+    } catch(e){
+        mostrarErro('Erro ao calcular data final');
+    }
+}
+
+function statusBadgeClass(status){
+    switch (status) {
+        case 'em_andamento': return 'bg-primary';
+        case 'suspenso': return 'bg-warning text-dark';
+        case 'arquivado': return 'bg-secondary';
+        default: return 'bg-secondary';
+    }
+}
+function formatStatusLabel(status){
+    return String(status||'').replace(/_/g,' ').replace(/(^|\s)\S/g, s=>s.toUpperCase()) || 'Em Andamento';
+}
+
+async function salvarMovimentacao(){
+    const form = document.getElementById('formNovaMovimentacao');
+    // validações básicas
+    if (!form.descricao.value.trim() || !form.data_inicial.value.trim() || !form.prazo_dias.value.trim()){
+        mostrarErro('Preencha descrição, data inicial e prazo.');
+        return;
+    }
+    const fd = new FormData(form);
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try{
+        const r = await fetch('', { method:'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            mostrarSucesso('Movimentação adicionada!');
+            setTimeout(()=> location.reload(), 1200);
+        } else {
+            mostrarErro(j.error||'Falha ao salvar movimentação');
+        }
+    } catch(e){
+        mostrarErro('Erro ao salvar movimentação');
+    }
+}
+
+// Máscara simples para datas no formato dd/mm/aaaa
+function attachDateMaskBR(input){
+    input.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '').slice(0,8);
+        const parts = [];
+        if (v.length >= 2) { parts.push(v.slice(0,2)); }
+        if (v.length >= 4) { parts.push(v.slice(2,4)); }
+        if (v.length > 4) { parts.push(v.slice(4)); }
+        e.target.value = parts.join('/');
+    });
+}
+
     const q = (document.getElementById('buscarProcessoCliente').value || '').toLowerCase().trim();
     const linhas = document.querySelectorAll('#tabelaProcessos tbody tr');
     let visiveis = 0;
@@ -649,6 +997,11 @@ async function visualizarProcesso(id){
         if (valorInicialEl) {
             valorInicialEl.value = maskCurrencyBR(valorInicialEl.value);
         }
+        // Configurar botão de Movimentações para abrir modal sobreposto
+        const btnMov = document.getElementById('btnAbrirMovimentacoes');
+        if (btnMov){
+            btnMov.onclick = () => abrirModalMovimentacao(p.id, p.numero_processo||'');
+        }
         // Mostrar modal
         document.getElementById('btnEditarProcesso').style.display = '';
         document.getElementById('btnSalvarProcesso').style.display = 'none';
@@ -671,25 +1024,53 @@ function toggleEdicaoProcesso(ativar){
     document.getElementById('btnExcluirProcesso').style.display = ativar ? '' : 'none';
 }
 
-async function salvarEdicaoProcesso(){
+async function salvarEdicaoProcesso() {
     const form = document.getElementById('formVisualizarEditarProcesso');
     const fd = new FormData(form);
     fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
     // normalizar valor da causa para formato numérico com ponto
-    if (fd.has('valor_causa')){
+    if (fd.has('valor_causa')) {
         fd.set('valor_causa', normalizeCurrencyToEN(fd.get('valor_causa')));
     }
+    try {
+        const r = await fetch('', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (j.success) {
+            mostrarSucesso('Processo atualizado com sucesso!');
+            setTimeout(function () { location.reload(); }, 1200);
+        } else {
+            mostrarErro('Erro: ' + (j.error || 'Falha ao atualizar'));
+        }
+    } catch (e) {
+        mostrarErro('Erro ao salvar alterações');
+    }
+}
+
+
+// Definir apenas uma vez no escopo global
+window.salvarNovoEvento = async function(){
+    const form = document.getElementById('formNovoEvento');
+    if (!form.descricao.value.trim() || !form.data_inicial.value.trim() || !form.prazo_dias.value.trim()){
+        mostrarErro('Preencha descrição, data inicial e prazo.');
+        return;
+    }
+    const fd = new FormData(form);
+    // Converter datas ISO para BR antes de enviar
+    fd.set('data_inicial', isoToBR(form.data_inicial.value));
+    if (form.data_final.value) fd.set('data_final', isoToBR(form.data_final.value));
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
     try {
         const r = await fetch('', { method:'POST', body: fd });
         const j = await r.json();
         if (j.success){
-            mostrarSucesso('Processo atualizado com sucesso!');
-            setTimeout(()=> location.reload(), 1200);
-        } else {
-            mostrarErro('Erro: ' + (j.error||'Falha ao atualizar'));
-        }
-    } catch(e){
-        mostrarErro('Erro ao salvar alterações');
-    }
+            mostrarSucesso('Evento criado!');
+            const pid = document.getElementById('movProcessoId').value;
+            carregarEventosProcesso(pid);
+            carregarResumoPrazos(pid);
+            bootstrap.Modal.getInstance(document.getElementById('modalNovoEvento')).hide();
+        } else { mostrarErro(j.error||'Falha ao salvar'); }
+    } catch(e){ mostrarErro('Erro ao salvar'); }
 }
+
+console.log('Script de processos carregado, salvarNovoEvento:', typeof window.salvarNovoEvento);
 </script>
