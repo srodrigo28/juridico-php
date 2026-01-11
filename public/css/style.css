@@ -9,6 +9,9 @@
     --primary-color: #2563eb;
     --secondary-color: #64748b;
     --success-color: #10b981;
+    --success-bg: #f0fdf4; /* verde clarinho para background */
+    --success-bg-hover: #dcfce7; /* hover mais destacado */
+    --success-border-color: #86efac; /* borda suave em verde */
     --danger-color: #ef4444;
     --warning-color: #f59e0b;
     --info-color: #3b82f6;
@@ -400,6 +403,45 @@ body {
 .mt-2 { margin-top: 0.5rem !important; }
 
 /* Mobile Drawer */
+/* Autocomplete de Clientes */
+.cliente-suggestions {
+    position: relative;
+    margin-top: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+.cliente-suggestions .cliente-suggestion {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid transparent;
+    background-color: var(--success-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--dark-text);
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+.cliente-suggestions .cliente-suggestion:hover {
+    background-color: var(--success-bg-hover);
+    border-color: var(--success-border-color);
+}
+.cliente-suggestions .cliente-suggestion.disabled {
+    color: var(--secondary-color);
+    cursor: default;
+    background-color: var(--light-bg);
+    border-color: var(--border-color);
+}
+
+.cliente-suggestions .cliente-suggestion i {
+    margin-right: 6px;
+    color: var(--success-color);
+}
 .drawer-backdrop {
     position: fixed;
     inset: 0;

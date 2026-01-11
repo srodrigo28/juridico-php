@@ -236,12 +236,13 @@ if (!empty($prazos_urgentes)):
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Cliente</label>
-                            <select class="form-select" name="cliente_id">
-                                <option value="">Sem cliente vinculado</option>
-                                <?php foreach ($lista_clientes as $cli): ?>
-                                    <option value="<?= $cli['id'] ?>"><?= sanitizar($cli['nome']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="clienteSearchNovo" data-cliente-search data-target-hidden="#clienteIdNovo" data-suggestions="#clienteSugestoesNovo" placeholder="Buscar cliente por nome">
+                            </div>
+                            <div class="form-text"><span data-cliente-search-status>Digite para filtrar clientes</span></div>
+                            <input type="hidden" name="cliente_id" id="clienteIdNovo" value="">
+                            <div class="cliente-suggestions" id="clienteSugestoesNovo"></div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Vara</label>
@@ -452,11 +453,68 @@ function attachProcessMasks(formEl){
     }
 }
 
+// Busca e filtro de clientes por nome nos selects
+function initClienteSearch(context){
+    if (!context) return;
+    const inputs = context.querySelectorAll('[data-cliente-search]');
+    inputs.forEach(inp => {
+        const hiddenSel = inp.getAttribute('data-target-hidden');
+        const suggSel = inp.getAttribute('data-suggestions');
+        const hidden = hiddenSel ? context.querySelector(hiddenSel) : context.querySelector('input[name="cliente_id"]');
+        const sugg = suggSel ? context.querySelector(suggSel) : null;
+        const statusEl = inp.closest('.col-md-6, .col-md-4')?.querySelector('[data-cliente-search-status]')
+            || context.querySelector('[data-cliente-search-status]');
+        if (!hidden) return;
+        function renderSuggestions(list){
+            if (!sugg) return;
+            if (!list.length){
+                sugg.innerHTML = '<div class="cliente-suggestion disabled">Nenhum cliente encontrado</div>';
+                return;
+            }
+            sugg.innerHTML = list.map(c => `
+                <button type="button" class="cliente-suggestion" data-id="${c.id}" data-nome="${c.nome}">
+                    <i class="bi bi-person"></i> ${c.nome}
+                </button>
+            `).join('');
+            sugg.querySelectorAll('.cliente-suggestion').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    hidden.value = btn.getAttribute('data-id');
+                    inp.value = btn.getAttribute('data-nome');
+                    if (statusEl) statusEl.textContent = `Selecionado: ${btn.getAttribute('data-nome')}`;
+                    if (sugg) sugg.innerHTML = '';
+                });
+            });
+        }
+        inp.addEventListener('input', () => {
+            hidden.value = '';
+            const q = inp.value.trim().toLowerCase();
+            const filtered = CLIENTES_ATIVOS.filter(c => c.nome.toLowerCase().includes(q));
+            if (statusEl){
+                statusEl.textContent = filtered.length ? `${filtered.length} resultado(s)` : 'Nenhum cliente encontrado';
+            }
+            renderSuggestions(filtered);
+        });
+        inp.addEventListener('focus', () => {
+            if (inp.value.trim() && sugg){
+                const filtered = CLIENTES_ATIVOS.filter(c => c.nome.toLowerCase().includes(inp.value.trim().toLowerCase()));
+                renderSuggestions(filtered);
+            }
+        });
+        document.addEventListener('click', (e) => {
+            if (!sugg) return;
+            if (!sugg.contains(e.target) && e.target !== inp){
+                sugg.innerHTML = '';
+            }
+        });
+    });
+}
+
 // Adicionar primeiro evento automaticamente
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('modalNovoProcesso')) {
         adicionarEvento();
         attachProcessMasks(document.getElementById('formNovoProcesso'));
+        initClienteSearch(document.getElementById('formNovoProcesso'));
     }
 });
 
@@ -491,9 +549,13 @@ async function visualizarProcesso(id){
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Cliente</label>
-                    <select class="form-select" name="cliente_id" disabled>
-                        ${clienteOptions}
-                    </select>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="clienteSearchEdit" data-cliente-search data-target-hidden="#clienteIdEdit" data-suggestions="#clienteSugestoesEdit" placeholder="Buscar cliente por nome" disabled>
+                    </div>
+                    <div class="form-text"><span data-cliente-search-status>Digite para filtrar clientes</span></div>
+                    <input type="hidden" name="cliente_id" id="clienteIdEdit" value="" disabled>
+                    <div class="cliente-suggestions" id="clienteSugestoesEdit"></div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Vara</label>
@@ -542,6 +604,8 @@ async function visualizarProcesso(id){
         if (valorInicialEl) {
             valorInicialEl.value = maskCurrencyBR(valorInicialEl.value);
         }
+        // inicializar busca de clientes por nome
+        initClienteSearch(form);
         // Mostrar modal
         document.getElementById('btnEditarProcesso').style.display = '';
         document.getElementById('btnSalvarProcesso').style.display = 'none';
