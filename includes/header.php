@@ -17,12 +17,12 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
 <header class="header">
     <div class="container-fluid">
         <div class="row align-items-center">
-            <div class="col-md-3">
+            <div class="col-8 col-md-3">
                 <h1 class="logo">⚖️ Precifex Jurídico</h1>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 d-none d-md-block">
                 <!-- Menu de Navegação -->
-                <nav class="nav-tabs-custom">
+                <nav class="nav-tabs-custom d-none d-md-flex">
                     <a href="<?= $base_url ?>?aba=dashboard" class="nav-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
@@ -43,16 +43,18 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
                     </a>
                 </nav>
             </div>
-            <div class="col-md-3 text-end">
+            <div class="col-4 col-md-3 text-end">
                 <div class="user-info">
-                    <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
+                    <!-- Botão de menu (apenas mobile) -->
+                    <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2 d-inline-flex d-md-none" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
                         <i class="bi bi-list"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="abrirPerfilUsuario()" title="Perfil do usuário">
+                    <!-- Controles (apenas desktop) -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex" onclick="abrirPerfilUsuario()" title="Perfil do usuário">
                         <i class="bi bi-person-circle"></i>
                         <span class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuário') ?></span>
                     </button>
-                    <a href="sistemas/logout.php" class="btn btn-sm btn-outline-danger ms-2">
+                    <a href="sistemas/logout.php" class="btn btn-sm btn-outline-danger ms-2 d-none d-md-inline-flex">
                         <i class="bi bi-box-arrow-right"></i> Sair
                     </a>
                 </div>
@@ -71,6 +73,9 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
         </button>
     </div>
     <nav class="mobile-drawer-nav">
+        <!-- Usuário e Sair dentro do drawer (mobile) -->
+        <a href="#" class="mobile-drawer-link" onclick="abrirPerfilUsuario(); return false;"><i class="bi bi-person-circle"></i> Usuário</a>
+        <a href="sistemas/logout.php" class="mobile-drawer-link text-danger"><i class="bi bi-box-arrow-right"></i> Sair</a>
         <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' ?>"><i class="bi bi-people"></i> Clientes</a>
         <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>"><i class="bi bi-briefcase"></i> Processos</a>

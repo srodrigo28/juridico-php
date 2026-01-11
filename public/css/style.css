@@ -400,6 +400,80 @@ body {
 .mt-2 { margin-top: 0.5rem !important; }
 
 /* Mobile Drawer */
+.drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1040;
+}
+
+.mobile-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 85vw;               /* largura base em mobile */
+    max-width: 420px;          /* não passar do tamanho útil em telas maiores */
+    max-width: min(100vw, 420px); /* em navegadores modernos, garante não exceder a viewport */
+    background-color: #fff;
+    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    overflow-x: hidden;        /* impedir overflow horizontal */
+    z-index: 1050;
+}
+
+.mobile-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-drawer-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--dark-text);
+}
+
+.mobile-drawer-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0;
+}
+
+.mobile-drawer-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--dark-text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-drawer-link:hover {
+    background-color: rgba(37, 99, 235, 0.06);
+}
+
+.mobile-drawer-link.active {
+    background-color: var(--light-bg);
+    font-weight: 600;
+}
+
+.mobile-drawer-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 480px) {
+    .mobile-drawer {
+        width: 100vw;          /* ocupa toda a viewport em telas muito pequenas */
+        max-width: 100vw;      /* nunca exceder a viewport */
+    }
+}
+
+/* Mobile Drawer */
 .mobile-menu-button {
     display: none;
 }
