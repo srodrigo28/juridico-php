@@ -71,12 +71,12 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
         </button>
     </div>
     <nav class="mobile-drawer-nav">
-        <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' }"><i class="bi bi-speedometer2"></i> Dashboard</a>
-        <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' }"><i class="bi bi-people"></i> Clientes</a>
-        <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' }"><i class="bi bi-briefcase"></i> Processos</a>
-        <a href="buscador.php" class="mobile-drawer-link <?= $aba_ativa === 'buscador' ? 'active' : '' }"><i class="bi bi-search"></i> Buscador</a>
-        <a href="<?= $base_url ?>?aba=financeiro" class="mobile-drawer-link <?= $aba_ativa === 'financeiro' ? 'active' : '' }"><i class="bi bi-currency-dollar"></i> Financeiro</a>
-        <a href="<?= $base_url ?>?aba=calculadoras" class="mobile-drawer-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' }"><i class="bi bi-calculator"></i> Calculadoras</a>
+        <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' ?>"><i class="bi bi-people"></i> Clientes</a>
+        <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>"><i class="bi bi-briefcase"></i> Processos</a>
+        <a href="buscador.php" class="mobile-drawer-link <?= $aba_ativa === 'buscador' ? 'active' : '' ?>"><i class="bi bi-search"></i> Buscador</a>
+        <a href="<?= $base_url ?>?aba=financeiro" class="mobile-drawer-link <?= $aba_ativa === 'financeiro' ? 'active' : '' ?>"><i class="bi bi-currency-dollar"></i> Financeiro</a>
+        <a href="<?= $base_url ?>?aba=calculadoras" class="mobile-drawer-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' ?>"><i class="bi bi-calculator"></i> Calculadoras</a>
     </nav>
     <div class="mobile-drawer-footer">
         <span class="badge bg-primary">Plano: <?= htmlspecialchars($plano_nome) ?></span>
