@@ -18,22 +18,7 @@
                     <span>Tarefas</span>
                     <span class="badge rounded-pill count-badge count-badge-tarefas" id="count-tarefas">0</span>
                 </div>
-                <div class="card-body kanban-column" data-column="tarefas">
-                    <div class="kanban-card priority-alta" draggable="true" data-priority="alta" data-date="2026-01-11">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="card-title">Definir escopo inicial</span>
-                            <span class="badge badge-priority-alta">Alta</span>
-                        </div>
-                        <div class="small text-secondary mt-1">Criado: <span class="card-date" data-date="2026-01-11">11/01/2026</span></div>
-                    </div>
-                    <div class="kanban-card priority-media" draggable="true" data-priority="media" data-date="2026-01-10">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="card-title">Criar layout base</span>
-                            <span class="badge badge-priority-media">Média</span>
-                        </div>
-                        <div class="small text-secondary mt-1">Criado: <span class="card-date" data-date="2026-01-10">10/01/2026</span></div>
-                    </div>
-                </div>
+                <div class="card-body kanban-column" data-column="tarefas"></div>
             </div>
         </div>
 
@@ -44,15 +29,7 @@
                     <span>Em Progresso</span>
                     <span class="badge rounded-pill count-badge count-badge-doing" id="count-doing">0</span>
                 </div>
-                <div class="card-body kanban-column" data-column="doing">
-                    <div class="kanban-card priority-media" draggable="true" data-priority="media" data-date="2026-01-11">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="card-title">Implementar arrastar e soltar</span>
-                            <span class="badge badge-priority-media">Média</span>
-                        </div>
-                        <div class="small text-secondary mt-1">Criado: <span class="card-date" data-date="2026-01-11">11/01/2026</span></div>
-                    </div>
-                </div>
+                <div class="card-body kanban-column" data-column="doing"></div>
             </div>
         </div>
 
@@ -63,15 +40,7 @@
                     <span>Concluído</span>
                     <span class="badge rounded-pill count-badge count-badge-done" id="count-done">0</span>
                 </div>
-                <div class="card-body kanban-column" data-column="done">
-                    <div class="kanban-card priority-baixa" draggable="true" data-priority="baixa" data-date="2026-01-09">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="card-title">Configurar páginas e menu</span>
-                            <span class="badge badge-priority-baixa">Baixa</span>
-                        </div>
-                        <div class="small text-secondary mt-1">Criado: <span class="card-date" data-date="2026-01-09">09/01/2026</span></div>
-                    </div>
-                </div>
+                <div class="card-body kanban-column" data-column="done"></div>
             </div>
         </div>
     </div>
@@ -89,7 +58,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="novoTitulo" class="form-label">Nome</label>
-                        <input type="text" class="form-control" id="novoTitulo" name="titulo" placeholder="Ex.: Implementar filtro por cliente" required minlength="3">
+                        <input type="text" class="form-control" id="novoTitulo" name="titulo" placeholder="Ex.: Título da tarefa" required minlength="3">
                         <div class="invalid-feedback">Informe um nome com pelo menos 3 caracteres.</div>
                     </div>
                     <div class="row g-3">
@@ -104,9 +73,9 @@
                             <div class="invalid-feedback">Selecione a prioridade.</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="novoData" class="form-label">Data de cadastro</label>
-                            <input type="date" class="form-control" id="novoData" name="data">
-                            <div class="form-text">Se vazio, usaremos a data de hoje.</div>
+                            <label for="novoPrevista" class="form-label">Data de vencimento / previsão</label>
+                            <input type="date" class="form-control" id="novoPrevista" name="data_prevista">
+                            <div class="form-text">Opcional: defina uma data prevista de conclusão.</div>
                         </div>
                     </div>
                     <div class="mt-3">
@@ -136,7 +105,7 @@
 /* Cores intuitivas por coluna (versão inicial aprovada) */
 .card-header.tarefas { background-color: #ecfdf5 !important; color: #065f46; border-bottom: 2px solid #a7f3d0; }
 .card-header.doing { background-color: #eff6ff !important; color: #1e40af; border-bottom: 2px solid #bfdbfe; }
-.card-header.done { background-color: #f9fafb !important; color: #334155; border-bottom: 2px solid #e5e7eb; }
+.card-header.done { background-color: #e0f2fe !important; color: #0c4a6e; border-bottom: 2px solid #bae6fd; }
 
 /* Destaque de prioridade no card (borda esquerda + badge) */
 .kanban-card { position: relative; }
@@ -155,7 +124,7 @@
 .count-badge{ font-weight: 600; }
 .count-badge-tarefas{ background: #dcfce7; color: #065f46; }
 .count-badge-doing{ background: #dbeafe; color: #1e40af; }
-.count-badge-done{ background: #e5e7eb; color: #334155; }
+.count-badge-done{ background: #e0f2fe; color: #0c4a6e; }
 
 </style>
 
@@ -168,7 +137,7 @@
     const formEl = document.getElementById('formNovoCard');
     const inputTitulo = document.getElementById('novoTitulo');
     const selectPrioridade = document.getElementById('novoPrioridade');
-    const inputData = document.getElementById('novoData');
+    const inputPrevista = document.getElementById('novoPrevista');
     const inputDesc = document.getElementById('novoDescricao');
         let editingCard = null;
         const deleteBtnEdit = document.getElementById('deleteFromEditBtn');
@@ -179,6 +148,18 @@
             doing: document.getElementById('count-doing'),
             done: document.getElementById('count-done')
         };
+
+        // Cliente API
+        const API_URL = 'ajax/kanban.php';
+        async function api(action, data){
+            const opts = { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } };
+            const body = new URLSearchParams({ action, ...data }).toString();
+            opts.body = body;
+            const res = await fetch(API_URL, opts);
+            const json = await res.json();
+            if(!json.ok) throw new Error(json.error || 'Falha na API');
+            return json.data || {};
+        }
 
   // Utilidades
   const priWeight = (p) => ({ alta: 3, media: 2, baixa: 1 }[p] || 0);
@@ -194,7 +175,17 @@
   function handleDrop(e){
     e.preventDefault();
     this.classList.remove('drag-over');
-        if(dragSrc){ this.appendChild(dragSrc); sortColumn(this); updateCounts(); dragSrc = null; }
+        if(dragSrc){ 
+            this.appendChild(dragSrc); 
+            sortColumn(this); 
+            updateCounts(); 
+            const id = dragSrc.dataset.id ? parseInt(dragSrc.dataset.id,10) : 0;
+            const coluna = this.dataset.column;
+            if(id > 0){
+                api('move', { id, coluna }).catch(()=>{});
+            }
+            dragSrc = null; 
+        }
   }
 
   function initCards(root){
@@ -234,14 +225,71 @@
     col.addEventListener('drop', handleDrop);
     sortColumn(col);
   });
-  initCards(document);
+    initCards(document);
     updateCounts();
+
+    // Renderizar card a partir de registro
+    function renderCard(row){
+        const prioridade = (row.prioridade||'media');
+        const badgeClass = prioridade==='alta' ? 'badge-priority-alta' : prioridade==='media' ? 'badge-priority-media' : 'badge-priority-baixa';
+        const priLabel = prioridade==='alta' ? 'Alta' : prioridade==='media' ? 'Média' : 'Baixa';
+        const dataCadastro = row.data_cadastro || todayISO();
+        const dataPrevista = row.data_prevista || '';
+        const card = document.createElement('div');
+        card.className = `kanban-card priority-${prioridade}`;
+        card.setAttribute('draggable', 'true');
+        card.dataset.priority = prioridade;
+        card.dataset.date = dataCadastro;
+        card.dataset.prevista = dataPrevista;
+        if(row.id) card.dataset.id = row.id;
+        card.title = (row.descricao||'');
+        card.innerHTML = `
+            <div class=\"d-flex justify-content-between align-items-center\">\n        <span class=\"card-title\"></span>\n        <span class=\"badge ${badgeClass}\">${priLabel}\</span>
+            </div>
+            <div class=\"card-desc\"></div>
+            <div class=\"small text-secondary mt-1\">Previsto: <span class=\"card-prevista\"></span></div>
+            <div class=\"small text-secondary mt-1 d-flex align-items-center justify-content-between\">\n        <span>Criado: <span class=\"card-date\" data-date=\"${dataCadastro}\"></span></span>\n        <button type=\"button\" class=\"btn btn-sm btn-light view-card-btn\" title=\"Detalhes\"><i class=\"bi bi-eye\"></i></button>\n      </div>`;
+        card.querySelector('.card-title').textContent = row.titulo || '';
+        card.querySelector('.card-desc').textContent = row.descricao || '';
+        const dateSpan = card.querySelector('.card-date');
+        dateSpan.textContent = formatBR(dataCadastro);
+        const prevSpan = card.querySelector('.card-prevista');
+        prevSpan.textContent = dataPrevista ? formatBR(dataPrevista) : '—';
+        card.addEventListener('dragstart', handleDragStart);
+        injectActions(card);
+        return card;
+    }
+
+    // Carregar dados do servidor
+    (async function loadServer(){
+        try{
+            const data = await api('list', {});
+            const cards = Array.isArray(data.cards) ? data.cards : [];
+            // Limpar colunas atuais
+            columns.forEach(col => col.innerHTML = '');
+            // Distribuir
+            cards.forEach(row => {
+                const colKey = row.coluna || 'tarefas';
+                const target = document.querySelector(`[data-column="${colKey}"]`);
+                if(target){
+                    const card = renderCard(row);
+                    target.appendChild(card);
+                }
+            });
+            // Ordenar e contar
+            columns.forEach(sortColumn);
+            updateCounts();
+        }catch(e){
+            // Silencioso no primeiro load
+            console.warn('Falha ao carregar Kanban:', e.message);
+        }
+    })();
 
     // Abrir modal ao clicar em Novo card
     addBtn?.addEventListener('click', () => {
         const modal = new bootstrap.Modal(modalEl);
-        // Pré-preencher data com hoje
-        inputData.value = todayISO();
+        // limpar data prevista
+        inputPrevista.value = '';
         formEl.classList.remove('was-validated');
         inputTitulo.value = '';
         selectPrioridade.value = '';
@@ -267,7 +315,7 @@
         const title = (inputTitulo.value || '').trim();
         const priSel = selectPrioridade.value;
         const desc = (inputDesc.value || '').trim();
-        const data = inputData.value || todayISO();
+        const dataPrevista = inputPrevista.value || '';
 
         if(title.length < 3 || !priSel || desc.length < 5){
             return;
@@ -282,7 +330,7 @@
             const titleEl = editingCard.querySelector('.card-title');
             const descEl = editingCard.querySelector('.card-desc');
             const badgeEl = editingCard.querySelector('.badge');
-            const dateEl = editingCard.querySelector('.card-date');
+            const prevEl = editingCard.querySelector('.card-prevista');
 
             // Atualiza dados
             titleEl.textContent = title;
@@ -295,15 +343,19 @@
             badgeEl.textContent = priLabel[priSel];
             badgeEl.className = `badge ${badgeClass}`;
             editingCard.dataset.priority = prioridade;
-            editingCard.dataset.date = data;
-            dateEl.dataset.date = data;
-            dateEl.textContent = formatBR(data);
+            editingCard.dataset.prevista = dataPrevista;
+            if(prevEl){ prevEl.textContent = dataPrevista ? formatBR(dataPrevista) : '—'; }
 
             // Atualiza classes de prioridade
             editingCard.classList.remove('priority-alta','priority-media','priority-baixa');
             editingCard.classList.add(`priority-${prioridade}`);
 
-            const parentCol = editingCard.parentElement;
+                        // Persistir
+                        const id = editingCard.dataset.id ? parseInt(editingCard.dataset.id,10) : 0;
+                        if(id > 0){
+                            api('update', { id, titulo: title, descricao: desc, prioridade, data_prevista: dataPrevista }).catch(()=>{});
+                        }
+                        const parentCol = editingCard.parentElement;
             sortColumn(parentCol);
             editingCard = null;
             bootstrap.Modal.getInstance(modalEl)?.hide();
@@ -315,25 +367,33 @@
         card.className = `kanban-card priority-${prioridade}`;
         card.setAttribute('draggable', 'true');
         card.dataset.priority = prioridade;
-        card.dataset.date = data;
+        card.dataset.date = todayISO();
+        card.dataset.prevista = dataPrevista;
         card.title = desc; // dica ao passar o mouse
         card.innerHTML = `
             <div class=\"d-flex justify-content-between align-items-center\">\n        <span class=\"card-title\"></span>\n        <span class=\"badge ${badgeClass}\">${priLabel[priSel]}\</span>
             </div>
             <div class=\"card-desc\"></div>
-            <div class=\"small text-secondary mt-1 d-flex align-items-center justify-content-between\">\n              <span>Criado: <span class=\"card-date\" data-date=\"${data}\"></span></span>\n              <button type=\"button\" class=\"btn btn-sm btn-light view-card-btn\" title=\"Detalhes\"><i class=\"bi bi-eye\"></i></button>\n            </div>`;
+            <div class=\"small text-secondary mt-1\">Previsto: <span class=\"card-prevista\"></span></div>
+            <div class=\"small text-secondary mt-1 d-flex align-items-center justify-content-between\">\n              <span>Criado: <span class=\"card-date\" data-date=\"${todayISO()}\"></span></span>\n              <button type=\"button\" class=\"btn btn-sm btn-light view-card-btn\" title=\"Detalhes\"><i class=\"bi bi-eye\"></i></button>\n            </div>`;
 
         card.querySelector('.card-title').textContent = title;
         card.querySelector('.card-desc').textContent = desc;
         const dateSpan = card.querySelector('.card-date');
-        dateSpan.textContent = formatBR(data);
+        dateSpan.textContent = formatBR(todayISO());
+        const prevSpan = card.querySelector('.card-prevista');
+        prevSpan.textContent = dataPrevista ? formatBR(dataPrevista) : '—';
 
         card.addEventListener('dragstart', handleDragStart);
         injectActions(card);
-        const tarefas = document.querySelector('[data-column=\"tarefas\"]');
-        tarefas.appendChild(card);
-        sortColumn(tarefas);
-        updateCounts();
+                const tarefas = document.querySelector('[data-column=\"tarefas\"]');
+                tarefas.appendChild(card);
+                // Persistir criação
+                api('create', { titulo: title, descricao: desc, prioridade, coluna: 'tarefas', data_prevista: dataPrevista })
+                    .then(d => { if(d.id) { card.dataset.id = d.id; if(d.data_cadastro){ card.dataset.date = d.data_cadastro; dateSpan.textContent = formatBR(d.data_cadastro); } } })
+                    .catch(()=>{});
+                sortColumn(tarefas);
+                updateCounts();
 
         // Fechar modal após adicionar
         bootstrap.Modal.getInstance(modalEl)?.hide();
@@ -362,7 +422,7 @@
         // Preencher modal de edição diretamente
         inputTitulo.value = card.querySelector('.card-title')?.textContent || '';
         inputDesc.value = card.querySelector('.card-desc')?.textContent || '';
-        inputData.value = card.dataset.date || todayISO();
+        inputPrevista.value = card.dataset.prevista || '';
         const priKey = (card.dataset.priority||'media');
         const priToSel = { alta: '1', media: '2', baixa: '3' };
         selectPrioridade.value = priToSel[priKey] || '2';
@@ -379,6 +439,8 @@
         if(!editingCard) return;
         if(confirm('Deseja excluir este card?')){
             const parent = editingCard.parentElement;
+            const id = editingCard.dataset.id ? parseInt(editingCard.dataset.id,10) : 0;
+            if(id > 0){ api('delete', { id }).catch(()=>{}); }
             editingCard.remove();
             editingCard = null;
             bootstrap.Modal.getInstance(modalEl)?.hide();
