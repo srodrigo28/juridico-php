@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
         drawer.setAttribute('aria-hidden', 'true');
         backdrop.classList.remove('show');
         toggleBtn?.setAttribute('aria-expanded', 'false');
-        setTimeout(() => { backdrop.hidden = true; lockScroll(false); }, 250);
+        setTimeout(() => { backdrop.hidden = true; lockScroll(false); }, 350);
         toggleBtn?.focus();
     }
 

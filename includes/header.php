@@ -4,6 +4,8 @@ $is_buscador = (basename($_SERVER['PHP_SELF']) === 'buscador.php');
 $base_url = $is_buscador ? 'index.php' : '';
 // Mock/Plano do cliente (teste): derivar nome do plano pelas licenças ativas
 $licencas_ativas = $_SESSION['user_licencas'] ?? [];
+$user_name = $_SESSION['user_name'] ?? 'Usuário';
+$user_email = $_SESSION['user_email'] ?? '';
 $plano_nome = (is_array($licencas_ativas) && count($licencas_ativas) > 1) ? 'Jurídico Premium' : 'Jurídico Pro';
 $beneficios_plano = (strpos($plano_nome, 'Premium') !== false)
     ? ['Gestão Financeira avançada', 'Clientes e Processos', 'Buscador TJ', 'Calculadoras Pro', 'Relatórios avançados', 'Suporte prioritário']
@@ -32,15 +34,6 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
                     <a href="<?= $base_url ?>?aba=processos" class="nav-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>">
                         <i class="bi bi-briefcase"></i> Processos
                     </a>
-                    <a href="buscador.php" class="nav-link <?= $aba_ativa === 'buscador' ? 'active' : '' ?>">
-                        <i class="bi bi-search"></i> Buscador
-                    </a>
-                    <a href="<?= $base_url ?>?aba=financeiro" class="nav-link <?= $aba_ativa === 'financeiro' ? 'active' : '' ?>">
-                        <i class="bi bi-currency-dollar"></i> Financeiro
-                    </a>
-                    <a href="<?= $base_url ?>?aba=calculadoras" class="nav-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' ?>">
-                        <i class="bi bi-calculator"></i> Calculadoras
-                    </a>
                 </nav>
             </div>
             <div class="col-4 col-md-3 text-end">
@@ -50,13 +43,8 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
                         <i class="bi bi-list"></i>
                     </button>
                     <!-- Controles (apenas desktop) -->
-                    <button type="button" class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex" onclick="abrirPerfilUsuario()" title="Perfil do usuário">
-                        <i class="bi bi-person-circle"></i>
-                        <span class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuário') ?></span>
-                    </button>
-                    <a href="sistemas/logout.php" class="btn btn-sm btn-outline-danger ms-2 d-none d-md-inline-flex">
-                        <i class="bi bi-box-arrow-right"></i> Sair
-                    </a>
+                    <!-- Perfil do usuário apenas no menu drawer -->
+                    <!-- Sair apenas no menu drawer -->
                 </div>
             </div>
         </div>
@@ -72,19 +60,32 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
             <i class="bi bi-x"></i>
         </button>
     </div>
+    <div class="mobile-drawer-user">
+        <div class="user-avatar" aria-hidden="true"><?= strtoupper(mb_substr($user_name, 0, 1)) ?></div>
+        <div class="user-meta">
+            <div class="user-meta-name"><?= htmlspecialchars($user_name) ?></div>
+            <?php if (!empty($user_email)): ?>
+            <div class="user-meta-email"><?= htmlspecialchars($user_email) ?></div>
+            <?php endif; ?>
+            <div class="user-meta-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="abrirPerfilUsuario()"><i class="bi bi-person"></i> Perfil</button>
+            </div>
+        </div>
+    </div>
     <nav class="mobile-drawer-nav">
-        <!-- Usuário e Sair dentro do drawer (mobile) -->
-        <a href="#" class="mobile-drawer-link" onclick="abrirPerfilUsuario(); return false;"><i class="bi bi-person-circle"></i> Usuário</a>
-        <a href="sistemas/logout.php" class="mobile-drawer-link text-danger"><i class="bi bi-box-arrow-right"></i> Sair</a>
-        <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i> Dashboard</a>
-        <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' ?>"><i class="bi bi-people"></i> Clientes</a>
-        <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>"><i class="bi bi-briefcase"></i> Processos</a>
-        <a href="buscador.php" class="mobile-drawer-link <?= $aba_ativa === 'buscador' ? 'active' : '' ?>"><i class="bi bi-search"></i> Buscador</a>
-        <a href="<?= $base_url ?>?aba=financeiro" class="mobile-drawer-link <?= $aba_ativa === 'financeiro' ? 'active' : '' ?>"><i class="bi bi-currency-dollar"></i> Financeiro</a>
-        <a href="<?= $base_url ?>?aba=calculadoras" class="mobile-drawer-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' ?>"><i class="bi bi-calculator"></i> Calculadoras</a>
+        <div class="mobile-drawer-section">Navegação</div>
+        <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="link-label">Dashboard</span></a>
+        <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Clientes"><i class="bi bi-people"></i> <span class="link-label">Clientes</span></a>
+        <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Processos"><i class="bi bi-briefcase"></i> <span class="link-label">Processos</span></a>
+        <a href="buscador.php" class="mobile-drawer-link <?= $aba_ativa === 'buscador' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Buscador"><i class="bi bi-search"></i> <span class="link-label">Buscador</span></a>
+        <a href="<?= $base_url ?>?aba=financeiro" class="mobile-drawer-link <?= $aba_ativa === 'financeiro' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Financeiro"><i class="bi bi-currency-dollar"></i> <span class="link-label">Financeiro</span></a>
+        <a href="<?= $base_url ?>?aba=calculadoras" class="mobile-drawer-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Calculadoras"><i class="bi bi-calculator"></i> <span class="link-label">Calculadoras</span></a>
     </nav>
     <div class="mobile-drawer-footer">
-        <span class="badge bg-primary">Plano: <?= htmlspecialchars($plano_nome) ?></span>
+        <a href="#" class="mobile-drawer-link plan" data-bs-toggle="tooltip" data-bs-placement="left" title="Plano: <?= htmlspecialchars($plano_nome) ?>">
+            <i class="bi bi-stars"></i> <span class="link-label">Plano: <?= htmlspecialchars($plano_nome) ?></span>
+        </a>
+        <a href="sistemas/logout.php" class="mobile-drawer-link logout" data-bs-toggle="tooltip" data-bs-placement="left" title="Sair"><i class="bi bi-box-arrow-right"></i> <span class="link-label">Sair</span></a>
     </div>
     <!-- Para foco inicial acessível -->
     <span class="sr-only" aria-hidden="true"></span>

@@ -483,6 +483,14 @@ body {
     flex-direction: column;
     padding: 0.25rem 0;
 }
+.mobile-drawer-section{
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 0.5rem 1rem;
+}
 
 .mobile-drawer-link {
     display: flex;
@@ -508,6 +516,30 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
+/* Bloco de usuário no drawer */
+.mobile-drawer-user{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.mobile-drawer-user .user-avatar{
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+.mobile-drawer-user .user-meta{ flex: 1; }
+.mobile-drawer-user .user-meta-name{ font-weight: 700; }
+.mobile-drawer-user .user-meta-email{ font-size: .85rem; color: var(--secondary-color); }
+.mobile-drawer-user .user-meta-actions{ margin-top: 8px; display: flex; gap: 8px; }
+
 @media (max-width: 480px) {
     .mobile-drawer {
         width: 100vw;          /* ocupa toda a viewport em telas muito pequenas */
@@ -526,7 +558,8 @@ body {
     background: rgba(0,0,0,0.35);
     backdrop-filter: blur(2px);
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.35s ease;
+    will-change: opacity;
     z-index: 1098; /* abaixo do drawer */
 }
 
@@ -539,13 +572,14 @@ body {
     top: 0;
     right: 0;
     height: 100vh;
-    width: 86vw;
-    max-width: 380px;
+    width: 85vw;
+    max-width: min(100vw, 420px);
     background: #ffffff;
     box-shadow: -10px 0 30px rgba(0,0,0,0.2);
     border-left: 2px solid var(--border-color);
     transform: translateX(100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.35s ease, width 0.35s ease;
+    will-change: transform;
     z-index: 1099;
     display: flex;
     flex-direction: column;
@@ -582,9 +616,11 @@ body {
     align-items: center;
     gap: 0.6rem;
     padding: 0.875rem 1rem;
+    min-height: 44px;
     border-radius: 10px;
     color: var(--dark-text);
     text-decoration: none;
+    white-space: nowrap;
     transition: background 0.2s ease, transform 0.2s ease;
 }
 
@@ -596,6 +632,12 @@ body {
     background: rgba(37, 99, 235, 0.12);
     color: var(--primary-color);
     font-weight: 600;
+}
+.mobile-drawer-link.logout {
+    color: var(--danger-color);
+}
+.mobile-drawer-link.logout:hover {
+    background: rgba(239, 68, 68, 0.08);
 }
 
 .mobile-drawer-link i { font-size: 1.1rem; }
@@ -610,6 +652,40 @@ body {
 @media (max-width: 768px) {
     .nav-tabs-custom { display: none; }
     .mobile-menu-button { display: inline-flex; }
+}
+
+/* Modo desktop: drawer fixo, compacto com ícones e expansível ao passar o mouse */
+@media (min-width: 992px) {
+    #mobileDrawer {
+        transform: none; /* sempre visível no desktop */
+        right: 0;
+        width: 72px; /* modo compacto com ícones */
+        max-width: 72px;
+        border-left: 2px solid var(--border-color);
+        overflow: hidden;
+    }
+    #mobileDrawer:hover {
+        width: 360px; /* expandir ao passar o mouse */
+        max-width: 360px;
+    }
+    #mobileDrawer .mobile-drawer-header .drawer-close { display: none; }
+    .drawer-backdrop { display: none !important; }
+    /* Header do drawer: ocultar título no compacto, exibir ao expandir */
+    #mobileDrawer .mobile-drawer-title { display: none; }
+    #mobileDrawer:hover .mobile-drawer-title { display: block; }
+    #mobileDrawer .mobile-drawer-header { padding: 0.5rem; }
+    /* Ocultar rótulos no modo compacto, exibir ao expandir */
+    #mobileDrawer .mobile-drawer-link .link-label { display: none; }
+    #mobileDrawer:hover .mobile-drawer-link .link-label { display: inline; }
+    #mobileDrawer .mobile-drawer-section { display: none; }
+    #mobileDrawer:hover .mobile-drawer-section { display: block; }
+    /* Centralizar ícones no compacto e alinhar ao expandir */
+    #mobileDrawer .mobile-drawer-link { justify-content: center; padding: 0.75rem 0; }
+    #mobileDrawer:hover .mobile-drawer-link { justify-content: flex-start; padding: 0.75rem 1rem; }
+    /* Bloco de usuário: mostrar apenas avatar no compacto */
+    #mobileDrawer .mobile-drawer-user { justify-content: center; }
+    #mobileDrawer .mobile-drawer-user .user-meta { display: none; }
+    #mobileDrawer:hover .mobile-drawer-user .user-meta { display: block; }
 }
 .mt-3 { margin-top: 1rem !important; }
 .mt-4 { margin-top: 1.5rem !important; }

@@ -20,8 +20,13 @@ $total_clientes = (int)$stmtCount->fetchColumn();
 <!-- Lista de Clientes -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Lista de Clientes</h5>
-        <span class="badge bg-primary">Total: <?= $total_clientes ?></span>
+        <h5 class="mb-0">Lista de Clientes <span class="text-muted" id="tituloContagemClientes">(<?= $total_clientes ?>)</span></h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary">Total: <?= $total_clientes ?></span>
+            <?php if (!empty($clientes ?? [])): ?>
+            <span class="badge bg-secondary" id="badgeResultadosClientes">Exibindo: <?= count($clientes ?? []) ?></span>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="card-body">
         <!-- Filtros -->
@@ -111,6 +116,7 @@ $total_clientes = (int)$stmtCount->fetchColumn();
                     </tbody>
                 </table>
             </div>
+            <div id="noResultsClientes" class="text-muted mt-2" style="display:none">Nenhum cliente encontrado</div>
         <?php endif; ?>
     </div>
 </div>
@@ -272,7 +278,7 @@ function filtrarClientes() {
     const tipo = document.getElementById('filtroTipo').value;
     const status = document.getElementById('filtroStatus').value;
     const linhas = document.querySelectorAll('#tabelaClientes tbody tr');
-    
+    let visiveis = 0;
     linhas.forEach(linha => {
         const nomeCol = linha.querySelector('td:nth-child(1)');
         const nomeLower = (nomeCol?.textContent || '').toLowerCase();
@@ -299,7 +305,14 @@ function filtrarClientes() {
         }
         
         linha.style.display = mostrar ? '' : 'none';
+        if (mostrar) visiveis++;
     });
+    const badge = document.getElementById('badgeResultadosClientes');
+    if (badge) { badge.textContent = `Exibindo: ${visiveis}`; }
+    const titulo = document.getElementById('tituloContagemClientes');
+    if (titulo) { titulo.textContent = `(${visiveis})`; }
+    const noRes = document.getElementById('noResultsClientes');
+    if (noRes) { noRes.style.display = visiveis === 0 ? '' : 'none'; }
 }
 
 // Utilitários de máscara

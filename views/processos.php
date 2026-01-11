@@ -29,8 +29,14 @@ $total_processos = (int)$stmt_total_proc->fetchColumn();
 ?>
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Meus Processos</h5>
-        <span class="badge bg-primary">Total: <?= $total_processos ?></span>
+        <h5 class="mb-0">Meus Processos <span class="text-muted" id="tituloContagemProc">(<?= $total_processos ?>)</span></h5>
+        <div class="d-flex align-items-center gap-2" style="min-width:280px">
+            <input type="text" class="form-control form-control-sm" id="buscarProcessoCliente" placeholder="Filtrar por cliente...">
+            <span class="badge bg-primary">Total: <?= $total_processos ?></span>
+            <?php if (!empty($processos ?? [])): ?>
+            <span class="badge bg-secondary" id="badgeResultadosProc">Exibindo: <?= count($processos ?? []) ?></span>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="card-body">
         <?php
@@ -62,7 +68,7 @@ $total_processos = (int)$stmt_total_proc->fetchColumn();
             </div>
         <?php else: ?>
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover" id="tabelaProcessos">
                     <thead>
                         <tr>
                             <th>Número</th>
@@ -117,6 +123,7 @@ $total_processos = (int)$stmt_total_proc->fetchColumn();
                     </tbody>
                 </table>
             </div>
+            <div id="noResultsProc" class="text-muted mt-2" style="display:none">Nenhum processo encontrado</div>
         <?php endif; ?>
     </div>
 </div>
@@ -536,7 +543,30 @@ document.addEventListener('DOMContentLoaded', function() {
         attachProcessMasks(document.getElementById('formNovoProcesso'));
         initClienteSearch(document.getElementById('formNovoProcesso'));
     }
+    const buscarProcInput = document.getElementById('buscarProcessoCliente');
+    if (buscarProcInput){
+        buscarProcInput.addEventListener('input', filtrarProcessosPorCliente);
+    }
 });
+
+function filtrarProcessosPorCliente(){
+    const q = (document.getElementById('buscarProcessoCliente').value || '').toLowerCase().trim();
+    const linhas = document.querySelectorAll('#tabelaProcessos tbody tr');
+    let visiveis = 0;
+    linhas.forEach(linha => {
+        const clienteCol = linha.querySelector('td:nth-child(2)');
+        const nomeCliente = (clienteCol?.textContent || '').toLowerCase();
+        const mostrar = q ? nomeCliente.includes(q) : true;
+        linha.style.display = mostrar ? '' : 'none';
+        if (mostrar) visiveis++;
+    });
+    const badge = document.getElementById('badgeResultadosProc');
+    if (badge) { badge.textContent = `Exibindo: ${visiveis}`; }
+    const titulo = document.getElementById('tituloContagemProc');
+    if (titulo) { titulo.textContent = `(${visiveis})`; }
+    const noRes = document.getElementById('noResultsProc');
+    if (noRes) { noRes.style.display = visiveis === 0 ? '' : 'none'; }
+}
 
 async function visualizarProcesso(id){
     const fd = new FormData();
