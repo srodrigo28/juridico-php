@@ -252,6 +252,15 @@ if (!empty($prazos_urgentes)):
                             <input type="text" class="form-control" name="parte_contraria">
                         </div>
                     </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Valor da Causa</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" class="form-control" name="valor_causa" placeholder="0,00">
+                            </div>
+                        </div>
+                    </div>
                     
                     <hr>
                     <h6>Eventos/Prazos do Processo</h6>
@@ -333,6 +342,10 @@ async function salvarProcesso() {
     const formData = new FormData(form);
     formData.append('action', 'cadastrar_processo');
     formData.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    // normalizar valor da causa para formato numérico com ponto
+    if (formData.has('valor_causa')){
+        formData.set('valor_causa', normalizeCurrencyToEN(formData.get('valor_causa')));
+    }
     
     try {
         const response = await fetch('', {
@@ -419,6 +432,15 @@ function maskCurrencyBR(v){
     ints = ints.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     return (ints || '0') + ',' + cents;
 }
+// Converte "1.234,56" para "1234.56" para envio ao backend
+function normalizeCurrencyToEN(v){
+    if (v == null) return '';
+    let s = String(v).trim();
+    if (!s) return '';
+    s = s.replace(/[^0-9.,-]/g, '');
+    s = s.replace(/\./g, '').replace(/,/g, '.');
+    return s;
+}
 function attachProcessMasks(formEl){
     if (!formEl) return;
     const valorInput = formEl.querySelector('input[name="valor_causa"]');
@@ -489,7 +511,10 @@ async function visualizarProcesso(id){
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Valor da Causa</label>
-                    <input type="text" class="form-control" name="valor_causa" value="${p.valor_causa||''}" disabled>
+                    <div class="input-group">
+                        <span class="input-group-text">R$</span>
+                        <input type="text" class="form-control" name="valor_causa" value="${p.valor_causa||''}" disabled>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Status</label>
@@ -511,8 +536,12 @@ async function visualizarProcesso(id){
         form.querySelector('[name="tribunal"]').value = p.tribunal||'';
         if (p.cliente_id) form.querySelector('[name="cliente_id"]').value = p.cliente_id;
         form.querySelector('[name="status"]').value = p.status||'em_andamento';
-        // aplicar máscara no campo de valor
+        // aplicar máscara no campo de valor e formatar valor inicial
         attachProcessMasks(form);
+        const valorInicialEl = form.querySelector('[name="valor_causa"]');
+        if (valorInicialEl) {
+            valorInicialEl.value = maskCurrencyBR(valorInicialEl.value);
+        }
         // Mostrar modal
         document.getElementById('btnEditarProcesso').style.display = '';
         document.getElementById('btnSalvarProcesso').style.display = 'none';
@@ -539,6 +568,10 @@ async function salvarEdicaoProcesso(){
     const form = document.getElementById('formVisualizarEditarProcesso');
     const fd = new FormData(form);
     fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    // normalizar valor da causa para formato numérico com ponto
+    if (fd.has('valor_causa')){
+        fd.set('valor_causa', normalizeCurrencyToEN(fd.get('valor_causa')));
+    }
     try {
         const r = await fetch('', { method:'POST', body: fd });
         const j = await r.json();
