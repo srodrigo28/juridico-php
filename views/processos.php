@@ -36,6 +36,9 @@ $total_processos = (int)$stmt_total_proc->fetchColumn();
         <?php
         $stmt = $pdo->prepare("
             SELECT p.*, c.nome as cliente_nome,
+                   MAX(c.celular) as cliente_celular,
+                   MAX(c.whatsapp) as cliente_whatsapp,
+                   MAX(c.telefone) as cliente_telefone,
                    COUNT(e.id) as total_prazos,
                    SUM(CASE WHEN e.status = 'pendente' AND e.data_final <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as prazos_urgentes
             FROM processos p
@@ -93,9 +96,21 @@ $total_processos = (int)$stmt_total_proc->fetchColumn();
                                 <button type="button" class="btn btn-sm btn-info" onclick="visualizarProcesso(<?= $proc['id'] ?>)" title="Visualizar">
                                     <i class="bi bi-eye"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-danger" onclick="excluirProcesso(<?= $proc['id'] ?>)" title="Excluir">
-                                    <i class="bi bi-trash"></i>
+                                <?php 
+                                    $wa_raw = $proc['cliente_celular'] ?? ($proc['cliente_whatsapp'] ?? ($proc['cliente_telefone'] ?? ''));
+                                    $wa_digits = preg_replace('/\D+/', '', $wa_raw);
+                                    if ($wa_digits && substr($wa_digits,0,2) !== '55') { $wa_digits = '55'.$wa_digits; }
+                                    $wa_text = urlencode('Olá, Precifex ADV traz informações sobre o processo '.($proc['numero_processo'] ?? '')); 
+                                ?>
+                                <?php if (!empty($wa_digits)): ?>
+                                <a href="https://wa.me/<?= $wa_digits ?>?text=<?= $wa_text ?>" target="_blank" class="btn btn-sm btn-success" title="Chamar no WhatsApp">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                                <?php else: ?>
+                                <button type="button" class="btn btn-sm btn-secondary" disabled title="WhatsApp indisponível">
+                                    <i class="bi bi-whatsapp"></i>
                                 </button>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -453,6 +468,11 @@ function attachProcessMasks(formEl){
     }
 }
 
+function getClienteNome(id){
+    const c = CLIENTES_ATIVOS.find(x => String(x.id) === String(id));
+    return c ? c.nome : '';
+}
+
 // Busca e filtro de clientes por nome nos selects
 function initClienteSearch(context){
     if (!context) return;
@@ -549,13 +569,8 @@ async function visualizarProcesso(id){
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Cliente</label>
-                    <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" id="clienteSearchEdit" data-cliente-search data-target-hidden="#clienteIdEdit" data-suggestions="#clienteSugestoesEdit" placeholder="Buscar cliente por nome" disabled>
-                    </div>
-                    <div class="form-text"><span data-cliente-search-status>Digite para filtrar clientes</span></div>
-                    <input type="hidden" name="cliente_id" id="clienteIdEdit" value="" disabled>
-                    <div class="cliente-suggestions" id="clienteSugestoesEdit"></div>
+                    <input type="text" class="form-control" name="cliente_readonly" value="${getClienteNome(p.cliente_id)||''}" disabled>
+                    <input type="hidden" name="cliente_id" value="${p.cliente_id||''}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Vara</label>
@@ -604,12 +619,10 @@ async function visualizarProcesso(id){
         if (valorInicialEl) {
             valorInicialEl.value = maskCurrencyBR(valorInicialEl.value);
         }
-        // inicializar busca de clientes por nome
-        initClienteSearch(form);
         // Mostrar modal
         document.getElementById('btnEditarProcesso').style.display = '';
         document.getElementById('btnSalvarProcesso').style.display = 'none';
-        document.getElementById('btnExcluirProcesso').style.display = 'none';
+        document.getElementById('btnExcluirProcesso').style.display = '';
         const modal = new bootstrap.Modal(document.getElementById('modalVisualizarProcesso'));
         modal.show();
     } catch(e){
@@ -620,7 +633,7 @@ async function visualizarProcesso(id){
 function toggleEdicaoProcesso(ativar){
     const form = document.getElementById('formVisualizarEditarProcesso');
     form.querySelectorAll('input, select, textarea').forEach(el => {
-        if (el.name === 'processo_id' || el.name === 'action') return;
+        if (el.name === 'processo_id' || el.name === 'action' || el.name === 'cliente_readonly' || el.name === 'cliente_id') return;
         el.disabled = !ativar;
     });
     document.getElementById('btnEditarProcesso').style.display = ativar ? 'none' : '';

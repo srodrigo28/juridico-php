@@ -266,14 +266,16 @@ document.getElementById('filtroStatus')?.addEventListener('change', function() {
 });
 
 function filtrarClientes() {
-    const busca = (document.getElementById('buscarCliente').value || '').toLowerCase();
-    const buscaDigits = busca.replace(/\D/g,'');
+    const buscaRaw = (document.getElementById('buscarCliente').value || '');
+    const busca = buscaRaw.toLowerCase();
+    const buscaDigits = (buscaRaw || '').replace(/\D/g,'');
     const tipo = document.getElementById('filtroTipo').value;
     const status = document.getElementById('filtroStatus').value;
     const linhas = document.querySelectorAll('#tabelaClientes tbody tr');
     
     linhas.forEach(linha => {
-        const texto = linha.textContent.toLowerCase();
+        const nomeCol = linha.querySelector('td:nth-child(1)');
+        const nomeLower = (nomeCol?.textContent || '').toLowerCase();
         const tipoCol = linha.querySelector('td:nth-child(2)');
         const statusCol = linha.querySelector('td:nth-child(5) .badge');
         const tipoCliente = (tipoCol?.textContent || '').toLowerCase().includes('física') ? 'pf' : 'pj';
@@ -282,13 +284,11 @@ function filtrarClientes() {
         const docDigits = (docCol?.textContent || '').replace(/\D/g,'');
         
         let mostrar = true;
-        
-        if (busca && !texto.includes(busca)) {
-            // Se busca for numérica, também comparar contra CPF/CNPJ sem máscara
-            if (buscaDigits && !docDigits.includes(buscaDigits)) {
-                mostrar = false;
-            }
-        }
+        // Match por nome (texto) ou CPF/CNPJ (apenas dígitos)
+        const matchNome = busca ? nomeLower.includes(busca) : true;
+        const matchDoc = buscaDigits ? docDigits.includes(buscaDigits) : false;
+        const matchBusca = busca ? (matchNome || matchDoc) : true;
+        if (!matchBusca) { mostrar = false; }
         
         if (tipo && tipoCliente !== tipo) {
             mostrar = false;
