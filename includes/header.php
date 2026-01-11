@@ -20,7 +20,11 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
     <div class="container-fluid ps-3 ps-md-4 pe-1 pe-md-0 position-relative">
         <div class="header-bar container">
             <div class="header-start d-flex align-items-center">
-                <h1 class="logo">⚖️ Precifex Jurídico</h1>
+                <!-- Botão de menu (apenas mobile) -->
+                <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2 d-inline-flex d-md-none" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="logo">⚖️ Precifex ADV</h1>
             </div>
             <div class="header-center">
                 <!-- Menu de Navegação -->
@@ -38,10 +42,6 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
             </div>
             <div class="header-end d-flex align-items-center justify-content-end">
                 <div class="user-info">
-                    <!-- Botão de menu (apenas mobile) -->
-                    <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2 d-inline-flex d-md-none" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
-                        <i class="bi bi-list"></i>
-                    </button>
                     <!-- Notificações (apenas desktop) -->
                     <button type="button" class="btn btn-sm btn-outline-light d-inline-flex position-relative" title="Notificações">
                         <i class="bi bi-bell"></i>
@@ -53,7 +53,7 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
     </div>
 </header>
 
-<!-- Drawer Mobile (abre da direita) -->
+<!-- Drawer Mobile (abre da esquerda) -->
 <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
 <aside id="mobileDrawer" class="mobile-drawer" aria-hidden="true" tabindex="-1">
     <div class="mobile-drawer-header">

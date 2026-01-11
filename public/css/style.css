@@ -476,13 +476,13 @@ body {
 .mobile-drawer {
     position: fixed;
     top: 0;
-    right: 0;
+    left: 0;
     height: 100vh;
     width: 85vw;               /* largura base em mobile */
     max-width: 420px;          /* não passar do tamanho útil em telas maiores */
     max-width: min(100vw, 420px); /* em navegadores modernos, garante não exceder a viewport */
     background-color: #fff;
-    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
     overflow-y: auto;
     overflow-x: hidden;        /* impedir overflow horizontal */
     z-index: 1050;
@@ -594,14 +594,14 @@ body {
 .mobile-drawer {
     position: fixed;
     top: 0;
-    right: 0;
+    left: 0;
     height: 100vh;
     width: 85vw;
     max-width: min(100vw, 420px);
     background: #ffffff;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.2);
-    border-left: 2px solid var(--border-color);
-    transform: translateX(100%);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+    border-right: 2px solid var(--border-color);
+    transform: translateX(-100%);
     transition: transform 0.35s ease, width 0.35s ease;
     will-change: transform;
     z-index: 1099;
@@ -682,10 +682,10 @@ body {
 @media (min-width: 992px) {
     #mobileDrawer {
         transform: none; /* sempre visível no desktop */
-        right: 0;
+        left: 0;
         width: 72px; /* modo compacto com ícones */
         max-width: 72px;
-        border-left: 2px solid var(--border-color);
+        border-right: 2px solid var(--border-color);
         overflow: hidden;
     }
     #mobileDrawer:hover {
