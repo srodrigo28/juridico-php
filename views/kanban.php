@@ -68,6 +68,54 @@
     </div>
 </div>
 
+<!-- Modal: Novo Card -->
+<div class="modal fade" id="modalNovoCard" tabindex="-1" aria-labelledby="modalNovoCardLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNovoCardLabel">Novo Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form id="formNovoCard" novalidate>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="novoTitulo" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="novoTitulo" name="titulo" placeholder="Ex.: Implementar filtro por cliente" required minlength="3">
+                        <div class="invalid-feedback">Informe um nome com pelo menos 3 caracteres.</div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="novoPrioridade" class="form-label">Prioridade</label>
+                            <select class="form-select" id="novoPrioridade" name="prioridade" required>
+                                <option value="" selected disabled>Selecione...</option>
+                                <option value="1">1 - Prioridade</option>
+                                <option value="2">2 - Atenção</option>
+                                <option value="3">3 - Aguarde</option>
+                            </select>
+                            <div class="invalid-feedback">Selecione a prioridade.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="novoData" class="form-label">Data de cadastro</label>
+                            <input type="date" class="form-control" id="novoData" name="data">
+                            <div class="form-text">Se vazio, usaremos a data de hoje.</div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label for="novoDescricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="novoDescricao" name="descricao" rows="3" placeholder="Breve descrição da tarefa" required minlength="5"></textarea>
+                        <div class="invalid-feedback">Descreva com pelo menos 5 caracteres.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+</div>
+
 <style>
 /* Estilos mínimos para Kanban */
 .kanban-column { min-height: 240px; display: flex; flex-direction: column; gap: .5rem; }
@@ -89,13 +137,22 @@
 .badge-priority-alta { background: #fee2e2; color: #b91c1c; }
 .badge-priority-media { background: #fef3c7; color: #b45309; }
 .badge-priority-baixa { background: #dcfce7; color: #065f46; }
+
+/* Descrição resumida no card */
+.card-desc{ font-size: .875rem; color: var(--secondary-color); margin-top: .25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 </style>
 
 <script>
 (function(){
   const columns = document.querySelectorAll('.kanban-column');
-  const addBtn = document.getElementById('addCardBtn');
-  const resetBtn = document.getElementById('resetKanbanBtn');
+    const addBtn = document.getElementById('addCardBtn');
+    const resetBtn = document.getElementById('resetKanbanBtn');
+    const modalEl = document.getElementById('modalNovoCard');
+    const formEl = document.getElementById('formNovoCard');
+    const inputTitulo = document.getElementById('novoTitulo');
+    const selectPrioridade = document.getElementById('novoPrioridade');
+    const inputData = document.getElementById('novoData');
+    const inputDesc = document.getElementById('novoDescricao');
 
   // Utilidades
   const priWeight = (p) => ({ alta: 3, media: 2, baixa: 1 }[p] || 0);
@@ -143,36 +200,63 @@
   });
   initCards(document);
 
-  addBtn?.addEventListener('click', () => {
-    const title = prompt('Título do card:');
-    if(!title) return;
-    let prioridade = prompt('Prioridade (Alta/Média/Baixa):', 'Média') || 'Média';
-    prioridade = prioridade.trim().toLowerCase().replace('é','e');
-    if(!['alta','media','baixa'].includes(prioridade)) prioridade = 'media';
-    const data = prompt('Data de cadastro (AAAA-MM-DD):', todayISO()) || todayISO();
+    // Abrir modal ao clicar em Novo card
+    addBtn?.addEventListener('click', () => {
+        const modal = new bootstrap.Modal(modalEl);
+        // Pré-preencher data com hoje
+        inputData.value = todayISO();
+        formEl.classList.remove('was-validated');
+        inputTitulo.value = '';
+        selectPrioridade.value = '';
+        inputDesc.value = '';
+        modal.show();
+    });
 
-    const card = document.createElement('div');
-    card.className = `kanban-card priority-${prioridade}`;
-    card.setAttribute('draggable', 'true');
-    card.dataset.priority = prioridade;
-    card.dataset.date = data;
-    card.innerHTML = `
-      <div class=\"d-flex justify-content-between align-items-center\">\n        <span class=\"card-title\"></span>\n        <span class=\"badge ${
-          prioridade==='alta'?'badge-priority-alta':
-          prioridade==='media'?'badge-priority-media':'badge-priority-baixa'
-        }\">${prioridade==='alta'?'Alta':prioridade==='media'?'Média':'Baixa'}\</span>
-      </div>
-      <div class=\"small text-secondary mt-1\">Criado: <span class=\"card-date\" data-date=\"${data}\"></span></div>`;
+    // Validar e criar card via modal
+    formEl?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        formEl.classList.add('was-validated');
+        // Validadores básicos
+        const title = (inputTitulo.value || '').trim();
+        const priSel = selectPrioridade.value;
+        const desc = (inputDesc.value || '').trim();
+        const data = inputData.value || todayISO();
 
-    card.querySelector('.card-title').textContent = title;
-    const dateSpan = card.querySelector('.card-date');
-    dateSpan.textContent = formatBR(data);
+        if(title.length < 3 || !priSel || desc.length < 5){
+            return;
+        }
+        // Mapear prioridade selecionada para classes internas
+        const priMap = { '1': 'alta', '2': 'media', '3': 'baixa' };
+        const priLabel = { '1': 'Alta', '2': 'Média', '3': 'Baixa' };
+        const prioridade = priMap[priSel] || 'media';
+        const badgeClass = prioridade==='alta' ? 'badge-priority-alta' : prioridade==='media' ? 'badge-priority-media' : 'badge-priority-baixa';
 
-    card.addEventListener('dragstart', handleDragStart);
-    const tarefas = document.querySelector('[data-column=\"tarefas\"]');
-    tarefas.appendChild(card);
-    sortColumn(tarefas);
-  });
+        const card = document.createElement('div');
+        card.className = `kanban-card priority-${prioridade}`;
+        card.setAttribute('draggable', 'true');
+        card.dataset.priority = prioridade;
+        card.dataset.date = data;
+        card.title = desc; // dica ao passar o mouse
+        card.innerHTML = `
+            <div class=\"d-flex justify-content-between align-items-center\">\n        <span class=\"card-title\"></span>\n        <span class=\"badge ${badgeClass}\">${priLabel[priSel]}\</span>
+            </div>
+            <div class=\"card-desc\"></div>
+            <div class=\"small text-secondary mt-1\">Criado: <span class=\"card-date\" data-date=\"${data}\"></span></div>`;
+
+        card.querySelector('.card-title').textContent = title;
+        card.querySelector('.card-desc').textContent = desc;
+        const dateSpan = card.querySelector('.card-date');
+        dateSpan.textContent = formatBR(data);
+
+        card.addEventListener('dragstart', handleDragStart);
+        const tarefas = document.querySelector('[data-column=\"tarefas\"]');
+        tarefas.appendChild(card);
+        sortColumn(tarefas);
+
+        // Fechar modal após adicionar
+        bootstrap.Modal.getInstance(modalEl)?.hide();
+    });
 
   resetBtn?.addEventListener('click', () => { location.reload(); });
 })();
