@@ -38,6 +38,9 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
                     <a href="<?= $base_url ?>?aba=processos" class="nav-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>">
                         <i class="bi bi-briefcase"></i> Processos
                     </a>
+                    <a href="<?= $base_url ?>?aba=kanban" class="nav-link <?= $aba_ativa === 'kanban' ? 'active' : '' ?>">
+                        <i class="bi bi-kanban"></i> Kanban
+                    </a>
                 </nav>
             </div>
             <div class="header-end d-flex align-items-center justify-content-end">
@@ -79,6 +82,7 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
         <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="link-label">Dashboard</span></a>
         <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Clientes"><i class="bi bi-people"></i> <span class="link-label">Clientes</span></a>
         <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Processos"><i class="bi bi-briefcase"></i> <span class="link-label">Processos</span></a>
+        <a href="<?= $base_url ?>?aba=kanban" class="mobile-drawer-link <?= $aba_ativa === 'kanban' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Kanban"><i class="bi bi-kanban"></i> <span class="link-label">Kanban</span></a>
         <a href="buscador.php" class="mobile-drawer-link <?= $aba_ativa === 'buscador' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Buscador"><i class="bi bi-search"></i> <span class="link-label">Buscador</span></a>
         <a href="<?= $base_url ?>?aba=financeiro" class="mobile-drawer-link <?= $aba_ativa === 'financeiro' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Financeiro"><i class="bi bi-currency-dollar"></i> <span class="link-label">Financeiro</span></a>
         <a href="<?= $base_url ?>?aba=calculadoras" class="mobile-drawer-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Calculadoras"><i class="bi bi-calculator"></i> <span class="link-label">Calculadoras</span></a>

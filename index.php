@@ -31,7 +31,7 @@ criarTabelas($pdo);
 
 // Determinar a aba ativa
 $aba_ativa = $_GET['aba'] ?? 'dashboard';
-$abas_validas = ['dashboard', 'clientes', 'processos', 'buscador', 'financeiro', 'calculadoras'];
+$abas_validas = ['dashboard', 'clientes', 'processos', 'buscador', 'financeiro', 'calculadoras', 'kanban'];
 
 if (!in_array($aba_ativa, $abas_validas)) {
     $aba_ativa = 'dashboard';
