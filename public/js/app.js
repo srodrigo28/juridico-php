@@ -180,6 +180,53 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Drawer Mobile
+    const drawer = document.getElementById('mobileDrawer');
+    const backdrop = document.getElementById('drawerBackdrop');
+    const toggleBtn = document.querySelector('.drawer-toggle');
+    const closeBtn = document.querySelector('.drawer-close');
+
+    function lockScroll(lock) {
+        if (lock) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    function openDrawer() {
+        if (!drawer || !backdrop) return;
+        drawer.classList.add('open');
+        drawer.setAttribute('aria-hidden', 'false');
+        backdrop.hidden = false;
+        // force reflow to apply transition
+        void backdrop.offsetWidth;
+        backdrop.classList.add('show');
+        toggleBtn?.setAttribute('aria-expanded', 'true');
+        lockScroll(true);
+        // Focus management
+        closeBtn?.focus();
+    }
+
+    function closeDrawer() {
+        if (!drawer || !backdrop) return;
+        drawer.classList.remove('open');
+        drawer.setAttribute('aria-hidden', 'true');
+        backdrop.classList.remove('show');
+        toggleBtn?.setAttribute('aria-expanded', 'false');
+        setTimeout(() => { backdrop.hidden = true; lockScroll(false); }, 250);
+        toggleBtn?.focus();
+    }
+
+    toggleBtn?.addEventListener('click', openDrawer);
+    closeBtn?.addEventListener('click', closeDrawer);
+    backdrop?.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer?.classList.contains('open')) {
+            closeDrawer();
+        }
+    });
 });
 
 // Exportar funções para uso global

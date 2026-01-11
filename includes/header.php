@@ -45,6 +45,9 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
             </div>
             <div class="col-md-3 text-end">
                 <div class="user-info">
+                    <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
+                        <i class="bi bi-list"></i>
+                    </button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="abrirPerfilUsuario()" title="Perfil do usuário">
                         <i class="bi bi-person-circle"></i>
                         <span class="user-name"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuário') ?></span>
@@ -57,6 +60,31 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
         </div>
     </div>
 </header>
+
+<!-- Drawer Mobile (abre da direita) -->
+<div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+<aside id="mobileDrawer" class="mobile-drawer" aria-hidden="true" tabindex="-1">
+    <div class="mobile-drawer-header">
+        <h2 class="mobile-drawer-title">Menu</h2>
+        <button type="button" class="btn btn-sm btn-outline-secondary drawer-close" aria-label="Fechar menu">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+    <nav class="mobile-drawer-nav">
+        <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' }"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' }"><i class="bi bi-people"></i> Clientes</a>
+        <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' }"><i class="bi bi-briefcase"></i> Processos</a>
+        <a href="buscador.php" class="mobile-drawer-link <?= $aba_ativa === 'buscador' ? 'active' : '' }"><i class="bi bi-search"></i> Buscador</a>
+        <a href="<?= $base_url ?>?aba=financeiro" class="mobile-drawer-link <?= $aba_ativa === 'financeiro' ? 'active' : '' }"><i class="bi bi-currency-dollar"></i> Financeiro</a>
+        <a href="<?= $base_url ?>?aba=calculadoras" class="mobile-drawer-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' }"><i class="bi bi-calculator"></i> Calculadoras</a>
+    </nav>
+    <div class="mobile-drawer-footer">
+        <span class="badge bg-primary">Plano: <?= htmlspecialchars($plano_nome) ?></span>
+    </div>
+    <!-- Para foco inicial acessível -->
+    <span class="sr-only" aria-hidden="true"></span>
+    
+</aside>
 
 <!-- Modal Perfil do Usuário -->
 <div class="modal fade" id="modalPerfilUsuario" tabindex="-1">
