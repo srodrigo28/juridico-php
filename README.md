@@ -8,6 +8,9 @@ Para rodar o projeto localmente sem redirecionar para produção, foi necessári
 http://localhost/www/juridico-php/index.php?aba=novo_usuario
 ```
 
+## criar banco
+criar_new_db.sql
+
 ## Ajuste de URLs base
 
 - Arquivo: [sistemas/config.php](sistemas/config.php#L30-L60)

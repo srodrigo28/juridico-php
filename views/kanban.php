@@ -6,7 +6,6 @@
         <h2 class="mb-0">Kanban de Tarefas</h2>
         <div class="d-flex gap-2">
             <button class="btn btn-primary btn-sm" id="addCardBtn"><i class="bi bi-plus-lg"></i> Novo card</button>
-            <button class="btn btn-outline-secondary btn-sm" id="resetKanbanBtn"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
         </div>
     </div>
 
