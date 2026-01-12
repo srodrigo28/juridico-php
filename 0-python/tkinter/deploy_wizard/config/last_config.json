@@ -1,0 +1,11 @@
+{
+    "local_path": "C:\\xampp\\htdocs\\www\\v2\\juridico-php",
+    "host": "77.37.126.7",
+    "port": "22",
+    "username": "srodrigo",
+    "password": "",
+    "remote_path": "/var/www/adv.precifex.com/",
+    "db_name": "adv",
+    "sql_file": "scripts/criar_new_db.sql",
+    "last_saved": "2026-01-11T23:36:18.584577"
+}

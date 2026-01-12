@@ -4,26 +4,33 @@ if (!defined('SISTEMA_MEMBROS')) {
     die('Acesso negado');
 }
 
-// Configuração do banco de dados Gestão
-/* Conexão externa
-$DB_CONFIG = [
-    'host' => '77.37.126.7',
-    'port' => 3306,
-    'database' => 'juridico',
-    'username' => '',
-    'password' => '',
-    'charset' => 'utf8mb4'
-];
-*/
-/* Conexão local */
-$DB_CONFIG = [
-    'host' => 'localhost',
-    'port' => 3306,
-    'database' => 'juridico',
-    'username' => 'root',
-    'password' => '',
-    'charset' => 'utf8mb4'
-];
+// Detectar ambiente (local vs produção)
+$__host = $_SERVER['HTTP_HOST'] ?? '';
+$__isLocal = preg_match('/^(localhost|127\\.0\\.0\\.1)(:\\d+)?$/', $__host) === 1;
+
+// Configuração do banco de dados - detecção automática
+if ($__isLocal) {
+    // Ambiente Local
+    $DB_CONFIG = [
+        'host' => 'localhost',
+        'port' => 3306,
+        'database' => 'adv',
+        'username' => 'root',
+        'password' => '',
+        'charset' => 'utf8mb4'
+    ];
+} else {
+    // Ambiente de Produção
+    $DB_CONFIG = [
+        'host' => 'localhost',  // No servidor remoto, MySQL está no localhost
+        'port' => 3306,
+        'database' => 'adv',
+        'username' => 'srodrigo',
+        'password' => '@dV#sRnAt98!',
+        'charset' => 'utf8mb4'
+    ];
+}
+
 /**
  * Conectar ao banco de dados
  */

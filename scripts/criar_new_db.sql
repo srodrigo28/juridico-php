@@ -187,22 +187,30 @@ CREATE TABLE kanban_cards (
   INDEX idx_kanban_user_email (user_email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Usuário admin (sem senha - definir depois)
-INSERT INTO usuarios_sistema (email, criado_em) VALUES ('admin@local.test', NOW());
+-- Usuário admin com senha hash ARGON2ID (compatível com o sistema)
+-- Email: rodrigoexer2@gmail.com
+-- Senha: 123123
+-- Hash gerado com SALT_SENHA: JLP_SISTEMAS_2025_SALT_HASH
+INSERT INTO usuarios_sistema (email, senha, criado_em) 
+VALUES ('rodrigoexer2@gmail.com', '$argon2id$v=19$m=65536,t=4,p=1$U1hneFJHeWdKQy9OcXNJTw$UpgxEWEgyelDa8q+5pg1ZrVpMjmccDA3cdfypZYfdsk', NOW());
 
--- Licença admin
-INSERT INTO licencas (email, produto_id, produto_nome, status_licenca)
-VALUES ('admin@local.test', '5776734', 'Precifex Jurídico', 'ativa');
+-- Licença admin ativa
+INSERT INTO licencas (email, produto_id, produto_nome, status_licenca, data_expiracao)
+VALUES ('rodrigoexer2@gmail.com', '5776734', 'Precifex Jurídico', 'ativa', '2027-12-31');
 
--- Perfil admin
+-- Perfil admin com telefone
 INSERT INTO usuarios_perfil (usuario_id, email, nome)
-VALUES ('admin', 'admin@local.test', 'Administrador');
+VALUES ('admin', 'rodrigoexer2@gmail.com', 'Rodrigo Administrador');
 
--- Cards de exemplo
+-- Cliente padrão do admin (para ter um cliente base)
+INSERT INTO clientes (usuario_id, tipo, nome, email, celular, whatsapp, status)
+VALUES ('admin', 'pf', 'Rodrigo Administrador', 'rodrigoexer2@gmail.com', '62998579084', '62998579084', 'ativo');
+
+-- Cards de exemplo para o novo usuário
 INSERT INTO kanban_cards (user_email, titulo, descricao, prioridade, coluna, data_prevista, criado_em) VALUES
-('admin@local.test', 'Definir escopo inicial', 'Mapear requisitos do Kanban', 'alta', 'tarefas', '2026-01-15', '2026-01-10 09:00:00'),
-('admin@local.test', 'Criar layout base', 'Estruturar colunas com Bootstrap', 'media', 'tarefas', '2026-01-16', '2026-01-10 14:30:00'),
-('admin@local.test', 'Implementar arrastar e soltar', 'Habilitar DnD nativo', 'media', 'doing', '2026-01-17', '2026-01-11 10:00:00'),
-('admin@local.test', 'Configurar páginas e menu', 'Adicionar link Kanban no header', 'baixa', 'done', '2026-01-14', '2026-01-09 16:00:00'),
-('admin@local.test', 'Adicionar contadores por coluna', 'Badges com cores dinâmicas', 'baixa', 'tarefas', '2026-01-18', '2026-01-11 11:15:00'),
-('admin@local.test', 'Integrar backend AJAX', 'CRUD completo de cards', 'alta', 'doing', '2026-01-19', '2026-01-11 12:00:00');
+('rodrigoexer2@gmail.com', 'Definir escopo inicial', 'Mapear requisitos do Kanban', 'alta', 'tarefas', '2026-01-15', '2026-01-10 09:00:00'),
+('rodrigoexer2@gmail.com', 'Criar layout base', 'Estruturar colunas com Bootstrap', 'media', 'tarefas', '2026-01-16', '2026-01-10 14:30:00'),
+('rodrigoexer2@gmail.com', 'Implementar arrastar e soltar', 'Habilitar DnD nativo', 'media', 'doing', '2026-01-17', '2026-01-11 10:00:00'),
+('rodrigoexer2@gmail.com', 'Configurar páginas e menu', 'Adicionar link Kanban no header', 'baixa', 'done', '2026-01-14', '2026-01-09 16:00:00'),
+('rodrigoexer2@gmail.com', 'Adicionar contadores por coluna', 'Badges com cores dinâmicas', 'baixa', 'tarefas', '2026-01-18', '2026-01-11 11:15:00'),
+('rodrigoexer2@gmail.com', 'Integrar backend AJAX', 'CRUD completo de cards', 'alta', 'doing', '2026-01-19', '2026-01-11 12:00:00');

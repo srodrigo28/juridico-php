@@ -11,6 +11,13 @@ http://localhost/www/juridico-php/index.php?aba=novo_usuario
 ## criar banco
 criar_new_db.sql
 
+## usuário padrão
+🔐 Credenciais do Usuário Padrão:
+Email: rodrigoexer2@gmail.com
+Senha: 123123
+Telefone: 62998579084
+Licença: Ativa até 31/12/2027
+
 ## Ajuste de URLs base
 
 - Arquivo: [sistemas/config.php](sistemas/config.php#L30-L60)

@@ -61,8 +61,8 @@ if ($__isLocal) {
     // Produção - AJUSTE CONFORME SEU DOMÍNIO
     define('BASE_URL', 'https://adv.precifex.com');
     define('LOGIN_URL', BASE_URL . '/login.php');
-    define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
-    define('LOGOUT_URL', BASE_URL . '/logout.php');
+    define('DASHBOARD_URL', BASE_URL . '/views/dashboard.php');
+    define('LOGOUT_URL', BASE_URL . '/sistemas/logout.php');
 }
 
 // Produtos disponíveis
