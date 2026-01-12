@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fluxo Correto de Deploy - Guia Rápido</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .gradient-animate {
+      background-size: 200% 200%;
+      animation: gradient 15s ease infinite;
+    }
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(139, 92, 246, 0.3); }
+      50% { border-color: rgba(139, 92, 246, 0.8); }
+    }
+    .pulse-border {
+      animation: pulse-border 2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-gray-100 min-h-screen">
+  
+  <!-- Header -->
+  <header class="gradient-animate bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 py-8 shadow-2xl">
+    <div class="max-w-5xl mx-auto px-6">
+      <h1 class="text-4xl font-bold text-white mb-2">✅ Fluxo Correto de Deploy</h1>
+      <p class="text-violet-100 text-lg">3 passos simples: CMD → Upload → PuTTY → Import</p>
+    </div>
+  </header>
+
+  <div class="max-w-5xl mx-auto p-6 space-y-6">
+
+    <!-- Warning Box -->
+    <section class="bg-amber-900/20 border-2 border-amber-500/50 rounded-xl p-6 shadow-xl">
+      <div class="flex items-start gap-4">
+        <div class="text-4xl">⚠️</div>
+        <div>
+          <h2 class="text-xl font-bold text-amber-300 mb-2">Atenção: Não Misture Contextos!</h2>
+          <ul class="space-y-2 text-amber-100 text-sm">
+            <li>🚫 <strong>PSCP</strong> não roda dentro do PSFTP</li>
+            <li>🚫 <strong>MySQL</strong> não roda dentro do PSFTP</li>
+            <li>✅ Use <strong>CMD</strong> para PSCP e <strong>PuTTY SSH</strong> para MySQL</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="bg-slate-800 rounded-xl shadow-2xl border border-violet-500/30 overflow-hidden">
+      <div class="bg-gradient-to-r from-violet-600/20 to-purple-600/20 px-6 py-4 border-b border-violet-500/30">
+        <h2 class="text-xl font-semibold text-violet-300">🔍 Diferença Entre as Ferramentas</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-900/50">
+            <tr>
+              <th class="px-6 py-3 text-left text-violet-300 font-semibold">Ferramenta</th>
+              <th class="px-6 py-3 text-left text-violet-300 font-semibold">Contexto</th>
+              <th class="px-6 py-3 text-left text-violet-300 font-semibold">Comandos Aceitos</th>
+              <th class="px-6 py-3 text-left text-violet-300 font-semibold">Quando Usar</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-700">
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="px-6 py-4">
+                <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">PSCP</span>
+              </td>
+              <td class="px-6 py-4 text-gray-300">Windows CMD/PowerShell</td>
+              <td class="px-6 py-4">
+                <code class="bg-slate-900 px-2 py-1 rounded text-violet-200 text-xs">pscp -r ...</code>
+              </td>
+              <td class="px-6 py-4 text-gray-300">Upload rápido em lote</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="px-6 py-4">
+                <span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold">PSFTP</span>
+              </td>
+              <td class="px-6 py-4 text-gray-300">Interface interativa SFTP</td>
+              <td class="px-6 py-4">
+                <code class="bg-slate-900 px-2 py-1 rounded text-violet-200 text-xs">lcd, cd, put, get, ls</code>
+              </td>
+              <td class="px-6 py-4 text-gray-300">Upload passo a passo</td>
+            </tr>
+            <tr class="hover:bg-slate-700/30 transition-colors">
+              <td class="px-6 py-4">
+                <span class="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold">PuTTY</span>
+              </td>
+              <td class="px-6 py-4 text-gray-300">SSH remoto</td>
+              <td class="px-6 py-4">
+                <code class="bg-slate-900 px-2 py-1 rounded text-violet-200 text-xs">mysql, ls, cd, bash</code>
+              </td>
+              <td class="px-6 py-4 text-gray-300">Executar comandos no servidor</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Step 1 -->
+    <section class="bg-slate-800 rounded-xl shadow-2xl border-2 pulse-border overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 px-6 py-4 border-b border-blue-500/30">
+        <h2 class="text-2xl font-bold text-blue-300 flex items-center gap-3">
+          <span class="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl">1</span>
+          Upload de Arquivos (CMD/PowerShell)
+        </h2>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">PowerShell</span>
+          <span class="bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold">CMD</span>
+          <span class="text-gray-400 text-sm">Execute no terminal do Windows</span>
+        </div>
+
+        <pre class="bg-black/40 p-4 rounded-lg overflow-x-auto border border-blue-500/20"><code id="cmd-step1" class="text-blue-200 text-sm">pscp -r -P 22 "C:\xampp\htdocs\www\v2\juridico-php\*" srodrigo@77.37.126.7:/var/www/adv.precifex.com/</code></pre>
+        
+        <button class="copy-btn bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-5 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg" data-target="cmd-step1">
+          📋 Copiar Comando
+        </button>
+
+        <details class="bg-slate-900/30 rounded-lg border border-blue-500/20 mt-4">
+          <summary class="cursor-pointer p-4 text-blue-300 font-medium hover:text-blue-200 transition-colors flex items-center gap-2">
+            <span>📖</span> O que este comando faz?
+          </summary>
+          <div class="px-4 pb-4 space-y-3 text-sm text-gray-300">
+            <div class="flex items-start gap-2">
+              <span class="text-blue-400 font-bold">•</span>
+              <div><code class="bg-slate-800 px-2 py-1 rounded text-blue-200">pscp</code> = PuTTY Secure Copy (ferramenta de upload)</div>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-blue-400 font-bold">•</span>
+              <div><code class="bg-slate-800 px-2 py-1 rounded text-blue-200">-r</code> = Recursivo (copia pastas e subpastas)</div>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-blue-400 font-bold">•</span>
+              <div><code class="bg-slate-800 px-2 py-1 rounded text-blue-200">-P 22</code> = Porta SSH (22 é padrão)</div>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-blue-400 font-bold">•</span>
+              <div><code class="bg-slate-800 px-2 py-1 rounded text-blue-200">"caminho\local\*"</code> = Todos os arquivos do projeto</div>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-blue-400 font-bold">•</span>
+              <div><code class="bg-slate-800 px-2 py-1 rounded text-blue-200">usuario@host:/destino/</code> = Para onde enviar</div>
+            </div>
+            <div class="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
+              <p class="text-blue-300 text-xs">💡 <strong>Dica:</strong> Certifique-se que o PSCP está no PATH do Windows ou use o caminho completo: <code class="bg-slate-800 px-2 py-1 rounded">"C:\Program Files\PuTTY\pscp.exe"</code></p>
+            </div>
+          </div>
+        </details>
+
+        <details class="bg-slate-900/30 rounded-lg border border-amber-500/20 mt-4">
+          <summary class="cursor-pointer p-4 text-amber-300 font-medium hover:text-amber-200 transition-colors flex items-center gap-2">
+            <span>⚠️</span> Solução de Problemas
+          </summary>
+          <div class="px-4 pb-4 space-y-3 text-sm text-gray-300">
+            <div class="bg-red-900/20 border border-red-500/30 rounded p-3">
+              <p class="text-red-300 font-semibold mb-2">Erro: "pscp não é reconhecido como comando"</p>
+              <p class="text-gray-300 mb-2">Solução:</p>
+              <pre class="bg-black/40 p-2 rounded text-xs">"C:\Program Files\PuTTY\pscp.exe" -r -P 22 "C:\xampp\htdocs\www\v2\juridico-php\*" srodrigo@77.37.126.7:/var/www/adv.precifex.com/</pre>
+            </div>
+            <div class="bg-amber-900/20 border border-amber-500/30 rounded p-3">
+              <p class="text-amber-300 font-semibold mb-2">Erro: "Permission denied"</p>
+              <p class="text-gray-300">Verifique se você está usando a senha correta: <code class="bg-slate-800 px-2 py-1 rounded text-amber-200">@dV#sRnAt98!</code></p>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Step 2 -->
+    <section class="bg-slate-800 rounded-xl shadow-2xl border-2 pulse-border overflow-hidden">
+      <div class="bg-gradient-to-r from-orange-600/20 to-red-600/20 px-6 py-4 border-b border-orange-500/30">
+        <h2 class="text-2xl font-bold text-orange-300 flex items-center gap-3">
+          <span class="bg-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl">2</span>
+          Conectar via SSH (PuTTY)
+        </h2>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold">PuTTY</span>
+          <span class="text-gray-400 text-sm">Abra o PuTTY GUI</span>
+        </div>
+
+        <div class="bg-black/40 p-6 rounded-lg border border-orange-500/20 space-y-3">
+          <div class="flex items-center gap-3">
+            <span class="text-orange-400 font-mono text-sm w-24">Host:</span>
+            <code class="bg-slate-900/80 px-4 py-2 rounded text-orange-200 text-sm flex-1">77.37.126.7</code>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-orange-400 font-mono text-sm w-24">Port:</span>
+            <code class="bg-slate-900/80 px-4 py-2 rounded text-orange-200 text-sm flex-1">22</code>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-orange-400 font-mono text-sm w-24">User:</span>
+            <code class="bg-slate-900/80 px-4 py-2 rounded text-orange-200 text-sm flex-1">srodrigo</code>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-orange-400 font-mono text-sm w-24">Password:</span>
+            <code id="password-step2" class="bg-slate-900/80 px-4 py-2 rounded text-amber-300 text-sm flex-1">@dV#sRnAt98!</code>
+            <button id="copy-password-step2" class="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-200 shadow-lg flex items-center gap-1">
+              <span>📋</span>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <details class="bg-slate-900/30 rounded-lg border border-orange-500/20 mt-4">
+          <summary class="cursor-pointer p-4 text-orange-300 font-medium hover:text-orange-200 transition-colors flex items-center gap-2">
+            <span>📖</span> Como usar o PuTTY?
+          </summary>
+          <div class="px-4 pb-4 space-y-3 text-sm text-gray-300">
+            <ol class="space-y-2 list-decimal list-inside">
+              <li>Abra o <strong class="text-orange-300">PuTTY.exe</strong></li>
+              <li>Em <strong>"Host Name"</strong>, digite: <code class="bg-slate-800 px-2 py-1 rounded text-orange-200">77.37.126.7</code></li>
+              <li>Em <strong>"Port"</strong>, mantenha: <code class="bg-slate-800 px-2 py-1 rounded text-orange-200">22</code></li>
+              <li>Clique em <strong class="text-orange-300">"Open"</strong></li>
+              <li>Na janela preta, digite: <code class="bg-slate-800 px-2 py-1 rounded text-orange-200">srodrigo</code></li>
+              <li>Quando pedir senha, cole: <code class="bg-slate-800 px-2 py-1 rounded text-amber-200">@dV#sRnAt98!</code></li>
+            </ol>
+            <div class="mt-3 p-3 bg-orange-900/20 border border-orange-500/30 rounded">
+              <p class="text-orange-300 text-xs">💡 <strong>Dica:</strong> A senha não aparece enquanto você digita. É normal!</p>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Step 3 -->
+    <section class="bg-slate-800 rounded-xl shadow-2xl border-2 pulse-border overflow-hidden">
+      <div class="bg-gradient-to-r from-purple-600/20 to-pink-600/20 px-6 py-4 border-b border-purple-500/30">
+        <h2 class="text-2xl font-bold text-purple-300 flex items-center gap-3">
+          <span class="bg-purple-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl">3</span>
+          Importar SQL (Terminal PuTTY)
+        </h2>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold">SSH Terminal</span>
+          <span class="text-gray-400 text-sm">Execute dentro do PuTTY conectado</span>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <p class="text-purple-300 text-sm font-semibold mb-2">Primeiro, verifique se o arquivo foi enviado:</p>
+            <pre class="bg-black/40 p-4 rounded-lg overflow-x-auto border border-purple-500/20"><code id="cmd-step3a" class="text-purple-200 text-sm">ls -la /var/www/adv.precifex.com/scripts</code></pre>
+            <button class="copy-btn mt-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg text-sm" data-target="cmd-step3a">
+              📋 Copiar Comando
+            </button>
+          </div>
+
+          <div>
+            <p class="text-purple-300 text-sm font-semibold mb-2">Depois, importe o SQL:</p>
+            <pre class="bg-black/40 p-4 rounded-lg overflow-x-auto border border-purple-500/20"><code id="cmd-step3b" class="text-purple-200 text-sm">mysql -u srodrigo -p adv &lt; /var/www/adv.precifex.com/scripts/criar_new_db.sql</code></pre>
+            <button class="copy-btn mt-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg text-sm" data-target="cmd-step3b">
+              📋 Copiar Comando
+            </button>
+          </div>
+        </div>
+
+        <details class="bg-slate-900/30 rounded-lg border border-purple-500/20 mt-4">
+          <summary class="cursor-pointer p-4 text-purple-300 font-medium hover:text-purple-200 transition-colors flex items-center gap-2">
+            <span>📖</span> O que estes comandos fazem?
+          </summary>
+          <div class="px-4 pb-4 space-y-3 text-sm text-gray-300">
+            <div class="bg-purple-900/20 border border-purple-500/30 rounded p-3">
+              <p class="text-purple-300 font-semibold mb-2">Comando 1: Listar arquivos</p>
+              <pre class="bg-black/40 p-2 rounded text-xs mb-2">ls -la /var/www/adv.precifex.com/scripts</pre>
+              <p class="text-gray-300">Verifica se o arquivo <code class="bg-slate-800 px-2 py-1 rounded">criar_new_db.sql</code> existe no servidor</p>
+            </div>
+            <div class="bg-purple-900/20 border border-purple-500/30 rounded p-3">
+              <p class="text-purple-300 font-semibold mb-2">Comando 2: Importar SQL</p>
+              <pre class="bg-black/40 p-2 rounded text-xs mb-2">mysql -u srodrigo -p adv &lt; arquivo.sql</pre>
+              <ul class="space-y-1 mt-2">
+                <li>• <code class="bg-slate-800 px-2 py-1 rounded text-purple-200">-u srodrigo</code> = Usuário MySQL</li>
+                <li>• <code class="bg-slate-800 px-2 py-1 rounded text-purple-200">-p</code> = Vai pedir senha</li>
+                <li>• <code class="bg-slate-800 px-2 py-1 rounded text-purple-200">adv</code> = Nome do banco de dados</li>
+                <li>• <code class="bg-slate-800 px-2 py-1 rounded text-purple-200">&lt; arquivo.sql</code> = Redireciona o conteúdo do arquivo para o MySQL</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details class="bg-slate-900/30 rounded-lg border border-red-500/20 mt-4">
+          <summary class="cursor-pointer p-4 text-red-300 font-medium hover:text-red-200 transition-colors flex items-center gap-2">
+            <span>🚨</span> Se der "Access Denied"
+          </summary>
+          <div class="px-4 pb-4 space-y-3 text-sm text-gray-300">
+            <div class="bg-red-900/20 border border-red-500/30 rounded p-3">
+              <p class="text-red-300 font-semibold mb-2">Erro: Access denied for user 'srodrigo'@'localhost'</p>
+              <p class="text-gray-300 mb-3">Use o flag <code class="bg-slate-800 px-2 py-1 rounded text-red-200">--no-defaults</code>:</p>
+              <pre class="bg-black/40 p-3 rounded text-xs overflow-x-auto">mysql --no-defaults -u srodrigo -p adv &lt; /var/www/adv.precifex.com/scripts/criar_new_db.sql</pre>
+            </div>
+            <div class="bg-amber-900/20 border border-amber-500/30 rounded p-3 mt-3">
+              <p class="text-amber-300 font-semibold mb-2">Se ainda não funcionar:</p>
+              <p class="text-gray-300">Você precisa que o administrador execute:</p>
+              <pre class="bg-black/40 p-3 rounded text-xs overflow-x-auto mt-2">GRANT ALL PRIVILEGES ON adv.* TO 'srodrigo'@'localhost' IDENTIFIED BY '@dV#sRnAt98!';
+FLUSH PRIVILEGES;</pre>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Success -->
+    <section class="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border-2 border-green-500/50 rounded-xl p-6 shadow-xl">
+      <div class="flex items-start gap-4">
+        <div class="text-5xl">🎉</div>
+        <div class="flex-1">
+          <h2 class="text-2xl font-bold text-green-300 mb-3">Pronto! Deploy Concluído</h2>
+          <p class="text-green-100 mb-4">Se todos os passos funcionaram, seus arquivos estão no servidor e o banco de dados está configurado.</p>
+          <div class="bg-green-900/30 border border-green-500/30 rounded-lg p-4">
+            <p class="text-green-200 text-sm font-semibold mb-2">✅ Checklist Final:</p>
+            <ul class="space-y-1 text-sm text-green-100">
+              <li>• Arquivos enviados via PSCP</li>
+              <li>• Conectado ao servidor via PuTTY SSH</li>
+              <li>• SQL importado para o banco 'adv'</li>
+              <li>• Pronto para testar a aplicação!</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Reference -->
+    <section class="bg-slate-800/50 rounded-xl border border-violet-500/20 overflow-hidden">
+      <details>
+        <summary class="cursor-pointer p-5 text-violet-300 font-semibold text-lg hover:bg-slate-800/80 transition-colors flex items-center gap-2">
+          <span>📚</span> Referência Rápida de Comandos
+        </summary>
+        <div class="px-6 pb-6 space-y-4">
+          <div class="bg-slate-900/50 rounded-lg p-4">
+            <h3 class="text-violet-300 font-semibold mb-2">Upload de Arquivos</h3>
+            <pre class="bg-black/40 p-3 rounded text-xs overflow-x-auto text-violet-200">pscp -r -P 22 "local\*" user@host:/remote/</pre>
+          </div>
+          <div class="bg-slate-900/50 rounded-lg p-4">
+            <h3 class="text-violet-300 font-semibold mb-2">Verificar Arquivos no Servidor</h3>
+            <pre class="bg-black/40 p-3 rounded text-xs overflow-x-auto text-violet-200">ls -la /caminho/remoto/</pre>
+          </div>
+          <div class="bg-slate-900/50 rounded-lg p-4">
+            <h3 class="text-violet-300 font-semibold mb-2">Importar SQL</h3>
+            <pre class="bg-black/40 p-3 rounded text-xs overflow-x-auto text-violet-200">mysql -u user -p database &lt; file.sql</pre>
+          </div>
+          <div class="bg-slate-900/50 rounded-lg p-4">
+            <h3 class="text-violet-300 font-semibold mb-2">Listar Tabelas</h3>
+            <pre class="bg-black/40 p-3 rounded text-xs overflow-x-auto text-violet-200">mysql -u user -p database -e "SHOW TABLES;"</pre>
+          </div>
+        </div>
+      </details>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-12 pb-8 text-center">
+    <div class="max-w-5xl mx-auto px-6">
+      <div class="bg-slate-800/50 rounded-lg border border-violet-500/20 p-6">
+        <p class="text-violet-300 text-sm">🔒 Guia Simplificado de Deploy - Use com atenção</p>
+        <p class="text-gray-500 text-xs mt-2">Deploy Training Guide v2.1 • January 2026</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Copy password button
+    document.getElementById('copy-password-step2').addEventListener('click', async () => {
+      const passwordText = document.getElementById('password-step2').innerText
+      try {
+        await navigator.clipboard.writeText(passwordText)
+        document.getElementById('copy-password-step2').innerHTML = '<span>✅</span><span>Copied!</span>'
+        setTimeout(() => {
+          document.getElementById('copy-password-step2').innerHTML = '<span>📋</span><span>Copy</span>'
+        }, 2000)
+      } catch(e) {
+        alert('❌ Copy failed. Please copy manually.')
+      }
+    })
+
+    // Enhanced copy functionality
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-target')
+        const el = document.getElementById(id)
+        if (!el) return
+        
+        const text = el.innerText.replace(/\u00A0/g, ' ')
+        
+        try {
+          await navigator.clipboard.writeText(text.trim())
+          const originalText = btn.innerHTML
+          btn.innerHTML = '✅ Copiado!'
+          btn.classList.add('scale-95')
+          
+          setTimeout(() => {
+            btn.innerHTML = originalText
+            btn.classList.remove('scale-95')
+          }, 2000)
+        } catch(e) {
+          alert('❌ Erro ao copiar. Selecione e copie manualmente.')
+        }
+      })
+    })
+  </script>
+</body>
+</html>

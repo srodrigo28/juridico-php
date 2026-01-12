@@ -1,8 +1,8 @@
 -- Merged: criar_banco.sql + script-kanban.sql
 -- Ajuste o nome do banco se necessário
 
-CREATE DATABASE IF NOT EXISTS juridico CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE juridico;
+CREATE DATABASE IF NOT EXISTS adv CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE adv;
 
 -- Tabela de perfil de usuários (necessária para seed Kanban)
 CREATE TABLE IF NOT EXISTS usuarios_perfil (
