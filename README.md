@@ -8,6 +8,19 @@ Para rodar o projeto localmente sem redirecionar para produção, foi necessári
 http://localhost/www/juridico-php/index.php?aba=novo_usuario
 ```
 
+> * acesso externo: 
+```
+https://adv.precifex.com/
+```
+## preview
+
+![alt text](image.png)
+
+<img width="1897" height="914" alt="image" src="https://github.com/user-attachments/assets/2748bf62-506b-4cd4-9d08-664d4eb685bc" />
+
+
+<img width="1444" height="1019" alt="image" src="https://github.com/user-attachments/assets/c06b6920-99cd-41e3-b0e1-05a3210e7155" />
+
 ## criar banco
 criar_new_db.sql
 

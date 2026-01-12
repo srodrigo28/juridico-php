@@ -16,7 +16,16 @@ class DeployWizard:
     def __init__(self, root):
         self.root = root
         self.root.title("Deploy Wizard - Juridico PHP")
-        self.root.geometry("900x700")
+        
+        # Obter dimensões da tela
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        # Configurar tamanho: 700px largura, 800px altura
+        self.root.geometry("700x1000")
+        
+        # Desabilitar redimensionamento
+        self.root.resizable(False, False)
         
         # Configurar para fechar conexões ao sair
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -26,15 +35,22 @@ class DeployWizard:
         self.deploy_manager = DeployManager()
         self.validators = Validators()
         
+        # Flags de controle
+        self.backup_files_done = False
+        self.backup_db_done = False
+        
         # Variáveis para armazenar dados
         self.data = {
             'local_path': r'C:\xampp\htdocs\www\v2\juridico-php',
+            'backup_local_path': r'C:\backups\deploy_wizard',
             'host': '77.37.126.7',
             'port': '22',
             'username': 'srodrigo',
-            'password': '',
+            'password': '@dV#sRnAt98!',  # Senha padrão
             'remote_path': '/var/www/adv.precifex.com/',
             'db_name': 'adv',
+            'db_user': 'srodrigo',
+            'db_pass': '@dV#sRnAt98!',
             'sql_file': 'scripts/criar_new_db.sql'
         }
         
@@ -44,22 +60,35 @@ class DeployWizard:
     def setup_ui(self):
         """Configurar interface principal"""
         # Header
-        self.header = ttk.Frame(self.root, bootstyle="dark")
+        self.header = ttk.Frame(self.root)
         self.header.pack(fill=X, padx=0, pady=0)
         
-        self.title_label = ttk.Label(
-            self.header,
-            text="🚀 Deploy Wizard",
+        # Frame para título com foguete violet
+        title_frame = ttk.Frame(self.header)
+        title_frame.pack(pady=20)
+        
+        # Foguete em violet
+        rocket_label = ttk.Label(
+            title_frame,
+            text="🚀",
             font=("Segoe UI", 24, "bold"),
-            bootstyle="inverse-dark"
+            foreground="#8B5CF6"  # Violet
         )
-        self.title_label.pack(pady=20)
+        rocket_label.pack(side=LEFT, padx=(0, 10))
+        
+        # Nome Deploy em violet
+        self.title_label = ttk.Label(
+            title_frame,
+            text="Deploy",
+            font=("Segoe UI", 24, "bold"),
+            foreground="#8B5CF6"  # Violet
+        )
+        self.title_label.pack(side=LEFT)
         
         self.subtitle_label = ttk.Label(
             self.header,
             text="3 passos simples: Upload → Verificação → Import SQL",
-            font=("Segoe UI", 11),
-            bootstyle="inverse-dark"
+            font=("Segoe UI", 11)
         )
         self.subtitle_label.pack(pady=(0, 20))
         
@@ -107,139 +136,402 @@ class DeployWizard:
         """Criar todas as páginas do wizard"""
         self.pages = []
         
-        # Página 1: Upload
+        # Página 1: Configuração
+        self.pages.append(self.create_page_config())
+        
+        # Página 2: Backup
+        self.pages.append(self.create_page_backup())
+        
+        # Página 3: Upload
         self.pages.append(self.create_page_upload())
         
-        # Página 2: Verificação
+        # Página 4: Verificação
         self.pages.append(self.create_page_verification())
         
-        # Página 3: Import SQL
+        # Página 5: Import SQL
         self.pages.append(self.create_page_import())
-        
-    def create_page_upload(self):
-        """Página 1: Configuração de Upload"""
+    
+    def create_page_config(self):
+        """Página 1: Configuração"""
         page = ttk.Frame(self.pages_container)
         
         # Título
-        title_frame = ttk.Frame(page)
-        title_frame.pack(pady=(0, 20))
-        
         ttk.Label(
-            title_frame,
-            text="📤 Passo 1: Upload de Arquivos",
-            font=("Segoe UI", 18, "bold"),
-            bootstyle="primary"
-        ).pack()
+            page,
+            text="⚙️ Configuração do Deploy",
+            font=("Segoe UI", 16, "bold"),
+            foreground="#8B5CF6"
+        ).pack(pady=(0, 30))
         
+        # Container com padding para centralizar
+        container = ttk.Frame(page)
+        container.pack(fill=BOTH, expand=True, padx=40, pady=10)
+        
+        # Frame do formulário
+        form = ttk.Frame(container)
+        form.pack(fill=X)
+        
+        # Seção 1: Diretórios
         ttk.Label(
-            title_frame,
-            text="Configure os dados de conexão e path dos arquivos",
-            font=("Segoe UI", 10),
-            bootstyle="secondary"
-        ).pack()
+            form, 
+            text="📂 Diretórios", 
+            font=("Segoe UI", 11, "bold"),
+            foreground="#8B5CF6"
+        ).grid(row=0, column=0, columnspan=2, sticky=W, pady=(0, 10))
         
-        # Form em um frame com scroll se necessário
-        form_frame = ttk.Frame(page)
-        form_frame.pack(fill=BOTH, expand=True, padx=20)
-        
-        form = ttk.Frame(form_frame)
-        form.pack(fill=BOTH, expand=True)
-        
-        # Path Local
-        ttk.Label(form, text="Path Local:", font=("Segoe UI", 10, "bold")).grid(
-            row=0, column=0, sticky=W, pady=8, padx=(0, 10)
+        # Local Path
+        ttk.Label(form, text="Local Path:", font=("Segoe UI", 10)).grid(
+            row=1, column=0, sticky=W, pady=10, padx=(10, 15)
         )
         path_frame = ttk.Frame(form)
-        path_frame.grid(row=0, column=1, sticky=EW, pady=8)
+        path_frame.grid(row=1, column=1, sticky=EW, pady=10)
         
-        self.entry_local_path = ttk.Entry(path_frame, width=50)
+        self.entry_local_path = ttk.Entry(path_frame, font=("Segoe UI", 9))
         self.entry_local_path.pack(side=LEFT, fill=X, expand=True)
         self.entry_local_path.insert(0, self.data['local_path'])
         
         ttk.Button(
             path_frame,
-            text="Browse...",
+            text="📁",
             command=self.browse_folder,
             bootstyle="info-outline",
-            width=12
+            width=4
         ).pack(side=LEFT, padx=(5, 0))
         
-        # Host
-        ttk.Label(form, text="Host:", font=("Segoe UI", 10, "bold")).grid(
-            row=1, column=0, sticky=W, pady=8, padx=(0, 10)
+        # Backup Path
+        ttk.Label(form, text="Backup Path:", font=("Segoe UI", 10)).grid(
+            row=2, column=0, sticky=W, pady=10, padx=(10, 15)
         )
-        self.entry_host = ttk.Entry(form, width=50)
-        self.entry_host.grid(row=1, column=1, sticky=EW, pady=8)
+        backup_frame = ttk.Frame(form)
+        backup_frame.grid(row=2, column=1, sticky=EW, pady=10)
+        
+        self.entry_backup_path = ttk.Entry(backup_frame, font=("Segoe UI", 9))
+        self.entry_backup_path.pack(side=LEFT, fill=X, expand=True)
+        self.entry_backup_path.insert(0, self.data['backup_local_path'])
+        
+        ttk.Button(
+            backup_frame,
+            text="💾",
+            command=self.browse_backup_folder,
+            bootstyle="info-outline",
+            width=4
+        ).pack(side=LEFT, padx=(5, 0))
+        
+        # Separador
+        ttk.Separator(form, orient=HORIZONTAL).grid(
+            row=3, column=0, columnspan=2, sticky=EW, pady=20
+        )
+        
+        # Seção 2: Conexão
+        ttk.Label(
+            form, 
+            text="🌐 Servidor", 
+            font=("Segoe UI", 11, "bold"),
+            foreground="#8B5CF6"
+        ).grid(row=4, column=0, columnspan=2, sticky=W, pady=(0, 10))
+        
+        # Host e Port
+        ttk.Label(form, text="Conexão:", font=("Segoe UI", 10)).grid(
+            row=5, column=0, sticky=W, pady=10, padx=(10, 15)
+        )
+        host_port_frame = ttk.Frame(form)
+        host_port_frame.grid(row=5, column=1, sticky=EW, pady=10)
+        
+        self.entry_host = ttk.Entry(host_port_frame, font=("Segoe UI", 9))
+        self.entry_host.pack(side=LEFT, fill=X, expand=True)
         self.entry_host.insert(0, self.data['host'])
         
-        # Port
-        ttk.Label(form, text="Port:", font=("Segoe UI", 10, "bold")).grid(
-            row=2, column=0, sticky=W, pady=8, padx=(0, 10)
+        ttk.Label(host_port_frame, text=":", font=("Segoe UI", 10, "bold")).pack(
+            side=LEFT, padx=5
         )
-        self.entry_port = ttk.Entry(form, width=50)
-        self.entry_port.grid(row=2, column=1, sticky=EW, pady=8)
+        self.entry_port = ttk.Entry(host_port_frame, width=8, font=("Segoe UI", 9))
+        self.entry_port.pack(side=LEFT)
         self.entry_port.insert(0, self.data['port'])
         
-        # Username
-        ttk.Label(form, text="Username:", font=("Segoe UI", 10, "bold")).grid(
-            row=3, column=0, sticky=W, pady=8, padx=(0, 10)
+        # Username e Password
+        ttk.Label(form, text="Credenciais:", font=("Segoe UI", 10)).grid(
+            row=6, column=0, sticky=W, pady=10, padx=(10, 15)
         )
-        self.entry_username = ttk.Entry(form, width=50)
-        self.entry_username.grid(row=3, column=1, sticky=EW, pady=8)
+        user_pass_frame = ttk.Frame(form)
+        user_pass_frame.grid(row=6, column=1, sticky=EW, pady=10)
+        
+        self.entry_username = ttk.Entry(user_pass_frame, font=("Segoe UI", 9))
+        self.entry_username.pack(side=LEFT, fill=X, expand=True)
         self.entry_username.insert(0, self.data['username'])
         
-        # Password
-        ttk.Label(form, text="Password:", font=("Segoe UI", 10, "bold")).grid(
-            row=4, column=0, sticky=W, pady=8, padx=(0, 10)
+        ttk.Label(user_pass_frame, text="@", font=("Segoe UI", 10, "bold")).pack(
+            side=LEFT, padx=5
         )
-        self.entry_password = ttk.Entry(form, width=50, show="•")
-        self.entry_password.grid(row=4, column=1, sticky=EW, pady=8)
         
-        # Remote Path
-        ttk.Label(form, text="Remote Path:", font=("Segoe UI", 10, "bold")).grid(
-            row=5, column=0, sticky=W, pady=8, padx=(0, 10)
+        password_inner_frame = ttk.Frame(user_pass_frame)
+        password_inner_frame.pack(side=LEFT, fill=X, expand=True)
+        
+        self.entry_password = ttk.Entry(password_inner_frame, show="•", font=("Segoe UI", 9))
+        self.entry_password.pack(side=LEFT, fill=X, expand=True)
+        self.entry_password.insert(0, self.data['password'])
+        
+        ttk.Button(
+            password_inner_frame,
+            text="👁",
+            command=self.toggle_password_visibility,
+            bootstyle="info-outline",
+            width=4
+        ).pack(side=LEFT, padx=(5, 0))
+        
+        # Separador
+        ttk.Separator(form, orient=HORIZONTAL).grid(
+            row=7, column=0, columnspan=2, sticky=EW, pady=20
         )
-        self.entry_remote_path = ttk.Entry(form, width=50)
-        self.entry_remote_path.grid(row=5, column=1, sticky=EW, pady=8)
+        
+        # Seção 3: Deploy
+        ttk.Label(
+            form, 
+            text="🚀 Deploy", 
+            font=("Segoe UI", 11, "bold"),
+            foreground="#8B5CF6"
+        ).grid(row=8, column=0, columnspan=2, sticky=W, pady=(0, 10))
+        
+        # Remote Path e Database
+        ttk.Label(form, text="Destino:", font=("Segoe UI", 10)).grid(
+            row=9, column=0, sticky=W, pady=10, padx=(10, 15)
+        )
+        remote_db_frame = ttk.Frame(form)
+        remote_db_frame.grid(row=9, column=1, sticky=EW, pady=10)
+        
+        self.entry_remote_path = ttk.Entry(remote_db_frame, font=("Segoe UI", 9))
+        self.entry_remote_path.pack(side=LEFT, fill=X, expand=True)
         self.entry_remote_path.insert(0, self.data['remote_path'])
         
+        ttk.Label(remote_db_frame, text="DB:", font=("Segoe UI", 10, "bold")).pack(
+            side=LEFT, padx=8
+        )
+        self.entry_db_name = ttk.Entry(remote_db_frame, width=15, font=("Segoe UI", 9))
+        self.entry_db_name.pack(side=LEFT)
+        self.entry_db_name.insert(0, self.data['db_name'])
+        
+        # SQL File
+        ttk.Label(form, text="SQL File:", font=("Segoe UI", 10)).grid(
+            row=10, column=0, sticky=W, pady=10, padx=(10, 15)
+        )
+        sql_frame = ttk.Frame(form)
+        sql_frame.grid(row=10, column=1, sticky=EW, pady=10)
+        
+        self.entry_sql_file = ttk.Entry(sql_frame, font=("Segoe UI", 9))
+        self.entry_sql_file.pack(side=LEFT, fill=X, expand=True)
+        self.entry_sql_file.insert(0, self.data['sql_file'])
+        
+        ttk.Button(
+            sql_frame,
+            text="📄",
+            command=self.browse_sql_file,
+            bootstyle="info-outline",
+            width=4
+        ).pack(side=LEFT, padx=(5, 0))
+        
         form.columnconfigure(1, weight=1)
+        
+        # Status
+        self.status_config = ttk.Label(
+            page,
+            text="✅ Configure os parâmetros e avance para o backup",
+            font=("Segoe UI", 10),
+            bootstyle="success"
+        )
+        self.status_config.pack(pady=25)
+        
+        return page
+    
+    def create_page_backup(self):
+        """Página 2: Backup"""
+        page = ttk.Frame(self.pages_container)
+        
+        # Título
+        ttk.Label(
+            page,
+            text="💾 Backup Automático",
+            font=("Segoe UI", 16, "bold"),
+            foreground="#FFA500"
+        ).pack(pady=(0, 20))
+        
+        # Descrição
+        desc = ttk.Label(
+            page,
+            text="Antes de fazer o deploy, vamos criar backup de segurança:\n"
+                 "• Arquivos PHP atuais do servidor\n"
+                 "• Banco de dados atual",
+            font=("Segoe UI", 10),
+            justify="center"
+        )
+        desc.pack(pady=10)
+        
+        # Frame para botões de backup
+        buttons_frame = ttk.Frame(page)
+        buttons_frame.pack(pady=30)
+        
+        # Botão: Backup Arquivos
+        self.btn_backup_files = ttk.Button(
+            buttons_frame,
+            text="📦 Backup Arquivos PHP",
+            command=self.execute_backup_files,
+            bootstyle="warning",
+            width=25
+        )
+        self.btn_backup_files.pack(pady=10)
+        
+        # Status backup arquivos
+        self.status_backup_files = ttk.Label(
+            buttons_frame,
+            text="⏳ Aguardando...",
+            font=("Segoe UI", 10)
+        )
+        self.status_backup_files.pack(pady=5)
+        
+        # Botão: Backup Database
+        self.btn_backup_db = ttk.Button(
+            buttons_frame,
+            text="🗄️ Backup Banco de Dados",
+            command=self.execute_backup_database,
+            bootstyle="warning",
+            width=25
+        )
+        self.btn_backup_db.pack(pady=10)
+        
+        # Status backup database
+        self.status_backup_db = ttk.Label(
+            buttons_frame,
+            text="⏳ Aguardando...",
+            font=("Segoe UI", 10)
+        )
+        self.status_backup_db.pack(pady=5)
         
         # Separador
         ttk.Separator(page, orient=HORIZONTAL).pack(fill=X, pady=20)
         
+        # Log de backup
+        ttk.Label(
+            page,
+            text="📋 Log de Backup:",
+            font=("Segoe UI", 11, "bold")
+        ).pack(anchor=W, pady=(10, 5))
+        
+        log_frame = ttk.Frame(page)
+        log_frame.pack(fill=BOTH, expand=True, pady=10)
+        
+        scrollbar = ttk.Scrollbar(log_frame)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        
+        import tkinter as tk
+        self.backup_log_text = tk.Text(
+            log_frame,
+            height=10,
+            wrap=WORD,
+            yscrollcommand=scrollbar.set,
+            font=("Consolas", 9),
+            bg="#1a1a1a",
+            fg="#00ff00"
+        )
+        self.backup_log_text.pack(side=LEFT, fill=BOTH, expand=True)
+        scrollbar.config(command=self.backup_log_text.yview)
+        
+        # Progress bar
+        self.backup_progress = ttk.Progressbar(
+            page,
+            mode='indeterminate',
+            bootstyle="warning-striped"
+        )
+        self.backup_progress.pack(fill=X, pady=10)
+        
+        return page
+    
+    def create_page_upload(self):
+        """Página 3: Upload de Arquivos"""
+        page = ttk.Frame(self.pages_container)
+        
+        # Título
+        ttk.Label(
+            page,
+            text="📤 Upload de Arquivos",
+            font=("Segoe UI", 16, "bold"),
+            foreground="#8B5CF6"
+        ).pack(pady=(0, 20))
+        
+        # Descrição
+        desc = ttk.Label(
+            page,
+            text="Os arquivos serão enviados para o servidor via PSCP",
+            font=("Segoe UI", 10),
+            bootstyle="inverse-secondary"
+        ).pack(pady=10)
+        
+        # Informações de configuração
+        info_frame = ttk.LabelFrame(page, text="📋 Configuração Atual")
+        info_frame.pack(fill=X, padx=20, pady=20)
+        
+        ttk.Label(
+            info_frame,
+            text=f"• Local: {self.data['local_path']}\n"
+                 f"• Servidor: {self.data['host']}:{self.data['port']}\n"
+                 f"• Destino: {self.data['remote_path']}",
+            font=("Segoe UI", 9),
+            bootstyle="secondary"
+        ).pack(anchor=W, padx=15, pady=15)
+        
         # Status
         self.status_upload = ttk.Label(
             page,
-            text="⏳ Preencha os campos e clique em 'Próximo' para iniciar o upload",
-            font=("Segoe UI", 10),
+            text="⏳ Clique em 'Próximo' para iniciar o upload",
+            font=("Segoe UI", 11, "bold"),
             bootstyle="info"
         )
-        self.status_upload.pack(pady=10)
+        self.status_upload.pack(pady=20)
+        
+        # Log de upload
+        ttk.Label(
+            page,
+            text="📋 Log de Upload:",
+            font=("Segoe UI", 11, "bold")
+        ).pack(anchor=W, padx=20, pady=(10, 5))
+        
+        log_frame = ttk.Frame(page)
+        log_frame.pack(fill=BOTH, expand=True, padx=20, pady=10)
+        
+        scrollbar = ttk.Scrollbar(log_frame)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        
+        import tkinter as tk
+        self.upload_log_text = tk.Text(
+            log_frame,
+            height=15,
+            wrap=WORD,
+            yscrollcommand=scrollbar.set,
+            font=("Consolas", 9),
+            bg="#1a1a1a",
+            fg="#00ff00"
+        )
+        self.upload_log_text.pack(side=LEFT, fill=BOTH, expand=True)
+        scrollbar.config(command=self.upload_log_text.yview)
+        
+        # Progress bar
+        self.upload_progress = ttk.Progressbar(
+            page,
+            mode='indeterminate',
+            bootstyle="success-striped"
+        )
+        self.upload_progress.pack(fill=X, padx=20, pady=10)
         
         return page
         
     def create_page_verification(self):
-        """Página 2: Verificação de Arquivos"""
+        """Página 4: Verificação de Arquivos"""
         page = ttk.Frame(self.pages_container)
         
         # Título
-        title_frame = ttk.Frame(page)
-        title_frame.pack(pady=(0, 20))
-        
         ttk.Label(
-            title_frame,
-            text="🔍 Passo 2: Verificar Arquivos no Servidor",
-            font=("Segoe UI", 18, "bold"),
-            bootstyle="primary"
-        ).pack()
-        
-        ttk.Label(
-            title_frame,
-            text="Listando arquivos enviados para o servidor remoto",
-            font=("Segoe UI", 10),
-            bootstyle="secondary"
-        ).pack()
+            page,
+            text="🔍 Verificar Arquivos no Servidor",
+            font=("Segoe UI", 16, "bold"),
+            foreground="#8B5CF6"
+        ).pack(pady=(0, 20))
         
         # Lista de arquivos com scrollbar
         text_frame = ttk.Frame(page)
@@ -273,26 +565,23 @@ class DeployWizard:
         return page
         
     def create_page_import(self):
-        """Página 3: Import SQL"""
+        """Página 5: Import SQL"""
         page = ttk.Frame(self.pages_container)
         
         # Título
-        title_frame = ttk.Frame(page)
-        title_frame.pack(pady=(0, 20))
-        
         ttk.Label(
-            title_frame,
-            text="🗄️ Passo 3: Importar SQL",
-            font=("Segoe UI", 18, "bold"),
-            bootstyle="primary"
-        ).pack()
+            page,
+            text="🗄️ Importar Banco de Dados",
+            font=("Segoe UI", 16, "bold"),
+            foreground="#8B5CF6"
+        ).pack(pady=(0, 20))
         
+        # Descrição
         ttk.Label(
-            title_frame,
+            page,
             text="Importar arquivo SQL para o banco de dados",
-            font=("Segoe UI", 10),
-            bootstyle="secondary"
-        ).pack()
+            font=("Segoe UI", 10)
+        ).pack(pady=10)
         
         # Form
         form_frame = ttk.Frame(page)
@@ -387,69 +676,115 @@ class DeployWizard:
     def next_step(self):
         """Avançar para próxima página"""
         if self.current_step == 0:
-            # Validar e executar upload
+            # Página 1: Configuração - validar e avançar
+            if self.validate_config():
+                self.show_page(self.current_step + 1)
+        elif self.current_step == 1:
+            # Página 2: Backup - verificar se backups foram feitos
+            if not self.backup_files_done and not self.backup_db_done:
+                response = messagebox.askyesno(
+                    "Aviso - Backup não realizado",
+                    "⚠️ Você não fez nenhum backup!\n\n"
+                    "É altamente recomendado fazer backup dos arquivos PHP "
+                    "e do banco de dados antes de continuar.\n\n"
+                    "Deseja continuar sem backup?",
+                    icon='warning'
+                )
+                if not response:
+                    return
+            elif not self.backup_files_done:
+                response = messagebox.askyesno(
+                    "Aviso - Backup Incompleto",
+                    "⚠️ Você não fez backup dos arquivos PHP!\n\n"
+                    "Deseja continuar sem esse backup?",
+                    icon='warning'
+                )
+                if not response:
+                    return
+            elif not self.backup_db_done:
+                response = messagebox.askyesno(
+                    "Aviso - Backup Incompleto",
+                    "⚠️ Você não fez backup do banco de dados!\n\n"
+                    "Deseja continuar sem esse backup?",
+                    icon='warning'
+                )
+                if not response:
+                    return
+            
+            self.show_page(self.current_step + 1)
+        elif self.current_step == 2:
+            # Página 3: Upload - validar e executar
             if self.validate_upload():
                 self.execute_upload_async()
-        elif self.current_step == 1:
-            # Avançar para página de import
-            if self.current_step < len(self.pages) - 1:
-                self.show_page(self.current_step + 1)
-        elif self.current_step == 2:
-            # Executar import
+        elif self.current_step == 3:
+            # Página 4: Verificação - avançar para import
+            self.show_page(self.current_step + 1)
+        elif self.current_step == 4:
+            # Página 5: Import - executar import
             self.execute_import_async()
             
     def previous_step(self):
         """Voltar para página anterior"""
         if self.current_step > 0:
             self.show_page(self.current_step - 1)
-            
-    def validate_upload(self):
-        """Validar dados da página 1"""
+    
+    def validate_config(self):
+        """Validar configurações da página 1"""
         local_path = self.entry_local_path.get()
+        backup_path = self.entry_backup_path.get()
         host = self.entry_host.get()
         port = self.entry_port.get()
         username = self.entry_username.get()
         password = self.entry_password.get()
         remote_path = self.entry_remote_path.get()
+        db_name = self.entry_db_name.get()
         
-        # Validações
-        if not self.validators.validate_path(local_path):
-            messagebox.showerror("Erro de Validação", f"Path local não existe:\n{local_path}")
+        if not local_path or not os.path.exists(local_path):
+            messagebox.showerror("Erro", "Pasta local não existe!")
             return False
-            
-        if not self.validators.validate_ip(host):
-            messagebox.showerror("Erro de Validação", "Host/IP inválido!")
+        
+        if not backup_path:
+            messagebox.showerror("Erro", "Pasta de backup não definida!")
             return False
-            
-        if not self.validators.validate_port(port):
-            messagebox.showerror("Erro de Validação", "Port inválido! (1-65535)")
+        
+        if not host or not port or not username or not password:
+            messagebox.showerror("Erro", "Preencha todos os campos de conexão!")
             return False
-            
-        if not self.validators.validate_username(username):
-            messagebox.showerror("Erro de Validação", "Username inválido!")
+        
+        if not remote_path or not db_name:
+            messagebox.showerror("Erro", "Preencha Remote Path e Database!")
             return False
-            
-        if not self.validators.validate_password(password):
-            messagebox.showerror("Erro de Validação", "Password não pode estar vazio!")
-            return False
-            
-        if not self.validators.validate_remote_path(remote_path):
-            messagebox.showerror("Erro de Validação", "Remote path deve começar com /")
-            return False
-            
+        
         # Salvar dados
         self.data['local_path'] = local_path
+        self.data['backup_local_path'] = backup_path
         self.data['host'] = host
         self.data['port'] = port
         self.data['username'] = username
         self.data['password'] = password
         self.data['remote_path'] = remote_path
+        self.data['db_name'] = db_name
+        self.data['sql_file'] = self.entry_sql_file.get()
+        
+        return True
+            
+    def validate_upload(self):
+        """Validar dados da página de upload (já foram validados na config)"""
+        # Os dados já foram validados na página de configuração
+        # Apenas garantir que estão atualizados
+        self.data['local_path'] = self.entry_local_path.get()
+        self.data['host'] = self.entry_host.get()
+        self.data['port'] = self.entry_port.get()
+        self.data['username'] = self.entry_username.get()
+        self.data['password'] = self.entry_password.get()
+        self.data['remote_path'] = self.entry_remote_path.get()
         
         return True
         
     def execute_upload_async(self):
         """Executar upload em thread separada"""
         self.status_upload.config(text="⏳ Preparando upload...", bootstyle="warning")
+        self.upload_progress.start()
         self.btn_next.config(state="disabled")
         self.btn_back.config(state="disabled")
         self.root.update()
@@ -465,16 +800,24 @@ class DeployWizard:
         
     def on_upload_complete(self, success, message):
         """Callback quando upload termina"""
+        self.upload_progress.stop()
+        self.upload_log_text.delete(1.0, END)
+        self.upload_log_text.insert(END, message)
+        
         if success:
-            self.status_upload.config(text="✅ Upload concluído com sucesso!", bootstyle="success")
-            messagebox.showinfo("Sucesso", "Arquivos enviados com sucesso!")
-            
-            # Avançar para próxima página e executar verificação
+            self.status_upload.config(
+                text="✅ Upload concluído! Arquivos enviados com sucesso",
+                bootstyle="success"
+            )
+            # Avançar automaticamente para verificação
             self.show_page(self.current_step + 1)
+            # Executar verificação automaticamente
             self.execute_verification_async()
         else:
-            self.status_upload.config(text=f"❌ Erro no upload", bootstyle="danger")
-            messagebox.showerror("Erro no Upload", message)
+            self.status_upload.config(
+                text="❌ Erro no upload",
+                bootstyle="danger"
+            )
             
         self.btn_next.config(state="normal")
         self.btn_back.config(state="normal")
@@ -542,9 +885,24 @@ class DeployWizard:
                 text="✅ Deploy concluído com sucesso! 🎉",
                 bootstyle="success"
             )
+            
+            # Mensagem de sucesso com credenciais
+            success_message = (
+                "🎉 Deploy Concluído com Sucesso!\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "📍 Acesse o Sistema:\n"
+                "   https://adv.precifex.com/\n\n"
+                "📧 Email de Acesso:\n"
+                "   rodrigoexer2@gmail.com\n\n"
+                "🔑 Senha Padrão:\n"
+                "   123123\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "✨ O sistema está pronto para uso!"
+            )
+            
             messagebox.showinfo(
-                "Sucesso",
-                "Deploy finalizado com sucesso!\n\nTodos os arquivos foram enviados e o SQL foi importado."
+                "Deploy Finalizado",
+                success_message
             )
         else:
             self.status_import.config(text="❌ Erro no import SQL", bootstyle="danger")
@@ -562,6 +920,125 @@ class DeployWizard:
         if folder:
             self.entry_local_path.delete(0, END)
             self.entry_local_path.insert(0, folder)
+    
+    def browse_backup_folder(self):
+        """Selecionar pasta para backups"""
+        folder = filedialog.askdirectory(
+            title="Selecione a pasta para backups",
+            initialdir=self.entry_backup_path.get()
+        )
+        if folder:
+            self.entry_backup_path.delete(0, END)
+            self.entry_backup_path.insert(0, folder)
+    
+    def browse_sql_file(self):
+        """Selecionar arquivo SQL"""
+        file = filedialog.askopenfilename(
+            title="Selecione o arquivo SQL",
+            initialdir=self.entry_local_path.get(),
+            filetypes=[("SQL Files", "*.sql"), ("All Files", "*.*")]
+        )
+        if file:
+            # Tornar relativo ao local_path se possível
+            local_path = self.entry_local_path.get()
+            if file.startswith(local_path):
+                file = os.path.relpath(file, local_path)
+            self.entry_sql_file.delete(0, END)
+            self.entry_sql_file.insert(0, file)
+    
+    def execute_backup_files(self):
+        """Executar backup de arquivos"""
+        self.backup_progress.start()
+        self.btn_backup_files.config(state="disabled")
+        self.status_backup_files.config(text="🔄 Fazendo backup...", bootstyle="warning")
+        
+        # Criar pasta de backup se não existir
+        backup_path = self.entry_backup_path.get()
+        os.makedirs(backup_path, exist_ok=True)
+        
+        def backup_thread():
+            self.data['backup_local_path'] = backup_path
+            self.data['remote_path'] = self.entry_remote_path.get()
+            self.data['host'] = self.entry_host.get()
+            self.data['port'] = self.entry_port.get()
+            self.data['username'] = self.entry_username.get()
+            self.data['password'] = self.entry_password.get()
+            success, log = self.deploy_manager.backup_files(self.data)
+            self.root.after(0, lambda: self.on_backup_files_complete(success, log))
+        
+        thread = threading.Thread(target=backup_thread, daemon=True)
+        thread.start()
+
+    def on_backup_files_complete(self, success, log):
+        """Callback quando backup de arquivos termina"""
+        self.backup_progress.stop()
+        self.backup_log_text.insert(END, log + "\n\n")
+        self.backup_log_text.see(END)
+        
+        if success:
+            self.backup_files_done = True
+            self.status_backup_files.config(
+                text="✅ Backup concluído!",
+                bootstyle="success"
+            )
+            messagebox.showinfo(
+                "Backup Concluído",
+                "🎉 Backup dos arquivos PHP foi gerado com segurança!\n\n"
+                f"📁 Localização: {self.data['backup_local_path']}\n\n"
+                "Agora você pode continuar com o deploy."
+            )
+        else:
+            self.status_backup_files.config(text="❌ Erro no backup", bootstyle="danger")
+            messagebox.showerror("Erro", "Falha ao fazer backup dos arquivos.")
+        
+        self.btn_backup_files.config(state="normal")
+
+    def execute_backup_database(self):
+        """Executar backup do banco"""
+        self.backup_progress.start()
+        self.btn_backup_db.config(state="disabled")
+        self.status_backup_db.config(text="🔄 Fazendo backup...", bootstyle="warning")
+        
+        # Criar pasta de backup se não existir
+        backup_path = self.entry_backup_path.get()
+        os.makedirs(backup_path, exist_ok=True)
+        
+        def backup_thread():
+            self.data['backup_local_path'] = backup_path
+            self.data['db_name'] = self.entry_db_name.get()
+            self.data['host'] = self.entry_host.get()
+            self.data['port'] = self.entry_port.get()
+            self.data['username'] = self.entry_username.get()
+            self.data['password'] = self.entry_password.get()
+            success, log = self.deploy_manager.backup_database(self.data)
+            self.root.after(0, lambda: self.on_backup_database_complete(success, log))
+        
+        thread = threading.Thread(target=backup_thread, daemon=True)
+        thread.start()
+
+    def on_backup_database_complete(self, success, log):
+        """Callback quando backup do banco termina"""
+        self.backup_progress.stop()
+        self.backup_log_text.insert(END, log + "\n\n")
+        self.backup_log_text.see(END)
+        
+        if success:
+            self.backup_db_done = True
+            self.status_backup_db.config(
+                text="✅ Backup concluído!",
+                bootstyle="success"
+            )
+            messagebox.showinfo(
+                "Backup Concluído",
+                "🎉 Backup do banco de dados foi gerado com segurança!\n\n"
+                f"📁 Localização: {self.data['backup_local_path']}\n\n"
+                "✨ Agora vamos subir as atualizações!"
+            )
+        else:
+            self.status_backup_db.config(text="❌ Erro no backup", bootstyle="danger")
+            messagebox.showerror("Erro", "Falha ao fazer backup do banco.")
+        
+        self.btn_backup_db.config(state="normal")
             
     def load_last_config(self):
         """Carregar última configuração usada"""
@@ -604,6 +1081,13 @@ class DeployWizard:
                 bootstyle="success"
             )
             
+    def toggle_password_visibility(self):
+        """Alternar visibilidade da senha"""
+        if self.entry_password.cget('show') == '•':
+            self.entry_password.config(show='')
+        else:
+            self.entry_password.config(show='•')
+    
     def save_current_config(self):
         """Salvar configuração atual"""
         # Coletar dados atuais dos campos
@@ -634,8 +1118,8 @@ class DeployWizard:
 
 def main():
     """Função principal"""
-    # Criar janela com tema darkly
-    root = ttk.Window(themename="darkly")
+    # Criar janela com tema cyborg (preto com violet)
+    root = ttk.Window(themename="cyborg")
     
     # Criar aplicação
     app = DeployWizard(root)

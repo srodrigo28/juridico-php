@@ -104,11 +104,10 @@ class DeployManager:
     def list_remote_files(self, data):
         """Listar arquivos no servidor remoto"""
         try:
-            # Conectar se ainda não conectado
-            if not self.ssh_client:
-                success, msg = self.connect_ssh(data)
-                if not success:
-                    return False, msg
+            # Sempre reconectar para garantir conexão ativa
+            success, msg = self.connect_ssh(data)
+            if not success:
+                return False, msg
             
             remote_path = data['remote_path']
             
@@ -329,3 +328,130 @@ class DeployManager:
             except:
                 pass
             self.ssh_client = None
+    
+    def backup_files(self, data: dict) -> tuple:
+        """
+        Fazer backup dos arquivos PHP do servidor
+        
+        Args:
+            data: Dicionário com host, username, password, remote_path, backup_local_path
+        
+        Returns:
+            (success, log_message)
+        """
+        log = []
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"backup_php_{timestamp}.tar.gz"
+        remote_backup = f"/tmp/{backup_filename}"
+        local_backup = os.path.join(data['backup_local_path'], backup_filename)
+        
+        try:
+            log.append("🔄 Iniciando backup dos arquivos PHP...")
+            
+            # Conectar SSH
+            success, msg = self.connect_ssh(data)
+            if not success:
+                log.append(f"❌ Erro de conexão: {msg}")
+                return False, "\n".join(log)
+            
+            ssh = self.ssh_client
+            
+            # Criar arquivo tar.gz no servidor
+            remote_path = data['remote_path'].rstrip('/')
+            tar_command = f"tar -czf {remote_backup} -C {os.path.dirname(remote_path)} {os.path.basename(remote_path)}"
+            
+            log.append(f"📦 Compactando: {remote_path}")
+            stdin, stdout, stderr = ssh.exec_command(tar_command, timeout=300)
+            exit_code = stdout.channel.recv_exit_status()
+            
+            if exit_code != 0:
+                error = stderr.read().decode()
+                log.append(f"❌ Erro ao compactar: {error}")
+                return False, "\n".join(log)
+            
+            log.append(f"✅ Arquivo compactado: {remote_backup}")
+            
+            # Download via SFTP
+            log.append(f"⬇️ Baixando para: {local_backup}")
+            sftp = ssh.open_sftp()
+            sftp.get(remote_backup, local_backup)
+            sftp.close()
+            
+            file_size = os.path.getsize(local_backup) / (1024 * 1024)  # MB
+            log.append(f"✅ Backup baixado com sucesso! ({file_size:.2f} MB)")
+            
+            # Remover arquivo temporário do servidor
+            ssh.exec_command(f"rm {remote_backup}")
+            log.append(f"🧹 Arquivo temporário removido do servidor")
+            
+            ssh.close()
+            return True, "\n".join(log)
+            
+        except Exception as e:
+            log.append(f"❌ Erro no backup de arquivos: {str(e)}")
+            return False, "\n".join(log)
+    
+    def backup_database(self, data: dict) -> tuple:
+        """
+        Fazer backup (dump) do banco de dados
+        
+        Args:
+            data: Dicionário com host, username, password, db_name, db_user, db_pass, backup_local_path
+        
+        Returns:
+            (success, log_message)
+        """
+        log = []
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"backup_db_{timestamp}.sql"
+        remote_backup = f"/tmp/{backup_filename}"
+        local_backup = os.path.join(data['backup_local_path'], backup_filename)
+        
+        try:
+            log.append("🔄 Iniciando backup do banco de dados...")
+            
+            # Conectar SSH
+            success, msg = self.connect_ssh(data)
+            if not success:
+                log.append(f"❌ Erro de conexão: {msg}")
+                return False, "\n".join(log)
+            
+            ssh = self.ssh_client
+            
+            # Fazer dump do banco
+            db_user = data.get('db_user', data['username'])
+            db_pass = data.get('db_pass', data['password'])
+            db_name = data['db_name']
+            
+            dump_command = f"mysqldump --no-defaults -u {db_user} -p'{db_pass}' {db_name} > {remote_backup}"
+            
+            log.append(f"💾 Exportando banco: {db_name}")
+            stdin, stdout, stderr = ssh.exec_command(dump_command, timeout=300)
+            exit_code = stdout.channel.recv_exit_status()
+            
+            if exit_code != 0:
+                error = stderr.read().decode()
+                log.append(f"❌ Erro ao exportar: {error}")
+                return False, "\n".join(log)
+            
+            log.append(f"✅ Dump criado: {remote_backup}")
+            
+            # Download via SFTP
+            log.append(f"⬇️ Baixando para: {local_backup}")
+            sftp = ssh.open_sftp()
+            sftp.get(remote_backup, local_backup)
+            sftp.close()
+            
+            file_size = os.path.getsize(local_backup) / (1024 * 1024)  # MB
+            log.append(f"✅ Backup baixado com sucesso! ({file_size:.2f} MB)")
+            
+            # Remover arquivo temporário do servidor
+            ssh.exec_command(f"rm {remote_backup}")
+            log.append(f"🧹 Arquivo temporário removido do servidor")
+            
+            ssh.close()
+            return True, "\n".join(log)
+            
+        except Exception as e:
+            log.append(f"❌ Erro no backup do banco: {str(e)}")
+            return False, "\n".join(log)
