@@ -29,16 +29,16 @@ if ($__isLocal) {
     define('DB_HOST', 'localhost');
     define('DB_PORT', '3306');
     // Use o banco local onde as tabelas serão criadas
-    define('DB_NAME', 'juridico');
+    define('DB_NAME', 'adv');
     define('DB_USER', 'root');
     define('DB_PASS', '');
 } else {
     // Produção (ajuste conforme necessário)
     define('DB_HOST', '77.37.126.7');
     define('DB_PORT', '3306');
-    define('DB_NAME', 'clientes');
-    define('DB_USER', '');
-    define('DB_PASS', '');
+    define('DB_NAME', 'adv');
+    define('DB_USER', 'srodrigo');
+    define('DB_PASS', '@dV#sRnAt98!');
 }
 
 // Configurações de segurança
