@@ -1,12 +1,11 @@
 -- Merged: criar_banco.sql + script-kanban.sql
--- Database: adv
+-- Ajuste o nome do banco se necessário
 
-DROP DATABASE IF EXISTS adv;
-CREATE DATABASE adv CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS adv CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE adv;
 
--- Tabela de perfil de usuários
-CREATE TABLE usuarios_perfil (
+-- Tabela de perfil de usuários (necessária para seed Kanban)
+CREATE TABLE IF NOT EXISTS usuarios_perfil (
   usuario_id VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL,
   nome VARCHAR(200) NULL,
@@ -18,7 +17,7 @@ CREATE TABLE usuarios_perfil (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabelas do sistema de autenticação/licenças
-CREATE TABLE usuarios_sistema (
+CREATE TABLE IF NOT EXISTS usuarios_sistema (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   senha VARCHAR(255) NULL,
@@ -31,7 +30,7 @@ CREATE TABLE usuarios_sistema (
   INDEX idx_token (token_senha)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE licencas (
+CREATE TABLE IF NOT EXISTS licencas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL,
   produto_id VARCHAR(32) NOT NULL,
@@ -46,7 +45,7 @@ CREATE TABLE licencas (
   INDEX idx_expira (data_expiracao)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE logs_emails_enviados (
+CREATE TABLE IF NOT EXISTS logs_emails_enviados (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL,
   tipo ENUM('pos_compra', 'manual', 'recuperacao') DEFAULT 'pos_compra',
@@ -58,7 +57,7 @@ CREATE TABLE logs_emails_enviados (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabelas da aplicação
-CREATE TABLE clientes (
+CREATE TABLE IF NOT EXISTS clientes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id VARCHAR(100) NOT NULL,
   tipo ENUM('pf', 'pj') DEFAULT 'pf',
@@ -84,7 +83,7 @@ CREATE TABLE clientes (
   INDEX idx_cpf_cnpj (cpf_cnpj)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE processos (
+CREATE TABLE IF NOT EXISTS processos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id VARCHAR(100) NOT NULL,
   cliente_id INT,
@@ -105,7 +104,7 @@ CREATE TABLE processos (
   INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE eventos (
+CREATE TABLE IF NOT EXISTS eventos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   processo_id INT NOT NULL,
   descricao VARCHAR(255) NOT NULL,
@@ -123,7 +122,7 @@ CREATE TABLE eventos (
   INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE honorarios (
+CREATE TABLE IF NOT EXISTS honorarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id VARCHAR(100) NOT NULL,
   cliente_id INT NOT NULL,
@@ -140,7 +139,7 @@ CREATE TABLE honorarios (
   INDEX idx_cliente (cliente_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE parcelas (
+CREATE TABLE IF NOT EXISTS parcelas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   honorario_id INT NOT NULL,
   numero_parcela INT NOT NULL,
@@ -156,7 +155,7 @@ CREATE TABLE parcelas (
   INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE despesas (
+CREATE TABLE IF NOT EXISTS despesas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id VARCHAR(100) NOT NULL,
   processo_id INT,
@@ -174,8 +173,27 @@ CREATE TABLE despesas (
   INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabela Kanban
-CREATE TABLE kanban_cards (
+-- Usuário administrador padrão (insira a senha via script PHP)
+INSERT INTO licencas (email, produto_id, produto_nome, status_licenca)
+VALUES ('admin@local.test', '5776734', 'Precifex Jurídico', 'ativa')
+ON DUPLICATE KEY UPDATE status_licenca='ativa', atualizado_em=NOW();
+
+-- Cria um registro do admin sem senha (será definida pelo script PHP)
+INSERT INTO usuarios_sistema (email, criado_em)
+VALUES ('admin@local.test', NOW())
+ON DUPLICATE KEY UPDATE atualizado_em=NOW();
+
+-- ======================
+-- Início: seed Kanban (script-kanban.sql)
+SET @user_email = 'admin@local.test';
+
+-- Garante perfil do usuário seed
+INSERT INTO usuarios_perfil (usuario_id, email, nome)
+SELECT SUBSTRING_INDEX(@user_email, '@', 1), @user_email, 'Usuário Seed'
+WHERE NOT EXISTS (SELECT 1 FROM usuarios_perfil WHERE email = @user_email);
+
+-- Tabela kanban_cards
+CREATE TABLE IF NOT EXISTS kanban_cards (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_email VARCHAR(255) NOT NULL,
   titulo VARCHAR(255) NOT NULL,
@@ -187,22 +205,23 @@ CREATE TABLE kanban_cards (
   INDEX idx_kanban_user_email (user_email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Usuário admin (sem senha - definir depois)
-INSERT INTO usuarios_sistema (email, criado_em) VALUES ('admin@local.test', NOW());
+-- Limpeza opcional para evitar duplicações em múltiplas execuções deste seed
+DELETE FROM kanban_cards
+WHERE user_email = @user_email
+  AND titulo IN (
+    'Definir escopo inicial',
+    'Criar layout base',
+    'Implementar arrastar e soltar',
+    'Configurar páginas e menu',
+    'Adicionar contadores por coluna',
+    'Integrar backend AJAX'
+  );
 
--- Licença admin
-INSERT INTO licencas (email, produto_id, produto_nome, status_licenca)
-VALUES ('admin@local.test', '5776734', 'Precifex Jurídico', 'ativa');
-
--- Perfil admin
-INSERT INTO usuarios_perfil (usuario_id, email, nome)
-VALUES ('admin', 'admin@local.test', 'Administrador');
-
--- Cards de exemplo
+-- Inserções de exemplo
 INSERT INTO kanban_cards (user_email, titulo, descricao, prioridade, coluna, data_prevista, criado_em) VALUES
-('admin@local.test', 'Definir escopo inicial', 'Mapear requisitos do Kanban', 'alta', 'tarefas', '2026-01-15', '2026-01-10 09:00:00'),
-('admin@local.test', 'Criar layout base', 'Estruturar colunas com Bootstrap', 'media', 'tarefas', '2026-01-16', '2026-01-10 14:30:00'),
-('admin@local.test', 'Implementar arrastar e soltar', 'Habilitar DnD nativo', 'media', 'doing', '2026-01-17', '2026-01-11 10:00:00'),
-('admin@local.test', 'Configurar páginas e menu', 'Adicionar link Kanban no header', 'baixa', 'done', '2026-01-14', '2026-01-09 16:00:00'),
-('admin@local.test', 'Adicionar contadores por coluna', 'Badges com cores dinâmicas', 'baixa', 'tarefas', '2026-01-18', '2026-01-11 11:15:00'),
-('admin@local.test', 'Integrar backend AJAX', 'CRUD completo de cards', 'alta', 'doing', '2026-01-19', '2026-01-11 12:00:00');
+(@user_email, 'Definir escopo inicial', 'Mapear requisitos do Kanban, colunas e prioridades.', 'alta', 'tarefas', '2026-01-15', '2026-01-10 09:00:00'),
+(@user_email, 'Criar layout base', 'Estruturar colunas, cabeçalhos e cartões com Bootstrap.', 'media', 'tarefas', '2026-01-16', '2026-01-10 14:30:00'),
+(@user_email, 'Implementar arrastar e soltar', 'Habilitar DnD nativo, ordenação por prioridade e data.', 'media', 'doing', '2026-01-17', '2026-01-11 10:00:00'),
+(@user_email, 'Configurar páginas e menu', 'Adicionar link Kanban no header e no index.', 'baixa', 'done', '2026-01-14', '2026-01-09 16:00:00'),
+(@user_email, 'Adicionar contadores por coluna', 'Badges com cores e atualização dinâmica.', 'baixa', 'tarefas', '2026-01-18', '2026-01-11 11:15:00'),
+(@user_email, 'Integrar backend AJAX', 'CRUD completo: listar, criar, editar, mover, excluir.', 'alta', 'doing', '2026-01-19', '2026-01-11 12:00:00');

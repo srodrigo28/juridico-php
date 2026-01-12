@@ -2,14 +2,8 @@
 /**
  * Configurações do Sistema de Membros
  * PRECIFEX - config.php
+ * Versão corrigida - Janeiro 2026
  */
-
-// Adicionar no início do config.php para evitar problemas de cache
-
-// Headers para evitar cache em páginas dinâmicas
-header('Cache-Control: no-cache, no-store, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
 
 // Impedir acesso direto
 if (!defined('SISTEMA_MEMBROS')) {
@@ -19,53 +13,53 @@ if (!defined('SISTEMA_MEMBROS')) {
 // Configuração de timezone
 date_default_timezone_set('America/Sao_Paulo');
 
-// Detectar ambiente (local vs produção) antes de usar $__isLocal
+// Detectar ambiente (local vs produção) - DECLARAR APENAS UMA VEZ
 $__host = $_SERVER['HTTP_HOST'] ?? '';
 $__isLocal = preg_match('/^(localhost|127\\.0\\.0\\.1)(:\\d+)?$/', $__host) === 1;
 
 // Configurações do banco de dados
-// Ambiente local
 if ($__isLocal) {
+    // Ambiente local
     define('DB_HOST', 'localhost');
     define('DB_PORT', '3306');
-    // Use o banco local onde as tabelas serão criadas
     define('DB_NAME', 'adv');
     define('DB_USER', 'root');
     define('DB_PASS', '');
+    
+    // Habilitar modo debug em ambiente local
+    if (!defined('DEBUG_MODE')) {
+        define('DEBUG_MODE', true);
+    }
 } else {
-    // Produção (ajuste conforme necessário)
+    // Produção
     define('DB_HOST', '77.37.126.7');
     define('DB_PORT', '3306');
     define('DB_NAME', 'adv');
     define('DB_USER', 'srodrigo');
     define('DB_PASS', '@dV#sRnAt98!');
+    
+    // Desabilitar debug em produção
+    if (!defined('DEBUG_MODE')) {
+        define('DEBUG_MODE', false);
+    }
 }
 
 // Configurações de segurança
 define('SALT_SENHA', 'JLP_SISTEMAS_2025_SALT_HASH');
 define('TOKEN_EXPIRY', 24 * 60 * 60); // 24 horas para token de criação de senha
 
-// URLs do sistema (ajuste para ambiente local vs produção)
-$__host = $_SERVER['HTTP_HOST'] ?? '';
-$__isLocal = preg_match('/^(localhost|127\\.0\\.0\\.1)(:\\d+)?$/', $__host) === 1;
-
+// URLs do sistema (usando a variável já declarada)
 if ($__isLocal) {
-    // Base local: ajuste conforme seu DocumentRoot
-    // Estrutura detectada: c:\xampp\htdocs\www\juridico-php -> http://localhost/www/juridico-php
+    // Base local
     $__scheme = 'http://';
-    $__baseLocal = $__scheme . $__host . '/www/juridico-php';
+    $__baseLocal = $__scheme . $__host . '/www/v2/juridico-php';
     define('BASE_URL', $__baseLocal);
     define('LOGIN_URL', BASE_URL . '/login.php');
-    // Dashboard acessa via index com aba
     define('DASHBOARD_URL', BASE_URL . '/index.php?aba=dashboard');
-    // Endpoint de logout dedicado
     define('LOGOUT_URL', BASE_URL . '/sistemas/logout.php');
-    // Habilitar modo debug em ambiente local
-    if (!defined('DEBUG_MODE')) {
-        define('DEBUG_MODE', true);
-    }
 } else {
-    define('BASE_URL', 'https://precifex.com/sistemas');
+    // Produção - AJUSTE CONFORME SEU DOMÍNIO
+    define('BASE_URL', 'https://adv.precifex.com');
     define('LOGIN_URL', BASE_URL . '/login.php');
     define('DASHBOARD_URL', BASE_URL . '/dashboard.php');
     define('LOGOUT_URL', BASE_URL . '/logout.php');
@@ -74,14 +68,14 @@ if ($__isLocal) {
 // Produtos disponíveis
 $PRODUTOS_SISTEMA = [
     
-    // Produto gratuito disponível para todos os usuários logados
+    // Produtos gratuitos disponíveis para todos os usuários logados
     'calculadora' => [
         'nome' => 'Calculadora de Datas',
         'descricao' => 'Realize cálculos de prazos de forma rápida e precisa, considerando feriados e diferentes metodologias de contagem',
         'url' => 'https://precifex.com/calculadora/',
         'icone' => '🗓️',
         'ativo' => true,
-        'gratuito' => true  // Flag especial para produtos gratuitos
+        'gratuito' => true
     ],
 
     'profissionais' => [
@@ -90,7 +84,7 @@ $PRODUTOS_SISTEMA = [
         'url' => 'https://precifex.com/profissionais/',
         'icone' => '👷‍♂️',
         'ativo' => true,
-        'gratuito' => true  // Flag especial para produtos gratuitos
+        'gratuito' => true
     ],
 
     'simulador' => [
@@ -99,9 +93,10 @@ $PRODUTOS_SISTEMA = [
         'url' => 'https://precifex.com/simulador/',
         'icone' => '🏠',
         'ativo' => true,
-        'gratuito' => true  // Flag especial para produtos gratuitos
+        'gratuito' => true
     ],
      
+    // Produtos pagos
     '4737273' => [
         'nome' => 'Pesquisa de Preços',
         'descricao' => 'Sistema completo para pesquisa de preços públicos com milhões de registros atualizados',
@@ -174,6 +169,7 @@ $PRODUTOS_SISTEMA = [
         'ativo' => true
     ],
 
+    // Planilhas
     '1974234' => [
         'nome' => 'Planilha de Revisão de Plano de Saúde',
         'descricao' => 'Planilha para identificar reajustes abusivos e recalcular mensalidades em planos de saúde',
@@ -228,6 +224,7 @@ $PRODUTOS_SISTEMA = [
         'tipo' => 'planilha'
     ],
 
+    // Cursos externos (Hotmart)
     '3106737' => [
         'nome' => 'Treinamento em Perícia Contábil',
         'descricao' => 'Sessão individual de 1 hora para ensinar a analisar contratos, extratos e realizar cálculos',
@@ -273,88 +270,87 @@ $PRODUTOS_SISTEMA = [
         'externa' => true
     ],
   
+    // Arquivos e guias
     '4879402' => [
-    'nome' => 'Checklist para Cadastramento como Perito Judicial',
-    'descricao' => 'Guia completo para cadastramento como perito judicial',
-    'url' => BASE_URL . '/arquivos.php?id=4879402',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Checklist para Cadastramento como Perito Judicial',
+        'descricao' => 'Guia completo para cadastramento como perito judicial',
+        'url' => BASE_URL . '/arquivos.php?id=4879402',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '3030198' => [
-    'nome' => 'Passo a Passo do Perito Judicial: Da Nomeação ao Recebimento dos Honorários',
-    'descricao' => 'Descubra exatamente o que fazer após receber sua primeira nomeação com este guia prático completo',
-    'url' => BASE_URL . '/arquivos.php?id=3030198',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Passo a Passo do Perito Judicial: Da Nomeação ao Recebimento dos Honorários',
+        'descricao' => 'Descubra exatamente o que fazer após receber sua primeira nomeação com este guia prático completo',
+        'url' => BASE_URL . '/arquivos.php?id=3030198',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '5091645' => [
-    'nome' => 'Decifrando Microfilmagem e Extrato PASEP',
-    'descricao' => 'Passo a passo para interpretar corretamente microfilmagens e extratos',
-    'url' => BASE_URL . '/arquivos.php?id=5091645',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Decifrando Microfilmagem e Extrato PASEP',
+        'descricao' => 'Passo a passo para interpretar corretamente microfilmagens e extratos',
+        'url' => BASE_URL . '/arquivos.php?id=5091645',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '5255689' => [
-    'nome' => 'Método para Melhorar Comunicação e Concentração de Crianças',
-    'descricao' => 'Técnicas práticas para desenvolvimento infantil',
-    'url' => BASE_URL . '/arquivos.php?id=5255689',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Método para Melhorar Comunicação e Concentração de Crianças',
+        'descricao' => 'Técnicas práticas para desenvolvimento infantil',
+        'url' => BASE_URL . '/arquivos.php?id=5255689',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '4923859' => [
-    'nome' => 'Planner -5kg em 30 Dias Sem Mudar Seu Cardápio',
-    'descricao' => 'Descubra como perder até 5kg em 30 dias adaptando seus próprios hábitos',
-    'url' => BASE_URL . '/arquivos.php?id=4923859',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Planner -5kg em 30 Dias Sem Mudar Seu Cardápio',
+        'descricao' => 'Descubra como perder até 5kg em 30 dias adaptando seus próprios hábitos',
+        'url' => BASE_URL . '/arquivos.php?id=4923859',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '5112381' => [
-    'nome' => 'Registre sua marca no INPI em 5 passos',
-    'descricao' => 'Passo a passo para pesquisar e registrar Marca no INPI',
-    'url' => BASE_URL . '/arquivos.php?id=5112381',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Registre sua marca no INPI em 5 passos',
+        'descricao' => 'Passo a passo para pesquisar e registrar Marca no INPI',
+        'url' => BASE_URL . '/arquivos.php?id=5112381',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '5410833' => [
-    'nome' => 'Script de Vendas de Shows para Órgãos Públicos',
-    'descricao' => 'Roteiro especializado para cantores e bandas que desejam vender shows para órgãos públicos',
-    'url' => BASE_URL . '/arquivos.php?id=5410833',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Script de Vendas de Shows para Órgãos Públicos',
+        'descricao' => 'Roteiro especializado para cantores e bandas que desejam vender shows para órgãos públicos',
+        'url' => BASE_URL . '/arquivos.php?id=5410833',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '5412054' => [
-    'nome' => 'Script de Vendas de Shows',
-    'descricao' => 'Roteiro especializado para cantores e bandas que desejam vender shows',
-    'url' => BASE_URL . '/arquivos.php?id=5412054',
-    'icone' => '📋',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Script de Vendas de Shows',
+        'descricao' => 'Roteiro especializado para cantores e bandas que desejam vender shows',
+        'url' => BASE_URL . '/arquivos.php?id=5412054',
+        'icone' => '📋',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ],
 
     '6294808' => [
-    'nome' => 'Ansiedade Desarmada',
-    'descricao' => 'Guia prático para identificar sinais, controlar crises e voltar a respirar',
-    'url' => BASE_URL . '/arquivos.php?id=6294808',
-    'icone' => '🧠',
-    'ativo' => true,
-    'tipo' => 'arquivo'
+        'nome' => 'Ansiedade Desarmada',
+        'descricao' => 'Guia prático para identificar sinais, controlar crises e voltar a respirar',
+        'url' => BASE_URL . '/arquivos.php?id=6294808',
+        'icone' => '🧠',
+        'ativo' => true,
+        'tipo' => 'arquivo'
     ]
-
-    // Futuros produtos serão adicionados aqui
 ];
 
 /**
@@ -381,19 +377,34 @@ function obterProdutosUsuario($produtosUsuario = []) {
 }
 
 /**
- * Conexão com banco de dados
+ * Conexão com banco de dados - MELHORADA COM SINGLETON
  */
 function getDBConnection() {
+    static $pdo = null;
+    
+    // Reutilizar conexão existente (evita múltiplas conexões)
+    if ($pdo !== null) {
+        return $pdo;
+    }
+    
     try {
         $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
         $pdo = new PDO($dsn, DB_USER, DB_PASS, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_TIMEOUT => 10
+            PDO::ATTR_TIMEOUT => 10,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_PERSISTENT => false
         ]);
         return $pdo;
     } catch (PDOException $e) {
-        error_log("Erro de conexão: " . $e->getMessage());
+        error_log("Erro de conexão DB: " . $e->getMessage());
+        
+        // Em modo debug, mostrar erro detalhado
+        if (defined('DEBUG_MODE') && DEBUG_MODE) {
+            die("<h3>Erro de Conexão com Banco de Dados</h3><p>" . htmlspecialchars($e->getMessage()) . "</p>");
+        }
+        
         return false;
     }
 }
@@ -473,55 +484,75 @@ function estaLogado() {
  */
 function iniciarSessao() {
     if (session_status() === PHP_SESSION_NONE) {
-        // Configurações de sessão (movida para dentro da função, para que as configurações só sejam aplicadas quando a sessão ainda não foi iniciada)
+        // Configurações de sessão
         ini_set('session.cookie_httponly', 1);
-        // Em ambiente local (HTTP), não usar cookie_secure
-        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+        
+        // Detectar HTTPS para cookie_secure
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                 || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
         ini_set('session.cookie_secure', $https ? 1 : 0);
+        
         ini_set('session.use_strict_mode', 1);
         session_name('MEMBROS_SESSION');
         session_start();
         
-        // Regenerar ID da sessão periodicamente
+        // Regenerar ID da sessão periodicamente (5 minutos)
         if (!isset($_SESSION['last_regeneration'])) {
             $_SESSION['last_regeneration'] = time();
-        } elseif (time() - $_SESSION['last_regeneration'] > 300) { // 5 minutos
+        } elseif (time() - $_SESSION['last_regeneration'] > 300) {
             session_regenerate_id(true);
             $_SESSION['last_regeneration'] = time();
         }
     }
 }
 
-// Inicializar sistema
-iniciarSessao();
-
-// Configurações de erro em produção
-if (!defined('DEBUG_MODE')) {
-    error_reporting(0);
-    ini_set('display_errors', 0);
-} else {
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-}
-
-// Atualizar licenças expiradas antes de carregar a página
+/**
+ * Atualizar licenças expiradas
+ * NOTA: Esta função deve ser chamada apenas onde necessário, não automaticamente
+ */
 function atualizarLicencasExpiradas() {
     $pdo = getDBConnection();
     if (!$pdo) return false;
     
-    $stmt = $pdo->prepare("
-        UPDATE licencas 
-        SET status_licenca = 'inativa', atualizado_em = NOW() 
-        WHERE status_licenca = 'ativa' 
-        AND data_expiracao IS NOT NULL 
-        AND data_expiracao < CURDATE()
-    ");
-    
-    $stmt->execute();
-    return $stmt->rowCount();
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE licencas 
+            SET status_licenca = 'inativa', atualizado_em = NOW() 
+            WHERE status_licenca = 'ativa' 
+            AND data_expiracao IS NOT NULL 
+            AND data_expiracao < CURDATE()
+        ");
+        
+        $stmt->execute();
+        $count = $stmt->rowCount();
+        
+        if ($count > 0) {
+            logSistema("Licenças expiradas atualizadas: $count registros", 'INFO');
+        }
+        
+        return $count;
+    } catch (PDOException $e) {
+        logSistema("Erro ao atualizar licenças: " . $e->getMessage(), 'ERROR');
+        return false;
+    }
 }
 
-// Executar a atualização
-atualizarLicencasExpiradas();
+// Inicializar sistema
+iniciarSessao();
+
+// Configurações de erro baseadas no ambiente
+if (defined('DEBUG_MODE') && DEBUG_MODE) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    ini_set('log_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+}
+
+// ❌ REMOVIDO: Execução automática
+// Chame atualizarLicencasExpiradas() apenas onde for necessário
+// Exemplo: na página de login, dashboard, ou via CRON
 
 ?>
