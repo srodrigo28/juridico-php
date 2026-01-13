@@ -51,7 +51,7 @@ $stats = obterEstatisticas($pdo, $_SESSION['user_id']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Precifex Jurídico</title>
+    <title>Precifex ADV</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="public/css/style.css">
@@ -84,7 +84,7 @@ $stats = obterEstatisticas($pdo, $_SESSION['user_id']);
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; <?= date('Y') ?> Precifex Jurídico - Todos os direitos reservados</p>
+                    <p class="mb-0">&copy; <?= date('Y') ?> Precifex ADV - Todos os direitos reservados</p>
                 </div>
                 <div class="col-md-6 text-end">
                     <p class="mb-0">Versão 1.0 Beta | <a href="mailto:contato@precifex.com">Suporte</a></p>

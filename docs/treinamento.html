@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Treinamento: Deploy via PuTTY / PSFTP / MySQL</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-4xl mx-auto p-6">
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold">Treinamento: Deploy via PuTTY / PSFTP / MySQL</h1>
+      <p class="text-sm text-gray-600 mt-1">Passo-a-passo interativo para subir, testar, apagar e re-subir arquivos e banco.</p>
+    </header>
+
+    <section class="bg-white rounded shadow p-4 mb-4">
+      <h2 class="font-medium">Credenciais (use com cuidado)</h2>
+      <ul class="text-sm mt-2 space-y-1">
+        <li><strong>SSH Host</strong>: 77.37.126.7</li>
+        <li><strong>SSH User</strong>: srodrigo</li>
+        <li><strong>SSH/SFTP Port</strong>: 22</li>
+        <li><strong>MySQL User</strong>: srodrigo</li>
+        <li><strong>MySQL Port</strong>: 3306</li>
+        <li><strong>Password (SSH & MySQL)</strong>: @dV#sRnAt98!</li>
+        <li><strong>Remote allowed dir</strong>: /var/www/adv.precifex.com</li>
+        <li><strong>Local project root</strong>: C:\xampp\htdocs\www\v2\juridico-php</li>
+        <li><strong>SQL script local path</strong>: C:\xampp\htdocs\www\v2\juridico-php\scripts\criar_new_db.sql</li>
+        <li><strong>Target DB</strong>: adv</li>
+      </ul>
+    </section>
+
+    <section id="instructions" class="bg-white rounded shadow p-4 space-y-4">
+      <h2 class="font-medium">Visão geral</h2>
+      <p class="text-sm text-gray-600">Três blocos de atividade: (1) enviar arquivos, (2) rodar script SQL no servidor, (3) verificar/apagar e repetir. Cada bloco tem comandos prontos para copiar.</p>
+
+      <!-- BLOCK 1 -->
+      <div class="border rounded p-4">
+        <h3 class="font-semibold">1) Subir arquivos (upload)</h3>
+        <p class="text-sm text-gray-600 mb-2">Opções: PSFTP interativo, PSCP (recomendado), ou WinSCP GUI.</p>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Recomendo (PowerShell ou CMD) - enviar todo o projeto rapidamente:</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-pscp">pscp -r -P 22 "C:\xampp\htdocs\www\v2\juridico-php\*" srodrigo@77.37.126.7:/var/www/adv.precifex.com/</code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-pscp">Copiar</button>
+        </div>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Ou usar PSFTP (interativo) – exemplo passo-a-passo:</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-psftp">
+psftp srodrigo@77.37.126.7
+# no prompt psftp>:
+lcd C:\xampp\htdocs\www\v2\juridico-php
+cd /var/www/adv.precifex.com
+mkdir scripts
+cd /var/www/adv.precifex.com/scripts
+put "C:\xampp\htdocs\www\v2\juridico-php\scripts\criar_new_db.sql"
+put -r public
+put -r vendor
+quit
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-psftp">Copiar</button>
+        </div>
+
+        <details class="mt-3">
+          <summary class="text-sm text-gray-700 cursor-pointer">Erros comuns e soluções</summary>
+          <ul class="text-sm mt-2 space-y-1 pl-4 text-gray-600">
+            <li><strong>local: unable to open &lt;name&gt;</strong> — execute <code>lcd C:\...path</code> ou use caminho absoluto no put.</li>
+            <li>Para chaves .ppk use <code>psftp -i C:\path\key.ppk srodrigo@host</code> ou carregue Pageant.</li>
+          </ul>
+        </details>
+      </div>
+
+      <!-- BLOCK 2 -->
+      <div class="border rounded p-4">
+        <h3 class="font-semibold">2) Rodar script SQL no servidor (via PuTTY)</h3>
+        <p class="text-sm text-gray-600 mb-2">Passos: conectar SSH, garantir arquivo no servidor, ajustar se necessário, importar para o DB adv.</p>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Conectar SSH (PuTTY)</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-putty"># Use PuTTY GUI: Host 77.37.126.7, Port 22, User srodrigo, password when prompted</code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-putty">Copiar</button>
+        </div>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">No shell remoto (execute após login)</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-remote-1">
+# listar scripts
+ls -la /var/www/adv.precifex.com/scripts
+
+# opcional: criar DB (se você tiver permissão)
+mysql -u srodrigo -p -e "CREATE DATABASE IF NOT EXISTS adv CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+# importar (use o nome do arquivo enviado)
+mysql -u srodrigo -p adv &lt; /var/www/adv.precifex.com/scripts/criar_new_db.sql
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-remote-1">Copiar</button>
+        </div>
+
+        <details class="mt-3">
+          <summary class="text-sm text-gray-700 cursor-pointer">Se “Access denied” ao importar</summary>
+          <div class="text-sm mt-2 pl-4 text-gray-600">
+            1) Você provavelmente não tem permissão para criar DB (CREATE DATABASE). <br>
+            2) Trabalhe com o admin ou peça criação do DB adv; ou peça que executem:
+            <pre class="bg-gray-100 p-2 rounded"><code>mysql -u root -p -e "CREATE DATABASE adv; GRANT ALL ON adv.* TO 'srodrigo'@'localhost' IDENTIFIED BY '@dV#sRnAt98!'; FLUSH PRIVILEGES;"</code></pre>
+            3) Alternativa: remova a linha CREATE DATABASE e troque USE juridico; por USE adv; no arquivo antes de importar:
+            <pre class="bg-gray-100 p-2 rounded"><code>cd /var/www/adv.precifex.com/scripts
+cp criar_new_db.sql novo_banco_adv.sql
+sed -i -e '/^CREATE DATABASE/Id' -e 's/USE juridico;/USE adv;/Ig' novo_banco_adv.sql
+mysql -u srodrigo -p adv &lt; novo_banco_adv.sql</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <!-- BLOCK 3 -->
+      <div class="border rounded p-4">
+        <h3 class="font-semibold">3) Exibir tabelas, apagar e repetir (testes)</h3>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Comandos de verificação</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-check">
+# mostrar DBs
+mysql -u srodrigo -p -e "SHOW DATABASES LIKE 'adv';"
+
+# listar tabelas no adv
+mysql -u srodrigo -p adv -e "SHOW TABLES;"
+
+# contar registros na tabela kanban_cards
+mysql -u srodrigo -p adv -e "SELECT COUNT(*) FROM kanban_cards;"
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-check">Copiar</button>
+        </div>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Apagar todas as tabelas (para re-testar import)</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-drop">
+# cuidado: remove todas as tabelas no DB adv
+mysql -u srodrigo -p adv -e "SET FOREIGN_KEY_CHECKS=0; \
+$(mysql -u srodrigo -p -N -B adv -e "SHOW TABLES" | sed "s/.*/DROP TABLE IF EXISTS &;/" | tr '\n' ' ') \
+; SET FOREIGN_KEY_CHECKS=1;"
+# alternativa manual:
+mysql -u srodrigo -p -e "DROP DATABASE IF EXISTS adv; CREATE DATABASE adv;"
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-drop">Copiar</button>
+          <p class="text-xs text-red-600 mt-2">Aviso: os comandos acima removem dados. Use somente para testes.</p>
+        </div>
+      </div>
+
+      <details class="mt-4">
+        <summary class="font-medium">Checklist rápido</summary>
+        <ul class="mt-2 text-sm text-gray-600 pl-4">
+          <li>1) Enviar scripts para /var/www/adv.precifex.com/scripts</li>
+          <li>2) Confirmar presença do arquivo SQL no servidor (ls -la ...)</li>
+          <li>3) Importar SQL para adv ou pedir DB/root se não tiver permissão</li>
+          <li>4) Verificar tabelas e seed</li>
+          <li>5) Apagar tabelas e repetir testes quando necessário</li>
+        </ul>
+      </details>
+    </section>
+
+    <footer class="mt-6 text-sm text-gray-500">
+      <p>Arquivo gerado automaticamente. Use com atenção às credenciais e permissões.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Copy buttons
+    document.querySelectorAll('.copy-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=> {
+        const id = btn.getAttribute('data-target')
+        const el = document.getElementById(id)
+        if (!el) return
+        const text = el.innerText.replace(/\u00A0/g,' ')
+        try {
+          await navigator.clipboard.writeText(text.trim())
+          btn.innerText = 'Copiado'
+          setTimeout(()=> btn.innerText = 'Copiar',1500)
+        } catch(e) {
+          alert('Erro ao copiar. Selecione e copie manualmente.')
+        }
+      })
+    })
+  </script>
+</body>
+</html>
+```// filepath: c:\xampp\htdocs\www\v2\juridico-php\treinamento.html
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Treinamento: Deploy via PuTTY / PSFTP / MySQL</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-4xl mx-auto p-6">
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold">Treinamento: Deploy via PuTTY / PSFTP / MySQL</h1>
+      <p class="text-sm text-gray-600 mt-1">Passo-a-passo interativo para subir, testar, apagar e re-subir arquivos e banco.</p>
+    </header>
+
+    <section class="bg-white rounded shadow p-4 mb-4">
+      <h2 class="font-medium">Credenciais (use com cuidado)</h2>
+      <ul class="text-sm mt-2 space-y-1">
+        <li><strong>SSH Host</strong>: 77.37.126.7</li>
+        <li><strong>SSH User</strong>: srodrigo</li>
+        <li><strong>SSH/SFTP Port</strong>: 22</li>
+        <li><strong>MySQL User</strong>: srodrigo</li>
+        <li><strong>MySQL Port</strong>: 3306</li>
+        <li><strong>Password (SSH & MySQL)</strong>: @dV#sRnAt98!</li>
+        <li><strong>Remote allowed dir</strong>: /var/www/adv.precifex.com</li>
+        <li><strong>Local project root</strong>: C:\xampp\htdocs\www\v2\juridico-php</li>
+        <li><strong>SQL script local path</strong>: C:\xampp\htdocs\www\v2\juridico-php\scripts\criar_new_db.sql</li>
+        <li><strong>Target DB</strong>: adv</li>
+      </ul>
+    </section>
+
+    <section id="instructions" class="bg-white rounded shadow p-4 space-y-4">
+      <h2 class="font-medium">Visão geral</h2>
+      <p class="text-sm text-gray-600">Três blocos de atividade: (1) enviar arquivos, (2) rodar script SQL no servidor, (3) verificar/apagar e repetir. Cada bloco tem comandos prontos para copiar.</p>
+
+      <!-- BLOCK 1 -->
+      <div class="border rounded p-4">
+        <h3 class="font-semibold">1) Subir arquivos (upload)</h3>
+        <p class="text-sm text-gray-600 mb-2">Opções: PSFTP interativo, PSCP (recomendado), ou WinSCP GUI.</p>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Recomendo (PowerShell ou CMD) - enviar todo o projeto rapidamente:</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-pscp">pscp -r -P 22 "C:\xampp\htdocs\www\v2\juridico-php\*" srodrigo@77.37.126.7:/var/www/adv.precifex.com/</code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-pscp">Copiar</button>
+        </div>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Ou usar PSFTP (interativo) – exemplo passo-a-passo:</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-psftp">
+psftp srodrigo@77.37.126.7
+# no prompt psftp>:
+lcd C:\xampp\htdocs\www\v2\juridico-php
+cd /var/www/adv.precifex.com
+mkdir scripts
+cd /var/www/adv.precifex.com/scripts
+put "C:\xampp\htdocs\www\v2\juridico-php\scripts\criar_new_db.sql"
+put -r public
+put -r vendor
+quit
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-psftp">Copiar</button>
+        </div>
+
+        <details class="mt-3">
+          <summary class="text-sm text-gray-700 cursor-pointer">Erros comuns e soluções</summary>
+          <ul class="text-sm mt-2 space-y-1 pl-4 text-gray-600">
+            <li><strong>local: unable to open &lt;name&gt;</strong> — execute <code>lcd C:\...path</code> ou use caminho absoluto no put.</li>
+            <li>Para chaves .ppk use <code>psftp -i C:\path\key.ppk srodrigo@host</code> ou carregue Pageant.</li>
+          </ul>
+        </details>
+      </div>
+
+      <!-- BLOCK 2 -->
+      <div class="border rounded p-4">
+        <h3 class="font-semibold">2) Rodar script SQL no servidor (via PuTTY)</h3>
+        <p class="text-sm text-gray-600 mb-2">Passos: conectar SSH, garantir arquivo no servidor, ajustar se necessário, importar para o DB adv.</p>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Conectar SSH (PuTTY)</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-putty"># Use PuTTY GUI: Host 77.37.126.7, Port 22, User srodrigo, password when prompted</code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-putty">Copiar</button>
+        </div>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">No shell remoto (execute após login)</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-remote-1">
+# listar scripts
+ls -la /var/www/adv.precifex.com/scripts
+
+# opcional: criar DB (se você tiver permissão)
+mysql -u srodrigo -p -e "CREATE DATABASE IF NOT EXISTS adv CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+# importar (use o nome do arquivo enviado)
+mysql -u srodrigo -p adv &lt; /var/www/adv.precifex.com/scripts/criar_new_db.sql
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-remote-1">Copiar</button>
+        </div>
+
+        <details class="mt-3">
+          <summary class="text-sm text-gray-700 cursor-pointer">Se “Access denied” ao importar</summary>
+          <div class="text-sm mt-2 pl-4 text-gray-600">
+            1) Você provavelmente não tem permissão para criar DB (CREATE DATABASE). <br>
+            2) Trabalhe com o admin ou peça criação do DB adv; ou peça que executem:
+            <pre class="bg-gray-100 p-2 rounded"><code>mysql -u root -p -e "CREATE DATABASE adv; GRANT ALL ON adv.* TO 'srodrigo'@'localhost' IDENTIFIED BY '@dV#sRnAt98!'; FLUSH PRIVILEGES;"</code></pre>
+            3) Alternativa: remova a linha CREATE DATABASE e troque USE juridico; por USE adv; no arquivo antes de importar:
+            <pre class="bg-gray-100 p-2 rounded"><code>cd /var/www/adv.precifex.com/scripts
+cp criar_new_db.sql novo_banco_adv.sql
+sed -i -e '/^CREATE DATABASE/Id' -e 's/USE juridico;/USE adv;/Ig' novo_banco_adv.sql
+mysql -u srodrigo -p adv &lt; novo_banco_adv.sql</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <!-- BLOCK 3 -->
+      <div class="border rounded p-4">
+        <h3 class="font-semibold">3) Exibir tabelas, apagar e repetir (testes)</h3>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Comandos de verificação</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-check">
+# mostrar DBs
+mysql -u srodrigo -p -e "SHOW DATABASES LIKE 'adv';"
+
+# listar tabelas no adv
+mysql -u srodrigo -p adv -e "SHOW TABLES;"
+
+# contar registros na tabela kanban_cards
+mysql -u srodrigo -p adv -e "SELECT COUNT(*) FROM kanban_cards;"
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-check">Copiar</button>
+        </div>
+
+        <div class="mb-2">
+          <div class="text-xs font-medium text-gray-700">Apagar todas as tabelas (para re-testar import)</div>
+          <pre class="bg-gray-100 p-3 rounded mt-2"><code id="cmd-drop">
+# cuidado: remove todas as tabelas no DB adv
+mysql -u srodrigo -p adv -e "SET FOREIGN_KEY_CHECKS=0; \
+$(mysql -u srodrigo -p -N -B adv -e "SHOW TABLES" | sed "s/.*/DROP TABLE IF EXISTS &;/" | tr '\n' ' ') \
+; SET FOREIGN_KEY_CHECKS=1;"
+# alternativa manual:
+mysql -u srodrigo -p -e "DROP DATABASE IF EXISTS adv; CREATE DATABASE adv;"
+          </code></pre>
+          <button class="copy-btn bg-indigo-600 text-white px-3 py-1 rounded mt-2" data-target="cmd-drop">Copiar</button>
+          <p class="text-xs text-red-600 mt-2">Aviso: os comandos acima removem dados. Use somente para testes.</p>
+        </div>
+      </div>
+
+      <details class="mt-4">
+        <summary class="font-medium">Checklist rápido</summary>
+        <ul class="mt-2 text-sm text-gray-600 pl-4">
+          <li>1) Enviar scripts para /var/www/adv.precifex.com/scripts</li>
+          <li>2) Confirmar presença do arquivo SQL no servidor (ls -la ...)</li>
+          <li>3) Importar SQL para adv ou pedir DB/root se não tiver permissão</li>
+          <li>4) Verificar tabelas e seed</li>
+          <li>5) Apagar tabelas e repetir testes quando necessário</li>
+        </ul>
+      </details>
+    </section>
+
+    <footer class="mt-6 text-sm text-gray-500">
+      <p>Arquivo gerado automaticamente. Use com atenção às credenciais e permissões.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Copy buttons
+    document.querySelectorAll('.copy-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=> {
+        const id = btn.getAttribute('data-target')
+        const el = document.getElementById(id)
+        if (!el) return
+        const text = el.innerText.replace(/\u00A0/g,' ')
+        try {
+          await navigator.clipboard.writeText(text.trim())
+          btn.innerText = 'Copiado'
+          setTimeout(()=> btn.innerText = 'Copiar',1500)
+        } catch(e) {
+          alert('Erro ao copiar. Selecione e copie manualmente.')
+        }
+      })
+    })
+  </script>
+</body>
+</html>
