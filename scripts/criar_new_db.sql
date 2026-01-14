@@ -71,6 +71,7 @@ CREATE TABLE `despesas` (
   `id` int NOT NULL AUTO_INCREMENT,
   `usuario_id` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `processo_id` int DEFAULT NULL,
+  `cliente_id` int DEFAULT NULL,
   `descricao` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `categoria` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `valor` decimal(15,2) NOT NULL,
@@ -80,11 +81,13 @@ CREATE TABLE `despesas` (
   `observacoes` text COLLATE utf8mb4_unicode_ci,
   `data_criacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `processo_id` (`processo_id`),
+  KEY `idx_processo` (`processo_id`),
+  KEY `idx_eventos_cliente` (`cliente_id`),
   KEY `idx_usuario` (`usuario_id`),
   KEY `idx_vencimento` (`data_vencimento`),
   KEY `idx_status` (`status`),
-  CONSTRAINT `despesas_ibfk_1` FOREIGN KEY (`processo_id`) REFERENCES `processos` (`id`) ON DELETE SET NULL
+  CONSTRAINT `despesas_fk_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `despesas_fk_processo` FOREIGN KEY (`processo_id`) REFERENCES `processos` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -132,6 +135,34 @@ LOCK TABLES `eventos` WRITE;
 /*!40000 ALTER TABLE `eventos` DISABLE KEYS */;
 /*!40000 ALTER TABLE `eventos` ENABLE KEYS */;
 UNLOCK TABLES;
+
+-- Table structure for table `uploads`
+
+DROP TABLE IF EXISTS `uploads`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `uploads` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `usuario_id` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cliente_id` int DEFAULT NULL,
+  `processo_id` int NOT NULL,
+  `evento_id` int DEFAULT NULL,
+  `nome` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `arquivo` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `mime` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tamanho` int DEFAULT NULL,
+  `observacoes` text COLLATE utf8mb4_unicode_ci,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_uploads_processo` (`processo_id`),
+  KEY `idx_uploads_evento` (`evento_id`),
+  KEY `idx_uploads_cliente` (`cliente_id`),
+  CONSTRAINT `uploads_fk_processo` FOREIGN KEY (`processo_id`) REFERENCES `processos` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `uploads_fk_evento` FOREIGN KEY (`evento_id`) REFERENCES `eventos` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `uploads_fk_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `honorarios`
@@ -375,18 +406,29 @@ DROP TABLE IF EXISTS `usuarios_sistema`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `usuarios_sistema` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `usuario_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `senha` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `token_senha` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `token_expiry` datetime DEFAULT NULL,
   `ultimo_login` datetime DEFAULT NULL,
+  `nome` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `telefone` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cep` varchar(9) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `endereco` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cidade` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estado` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lic_produto_id` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lic_duracao` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `criado_em` datetime DEFAULT CURRENT_TIMESTAMP,
   `atualizado_em` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `uq_usuarios_sistema_email` (`email`),
+  UNIQUE KEY `uq_usuarios_sistema_usuario_id` (`usuario_id`),
   KEY `idx_email` (`email`),
   KEY `idx_token` (`token_senha`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -395,7 +437,7 @@ CREATE TABLE `usuarios_sistema` (
 
 LOCK TABLES `usuarios_sistema` WRITE;
 /*!40000 ALTER TABLE `usuarios_sistema` DISABLE KEYS */;
-INSERT INTO `usuarios_sistema` VALUES (1,'rodrigoexer2@gmail.com','$argon2id$v=19$m=65536,t=4,p=1$U1hneFJHeWdKQy9OcXNJTw$UpgxEWEgyelDa8q+5pg1ZrVpMjmccDA3cdfypZYfdsk',NULL,NULL,'2026-01-12 23:46:58','2026-01-12 10:42:42','2026-01-12 23:46:58');
+INSERT INTO `usuarios_sistema` (`id`,`usuario_id`,`email`,`senha`,`token_senha`,`token_expiry`,`ultimo_login`,`nome`,`telefone`,`cep`,`endereco`,`cidade`,`estado`,`lic_produto_id`,`lic_duracao`,`criado_em`,`atualizado_em`) VALUES (1,NULL,'rodrigoexer2@gmail.com','$argon2id$v=19$m=65536,t=4,p=1$U1hneFJHeWdKQy9OcXNJTw$UpgxEWEgyelDa8q+5pg1ZrVpMjmccDA3cdfypZYfdsk',NULL,NULL,'2026-01-12 23:46:58',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2026-01-12 10:42:42','2026-01-12 23:46:58');
 /*!40000 ALTER TABLE `usuarios_sistema` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

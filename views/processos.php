@@ -245,11 +245,12 @@ if (!empty($prazos_urgentes)):
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="formNovoProcesso">
+                <form id="formNovoProcesso" enctype="multipart/form-data">
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Número do Processo *</label>
                             <input type="text" class="form-control" name="numero_processo" required>
+                            <div class="invalid-feedback">Número do processo é obrigatório</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tribunal *</label>
@@ -260,6 +261,7 @@ if (!empty($prazos_urgentes)):
                                     <option value="<?= $trib['abrangencia'] ?>"><?= $trib['abrangencia'] ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <div class="invalid-feedback">Selecione o tribunal</div>
                         </div>
                     </div>
                     
@@ -269,6 +271,7 @@ if (!empty($prazos_urgentes)):
                             <div class="input-group mb-2">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" class="form-control" id="clienteSearchNovo" data-cliente-search data-target-hidden="#clienteIdNovo" data-suggestions="#clienteSugestoesNovo" placeholder="Buscar cliente por nome">
+                                <div class="invalid-feedback">Selecione um cliente válido</div>
                             </div>
                             <div class="form-text"><span data-cliente-search-status>Digite para filtrar clientes</span></div>
                             <input type="hidden" name="cliente_id" id="clienteIdNovo" value="">
@@ -292,6 +295,25 @@ if (!empty($prazos_urgentes)):
                             </div>
                         </div>
                     </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">Uploads de Arquivos</label>
+                            <div id="uploadsContainer">
+                                <div class="input-group mb-2 upload-group">
+                                    <input type="text" class="form-control" name="upload_titulo[]" placeholder="Título do arquivo" required>
+                                        <div class="invalid-feedback">Informe um título para o arquivo</div>
+                                        <input type="file" class="form-control" name="uploads[]" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" required>
+                                        <div class="invalid-feedback">Selecione um arquivo válido</div>
+                                    <button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">Remover</button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarUpload()">
+                                <i class="bi bi-plus"></i> Adicionar outro arquivo
+                            </button>
+                            <div class="form-text">Tipos permitidos: pdf, png, jpg, doc, docx, xls, xlsx</div>
+                        </div>
+                    </div>
                     
                     <hr>
                     <h6>Eventos/Prazos do Processo</h6>
@@ -303,7 +325,7 @@ if (!empty($prazos_urgentes)):
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="salvarProcesso()">Salvar Processo</button>
+                <button type="button" id="btnSalvarNovoProcesso" class="btn btn-primary">Salvar Processo</button>
             </div>
         </div>
     </div>
@@ -314,6 +336,19 @@ if (!empty($prazos_urgentes)):
 
 <script>
 let contadorEventos = 0;
+
+function adicionarUpload() {
+    const container = document.getElementById('uploadsContainer');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2 upload-group';
+    div.innerHTML = `
+        <input type="text" class="form-control" name="upload_titulo[]" placeholder="Título do arquivo" required>
+        <input type="file" class="form-control" name="uploads[]" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" required>
+        <button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">Remover</button>
+    `;
+    container.appendChild(div);
+}
 
 
 // --- Garantir que salvarNovoEvento está no escopo global ---
@@ -337,12 +372,15 @@ function adicionarEvento() {
             <div class="row g-2">
                 <div class="col-md-6">
                     <input type="text" class="form-control" name="eventos[${contadorEventos}][descricao]" placeholder="Descrição" required>
+                    <div class="invalid-feedback">Descrição do evento é obrigatória</div>
                 </div>
                 <div class="col-md-2">
                     <input type="date" class="form-control" name="eventos[${contadorEventos}][data_inicial]" value="${getTodayISO()}" required>
+                    <div class="invalid-feedback">Data inicial é obrigatória</div>
                 </div>
                 <div class="col-md-2">
                     <input type="number" class="form-control" name="eventos[${contadorEventos}][prazo_dias]" min="1" placeholder="Prazo" required>
+                    <div class="invalid-feedback">Informe o prazo em dias (>=1)</div>
                 </div>
                 <div class="col-md-2 d-flex gap-2">
                     <select class="form-select" name="eventos[${contadorEventos}][tipo_contagem]">
@@ -441,6 +479,91 @@ function attachProcessMasks(formEl){
             e.target.selectionStart = e.target.selectionEnd = e.target.value.length;
         });
     }
+}
+
+// Salvar novo processo (normaliza valor e datas de eventos)
+window.salvarProcesso = async function(){
+    const form = document.getElementById('formNovoProcesso');
+    if (!form) return;
+    // Primeiro, usar validação HTML5 nativa (atributos `required`, type, etc.)
+    // Remove marcações anteriores
+    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    if (!form.checkValidity()) {
+        // Mostrar mensagens nativas e destaque
+        form.reportValidity();
+        mostrarErro('Preencha os campos obrigatórios destacados.');
+        // Marcar campos inválidos com classe visual e popular mensagens inline
+        Array.from(form.elements).forEach(el => {
+            if (el.willValidate && !el.checkValidity()) {
+                el.classList.add('is-invalid');
+                // localizar elemento .invalid-feedback associado (pode estar logo após ou após input-group)
+                let feedback = null;
+                if (el.closest('.input-group')) {
+                    feedback = el.closest('.input-group').nextElementSibling;
+                } else {
+                    feedback = el.nextElementSibling;
+                }
+                if (feedback && feedback.classList && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = el.validationMessage || 'Campo obrigatório';
+                }
+            } else {
+                // remover marcação anterior
+                el.classList.remove('is-invalid');
+            }
+        });
+        return;
+    }
+
+    // Validação extra: campo número do processo e tribunal (redundante, mas garante)
+    const numeroEl = form.querySelector('[name="numero_processo"]');
+    const tribunalEl = form.querySelector('[name="tribunal"]');
+    if (!numeroEl || !numeroEl.value.trim()) { mostrarErro('Número do processo é obrigatório'); numeroEl?.classList.add('is-invalid'); numeroEl?.focus(); return; }
+    if (!tribunalEl || !tribunalEl.value.trim()) { mostrarErro('Tribunal é obrigatório'); tribunalEl?.classList.add('is-invalid'); tribunalEl?.focus(); return; }
+
+    // Verificar eventos: ao menos 1 evento válido (descrição, data inicial, prazo)
+    const eventoDescInputs = Array.from(form.querySelectorAll('[name*="[descricao]"]'))
+        .filter(i => i.name.startsWith('eventos['));
+    let temEventoValido = false;
+    for (const descEl of eventoDescInputs) {
+        const base = descEl.name.replace('[descricao]','');
+        const dataEl = form.querySelector(`[name="${base}[data_inicial]"]`);
+        const prazoEl = form.querySelector(`[name="${base}[prazo_dias]"]`);
+        const descricaoVal = String(descEl.value||'').trim();
+        const dataVal = dataEl ? String(dataEl.value||'').trim() : '';
+        const prazoVal = prazoEl ? Number(prazoEl.value||0) : 0;
+        if (descricaoVal && dataVal && prazoVal > 0) { temEventoValido = true; break; }
+    }
+    if (!temEventoValido) { mostrarErro('Adicione ao menos um evento/prazo válido (descrição, data inicial e prazo)'); return; }
+    const fd = new FormData(form);
+    // Normalizar valor da causa
+    if (fd.has('valor_causa')){
+        fd.set('valor_causa', normalizeCurrencyToEN(fd.get('valor_causa')));
+    }
+    // Converter datas de eventos (inputs type=date → enviar dd/mm/yyyy esperado pelo backend)
+    const dateInputs = form.querySelectorAll('input[name^="eventos"][name$="[data_inicial]"]');
+    dateInputs.forEach(inp => {
+        const name = inp.name;
+        const iso = inp.value || '';
+        if (iso) fd.set(name, isoToBR(iso));
+    });
+    // Também converter any event data_final fields if present (nome like eventos[*][data_final])
+    const dateFinals = form.querySelectorAll('input[name^="eventos"][name$="[data_final]"]');
+    dateFinals.forEach(inp => {
+        const name = inp.name;
+        const iso = inp.value || '';
+        if (iso) fd.set(name, isoToBR(iso));
+    });
+
+    fd.append('action','cadastrar_processo');
+    fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    try {
+        const r = await fetch('', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (j.success){
+            mostrarSucesso('Processo cadastrado!');
+            setTimeout(()=> location.reload(), 1000);
+        } else { mostrarErro(j.error||'Falha ao cadastrar processo'); }
+    } catch(e){ mostrarErro('Erro ao cadastrar processo'); }
 }
 
 function getClienteNome(id){
@@ -547,6 +670,23 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
     // Carregar eventos existentes
     carregarEventosProcesso(processoId);
+    // Preparar modal Novo Processo: reset, adicionar primeiro evento e aplicar máscara de moeda
+    const novoProcModal = document.getElementById('modalNovoProcesso');
+    if (novoProcModal) {
+        novoProcModal.addEventListener('show.bs.modal', function(){
+            const form = document.getElementById('formNovoProcesso');
+            if (form){
+                form.reset();
+                const eventosCont = document.getElementById('eventosContainer');
+                if (eventosCont) {
+                    eventosCont.innerHTML = '';
+                    contadorEventos = 0;
+                    adicionarEvento();
+                }
+                attachProcessMasks(form);
+            }
+        });
+    }
     // Não abre aqui; o modal será aberto pelo Bootstrap via data attributes
 }
 
@@ -898,7 +1038,8 @@ function attachDateMaskBR(input){
     });
 }
 
-    const q = (document.getElementById('buscarProcessoCliente').value || '').toLowerCase().trim();
+function filtrarProcessos(){
+    const q = (document.getElementById('buscarProcessoCliente')?.value || '').toLowerCase().trim();
     const linhas = document.querySelectorAll('#tabelaProcessos tbody tr');
     let visiveis = 0;
     linhas.forEach(linha => {
@@ -915,6 +1056,15 @@ function attachDateMaskBR(input){
     const noRes = document.getElementById('noResultsProc');
     if (noRes) { noRes.style.display = visiveis === 0 ? '' : 'none'; }
 }
+// Vincular ao input de busca (se existir) e executar inicialmente
+(function(){
+    const inputBuscar = document.getElementById('buscarProcessoCliente');
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', filtrarProcessos);
+    }
+    // Executar uma vez ao carregar o script
+    try{ filtrarProcessos(); } catch(e){}
+})();
 
 async function visualizarProcesso(id){
     const fd = new FormData();
@@ -935,7 +1085,7 @@ async function visualizarProcesso(id){
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Número do Processo</label>
-                    <input type="text" class="form-control" name="numero_processo" value="${p.numero_processo||''}" disabled>
+                    <input type="text" class="form-control" name="numero_processo" value="" disabled>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Tribunal</label>
@@ -947,28 +1097,28 @@ async function visualizarProcesso(id){
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Cliente</label>
-                    <input type="text" class="form-control" name="cliente_readonly" value="${getClienteNome(p.cliente_id)||''}" disabled>
-                    <input type="hidden" name="cliente_id" value="${p.cliente_id||''}">
+                    <input type="text" class="form-control" name="cliente_readonly" value="" disabled>
+                    <input type="hidden" name="cliente_id" value="">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Vara</label>
-                    <input type="text" class="form-control" name="vara" value="${p.vara||''}" disabled>
+                    <input type="text" class="form-control" name="vara" value="" disabled>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Tipo de Ação</label>
-                    <input type="text" class="form-control" name="tipo_acao" value="${p.tipo_acao||''}" disabled>
+                    <input type="text" class="form-control" name="tipo_acao" value="" disabled>
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Parte Contrária</label>
-                    <input type="text" class="form-control" name="parte_contraria" value="${p.parte_contraria||''}" disabled>
+                    <input type="text" class="form-control" name="parte_contraria" value="" disabled>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Valor da Causa</label>
                     <div class="input-group">
                         <span class="input-group-text">R$</span>
-                        <input type="text" class="form-control" name="valor_causa" value="${p.valor_causa||''}" disabled>
+                        <input type="text" class="form-control" name="valor_causa" value="" disabled>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -982,15 +1132,21 @@ async function visualizarProcesso(id){
             </div>
             <div class="mb-3">
                 <label class="form-label">Observações</label>
-                <textarea class="form-control" name="observacoes" rows="3" disabled>${p.observacoes||''}</textarea>
+                <textarea class="form-control" name="observacoes" rows="3" disabled></textarea>
             </div>
         `;
         document.getElementById('detalhesProcesso').innerHTML = html;
-        // Selecionar valores atuais em selects
+        // Selecionar valores atuais em selects e preencher campos com segurança (evita injeção de backticks)
         const form = document.getElementById('formVisualizarEditarProcesso');
         form.querySelector('[name="tribunal"]').value = p.tribunal||'';
         if (p.cliente_id) form.querySelector('[name="cliente_id"]').value = p.cliente_id;
+        form.querySelector('[name="cliente_readonly"]').value = getClienteNome(p.cliente_id) || '';
+        form.querySelector('[name="numero_processo"]').value = p.numero_processo || '';
+        form.querySelector('[name="vara"]').value = p.vara || '';
+        form.querySelector('[name="tipo_acao"]').value = p.tipo_acao || '';
+        form.querySelector('[name="parte_contraria"]').value = p.parte_contraria || '';
         form.querySelector('[name="status"]').value = p.status||'em_andamento';
+        form.querySelector('[name="observacoes"]').textContent = p.observacoes || '';
         // aplicar máscara no campo de valor e formatar valor inicial
         attachProcessMasks(form);
         const valorInicialEl = form.querySelector('[name="valor_causa"]');
@@ -1071,6 +1227,12 @@ window.salvarNovoEvento = async function(){
         } else { mostrarErro(j.error||'Falha ao salvar'); }
     } catch(e){ mostrarErro('Erro ao salvar'); }
 }
+
+// Attach click handler for Novo Processo save button (avoid inline onclick)
+try {
+    const btnSalvarNovo = document.getElementById('btnSalvarNovoProcesso');
+    if (btnSalvarNovo) btnSalvarNovo.addEventListener('click', () => { if (typeof window.salvarProcesso === 'function') window.salvarProcesso(); });
+} catch(e) { /* noop */ }
 
 console.log('Script de processos carregado, salvarNovoEvento:', typeof window.salvarNovoEvento);
 </script>

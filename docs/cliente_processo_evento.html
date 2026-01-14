@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Diagrama: Cliente → Processo → Evento (uploads)</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:20px;color:#222}
+    h1,h2{color:#0b5;}
+    pre{background:#f7f7f7;padding:12px;border:1px solid #e0e0e0}
+    table{border-collapse:collapse;margin:8px 0}
+    td,th{border:1px solid #ddd;padding:6px}
+  </style>
+</head>
+<body>
+  <h1>Cliente → Processo → Evento (com suporte a Uploads)</h1>
+  <p>Este documento descreve o relacionamento entre as entidades <strong>clientes</strong>, <strong>processos</strong> e <strong>eventos</strong> no banco de dados atual (arquivo <code>scripts/criar_new_db.sql</code>), e propõe pequenas alterações para</p>
+  <ul>
+    <li>colar a referência direta ao cliente na tabela <code>eventos</code> (campo <code>cliente_id</code>),</li>
+    <li>adicionar suporte a <strong>uploads</strong> associados a processos (opcionalmente a um evento),</li>
+    <li>fornecer SQL de migração para aplicar as mudanças e atualizar dados existentes.</li>
+  </ul>
+
+  <h2>Esquema atual (resumo)</h2>
+  <p>Principais tabelas e campos relevantes (extraído de <code>criar_new_db.sql</code>):</p>
+  <h3><code>clientes</code></h3>
+  <pre>
+id, usuario_id, tipo, nome, cpf_cnpj, email, telefone, celular, whatsapp,
+cep, endereco, numero, complemento, bairro, cidade, estado, status, observacoes,
+data_criacao, data_atualizacao
+  </pre>
+
+  <h3><code>processos</code></h3>
+  <pre>
+id, usuario_id, cliente_id, numero_processo, tribunal, vara, tipo_acao,
+parte_contraria, valor_causa, status, observacoes, data_criacao, data_atualizacao
+  </pre>
+
+  <h3><code>eventos</code></h3>
+  <pre>
+id, processo_id, descricao, data_inicial, prazo_dias, tipo_contagem,
+metodologia, data_final, status, ordem, data_criacao
+  </pre>
+
+  <p>Observação: atualmente <code>eventos</code> refere-se apenas a <code>processo_id</code>. Podemos otimizar algumas consultas (e simplificar relatórios por cliente) adicionando também <code>cliente_id</code> em <code>eventos</code> — redundância controlada com FK — e sincronizando os valores existentes.</p>
+
+  <h2>Diagrama lógico proposto</h2>
+  <pre>
+CLIENTES (1) <---- (N) PROCESSOS (1) <---- (N) EVENTOS
+                         |
+                         +---- (N) UPLOADS
+UPLOADS pode referenciar opcionalmente um EVENTO (evento_id) ou somente o PROCESSO
+  </pre>
+
+  <h2>Motivações</h2>
+  <ul>
+    <li>Ter <code>cliente_id</code> em <code>eventos</code> permite consultas diretas por cliente (ex.: listar todos os prazos pendentes de um cliente) sem JOIN extra em <code>processos</code>.</li>
+    <li>Tabela <code>uploads</code> permite armazenar metadados dos arquivos enviados (nome informado pelo usuário, caminho/filename, mimetype, tamanho, descrição, etc.).</li>
+    <li>Uploads podem ser vinculados a um processo e, opcionalmente, a um evento (por exemplo, um documento que pertence a um prazo específico).</li>
+  </ul>
+
+  <h2>Campos sugeridos para <code>uploads</code></h2>
+  <table>
+    <tr><th>campo</th><th>tipo</th><th>descrição</th></tr>
+    <tr><td>id</td><td>int auto_increment</td><td>PK</td></tr>
+    <tr><td>usuario_id</td><td>varchar(100)</td><td>dono/empresa (consistente com outras tabelas)</td></tr>
+    <tr><td>cliente_id</td><td>int NULL</td><td>FK opcional para <code>clientes(id)</code></td></tr>
+    <tr><td>processo_id</td><td>int NOT NULL</td><td>FK para <code>processos(id)</code></td></tr>
+    <tr><td>evento_id</td><td>int NULL</td><td>FK opcional para <code>eventos(id)</code></td></tr>
+    <tr><td>nome</td><td>varchar(255)</td><td>nome amigável digitado pelo usuário</td></tr>
+    <tr><td>arquivo</td><td>varchar(255)</td><td>nome físico / caminho no storage</td></tr>
+    <tr><td>mime</td><td>varchar(100)</td><td>mimetype</td></tr>
+    <tr><td>tamanho</td><td>int</td><td>tamanho em bytes</td></tr>
+    <tr><td>observacoes</td><td>text</td><td>texto livre</td></tr>
+    <tr><td>criado_em</td><td>timestamp</td><td>data do upload</td></tr>
+  </table>
+
+  <h2>Script de migração (aplicar com cuidado)</h2>
+  <p>O arquivo <code>scripts/alter_tables_for_uploads.sql</code> contém as instruções para:</p>
+  <ol>
+    <li>adicionar <code>cliente_id</code> em <code>eventos</code> (nullable) com FK para <code>clientes</code> e índice;</li>
+    <li>preencher <code>eventos.cliente_id</code> a partir de <code>processos.cliente_id</code> (UPDATE JOIN) para dados existentes;</li>
+    <li>criar tabela <code>uploads</code> com as colunas e FKs descritas;</li>
+    <li>criar índices úteis.</li>
+  </ol>
+
+  <h3>Observações antes de rodar</h3>
+  <ul>
+    <li>Faça backup do banco antes de aplicar o script.</li>
+    <li>Execute em ambiente de teste primeiro.</li>
+    <li>A coluna <code>cliente_id</code> em <code>eventos</code> é redundante (pode ser derivada via JOIN), mas melhora performance de certas consultas e é mantida sincronizada via script de backfill; se preferir evitar redundância, não aplique essa alteração.</li>
+  </ul>
+
+  <p>O script de migração está em <code>scripts/alter_tables_for_uploads.sql</code>.</p>
+</body>
+</html>

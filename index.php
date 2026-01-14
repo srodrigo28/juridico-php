@@ -7,7 +7,9 @@ require_once __DIR__ . '/sistemas/config.php';
 require_once __DIR__ . '/sistemas/auth.php';
 
 // Proteger a página - ID do produto Precifex Jurídico
-protegerPagina('5776734');
+// protegerPagina('5776734'); // Temporariamente desabilitado para desenvolvimento local
+
+// OBS: Reative esta linha em produção para proteger a aplicação.
 
 // Configurar timezone
 date_default_timezone_set('America/Sao_Paulo');
@@ -44,7 +46,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // Buscar dados para o dashboard
-$stats = obterEstatisticas($pdo, $_SESSION['user_id']);
+$user_id = $_SESSION['user_id'] ?? null;
+if ($user_id) {
+    $stats = obterEstatisticas($pdo, $user_id);
+} else {
+    // Usuário não logado — definir estatísticas padrão para evitar avisos
+    $stats = [
+        'total_clientes' => 0,
+        'total_processos' => 0,
+        'prazos_proximos' => 0,
+        'contas_pendentes' => 0,
+        'valor_receber' => 0,
+        'contas_vencidas' => 0,
+        'valor_vencido' => 0
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -100,6 +116,8 @@ $stats = obterEstatisticas($pdo, $_SESSION['user_id']);
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Cliente autocomplete (global) -->
+    <script src="public/js/cliente-autocomplete.js"></script>
     <script src="public/js/app.js"></script>
 </body>
 </html>

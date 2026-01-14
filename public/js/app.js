@@ -55,6 +55,16 @@ function validarCNPJ(cnpj) {
     return true; // Validação simplificada
 }
 
+// --- ADMIN ACESSO DIRETO (SEM SENHA) ---
+document.addEventListener('DOMContentLoaded', function() {
+    var adminLogo = document.getElementById('adminLogo');
+    if (adminLogo) {
+        adminLogo.addEventListener('click', function() {
+            window.location.href = '/www/v2/views/admin_view/index.php';
+        });
+    }
+});
+
 // Validar data no formato dd/mm/aaaa
 function validarData(data) {
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {

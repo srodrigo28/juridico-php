@@ -1,3 +1,6 @@
+</script>
+<!-- Importa JS principal do sistema -->
+<script src="/www/v2/public/js/app.js"></script>
 <?php
 // Detectar se está no buscador.php ou no index.php
 $is_buscador = (basename($_SERVER['PHP_SELF']) === 'buscador.php');
@@ -20,28 +23,14 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
     <div class="container-fluid ps-3 ps-md-4 pe-1 pe-md-0 position-relative">
         <div class="header-bar container">
             <div class="header-start d-flex align-items-center">
-                <!-- Botão de menu (apenas mobile) -->
-                <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2 d-inline-flex d-md-none" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
+                <!-- Botão de menu (agora visível em todos os tamanhos) -->
+                <button type="button" class="btn btn-sm btn-outline-light mobile-menu-button drawer-toggle me-2 d-inline-flex" aria-controls="mobileDrawer" aria-expanded="false" aria-label="Abrir menu" title="Menu">
                     <i class="bi bi-list"></i>
                 </button>
-                <h1 class="logo">⚖️ Precifex ADV</h1>
+                <h1 class="logo" id="adminLogo" style="cursor:pointer;">⚖️ Precifex ADV</h1>
             </div>
             <div class="header-center">
-                <!-- Menu de Navegação -->
-                <nav class="nav-tabs-custom d-none d-md-flex">
-                    <a href="<?= $base_url ?>?aba=dashboard" class="nav-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
-                    <a href="<?= $base_url ?>?aba=clientes" class="nav-link <?= $aba_ativa === 'clientes' ? 'active' : '' ?>">
-                        <i class="bi bi-people"></i> Clientes
-                    </a>
-                    <a href="<?= $base_url ?>?aba=processos" class="nav-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>">
-                        <i class="bi bi-briefcase"></i> Processos
-                    </a>
-                    <a href="<?= $base_url ?>?aba=kanban" class="nav-link <?= $aba_ativa === 'kanban' ? 'active' : '' ?>">
-                        <i class="bi bi-kanban"></i> Kanban
-                    </a>
-                </nav>
+                <!-- Menu superior removido: navegação concentrada apenas no menu lateral -->
             </div>
             <div class="header-end d-flex align-items-center justify-content-end">
                 <div class="user-info">
@@ -82,7 +71,7 @@ $beneficios_html = '<div style="min-width:260px"><strong>'.$plano_nome."</strong
         <a href="<?= $base_url ?>?aba=dashboard" class="mobile-drawer-link <?= $aba_ativa === 'dashboard' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Dashboard"><i class="bi bi-speedometer2"></i> <span class="link-label">Dashboard</span></a>
         <a href="<?= $base_url ?>?aba=clientes" class="mobile-drawer-link <?= $aba_ativa === 'clientes' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Clientes"><i class="bi bi-people"></i> <span class="link-label">Clientes</span></a>
         <a href="<?= $base_url ?>?aba=processos" class="mobile-drawer-link <?= $aba_ativa === 'processos' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Processos"><i class="bi bi-briefcase"></i> <span class="link-label">Processos</span></a>
-        <a href="<?= $base_url ?>?aba=kanban" class="mobile-drawer-link <?= $aba_ativa === 'kanban' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Kanban"><i class="bi bi-kanban"></i> <span class="link-label">Kanban</span></a>
+        <a href="<?= $base_url ?>?aba=kanban" class="mobile-drawer-link <?= $aba_ativa === 'kanban' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Tarefas"><i class="bi bi-kanban"></i> <span class="link-label">Tarefas</span></a>
         <a href="buscador.php" class="mobile-drawer-link <?= $aba_ativa === 'buscador' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Buscador"><i class="bi bi-search"></i> <span class="link-label">Buscador</span></a>
         <a href="<?= $base_url ?>?aba=financeiro" class="mobile-drawer-link <?= $aba_ativa === 'financeiro' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Financeiro"><i class="bi bi-currency-dollar"></i> <span class="link-label">Financeiro</span></a>
         <a href="<?= $base_url ?>?aba=calculadoras" class="mobile-drawer-link <?= $aba_ativa === 'calculadoras' ? 'active' : '' ?>" data-bs-toggle="tooltip" data-bs-placement="left" title="Calculadoras"><i class="bi bi-calculator"></i> <span class="link-label">Calculadoras</span></a>

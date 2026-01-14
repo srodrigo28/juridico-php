@@ -52,7 +52,7 @@
 				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 			</div>
 			<div class="modal-body">
-				<form id="formNovoEvento">
+				<form id="formNovoEvento" enctype="multipart/form-data">
 					<input type="hidden" name="action" value="cadastrar_evento">
 					<input type="hidden" name="processo_id" id="novoEvtProcessoId">
 					<input type="hidden" name="tribunal" id="novoEvtTribunal" value="NACIONAL">
@@ -95,7 +95,37 @@
 							<div class="form-text">Se não informado, será calculada automaticamente</div>
 						</div>
 					</div>
-				</form>
+					<div class="row mb-3">
+						<div class="col-12">
+							<label class="form-label">Uploads de Arquivos</label>
+							<div id="uploadsEventoContainer">
+								<div class="input-group mb-2 upload-group">
+									<input type="text" class="form-control" name="upload_titulo_evento[]" placeholder="Título do arquivo" required>
+									<input type="file" class="form-control" name="uploads_evento[]" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" required>
+									<button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">Remover</button>
+								</div>
+							</div>
+							<button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarUploadEvento()">
+								<i class="bi bi-plus"></i> Adicionar outro arquivo
+							</button>
+							<div class="form-text">Tipos permitidos: pdf, png, jpg, doc, docx, xls, xlsx</div>
+							</div>
+						</div>
+					</form>
+					<script>
+					function adicionarUploadEvento() {
+						const container = document.getElementById('uploadsEventoContainer');
+						if (!container) return;
+						const div = document.createElement('div');
+						div.className = 'input-group mb-2 upload-group';
+						div.innerHTML = `
+							<input type="text" class="form-control" name="upload_titulo_evento[]" placeholder="Título do arquivo" required>
+							<input type="file" class="form-control" name="uploads_evento[]" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" required>
+							<button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">Remover</button>
+						`;
+						container.appendChild(div);
+					}
+					</script>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

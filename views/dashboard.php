@@ -126,8 +126,12 @@
                     ORDER BY e.data_final ASC
                     LIMIT 5
                 ");
-                $stmt->execute([$_SESSION['user_id']]);
-                $prazos = $stmt->fetchAll();
+                if (!empty($user_id)) {
+                    $stmt->execute([$user_id]);
+                    $prazos = $stmt->fetchAll();
+                } else {
+                    $prazos = [];
+                }
                 
                 if (empty($prazos)):
                 ?>
@@ -178,8 +182,12 @@
                     ORDER BY par.data_vencimento ASC
                     LIMIT 5
                 ");
-                $stmt->execute([$_SESSION['user_id']]);
-                $recebimentos = $stmt->fetchAll();
+                if (!empty($user_id)) {
+                    $stmt->execute([$user_id]);
+                    $recebimentos = $stmt->fetchAll();
+                } else {
+                    $recebimentos = [];
+                }
                 
                 if (empty($recebimentos)):
                 ?>
@@ -231,8 +239,12 @@
                     ORDER BY p.data_criacao DESC
                     LIMIT 5
                 ");
-                $stmt->execute([$_SESSION['user_id']]);
-                $processos = $stmt->fetchAll();
+                if (!empty($user_id)) {
+                    $stmt->execute([$user_id]);
+                    $processos = $stmt->fetchAll();
+                } else {
+                    $processos = [];
+                }
                 
                 if (empty($processos)):
                 ?>

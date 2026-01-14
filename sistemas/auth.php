@@ -763,4 +763,25 @@ try {
 } catch (Exception $e) {
     // silencioso em local
 }
+
+// ======================================
+// Enforce session timeout (6 hours)
+// Executado a cada inclusão de auth.php
+// ======================================
+try {
+    $sessionLimit = 6 * 60 * 60; // 6 horas em segundos
+    if (isset($_SESSION['login_time']) && is_int($_SESSION['login_time'])) {
+        if (time() - $_SESSION['login_time'] > $sessionLimit) {
+            logSistema("Sessão expirada por tempo limite: {$_SESSION['user_email']}", 'INFO');
+            // Fazer logout e redirecionar para login
+            fazerLogout();
+            if (!headers_sent()) {
+                header('Location: ' . (defined('LOGIN_URL') ? LOGIN_URL : '/login.php') . '?erro=session_expirada');
+            }
+            exit;
+        }
+    }
+} catch (Exception $e) {
+    // não interromper o fluxo em caso de erro na verificação
+}
 ?>

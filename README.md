@@ -7,6 +7,8 @@ Para rodar o projeto localmente sem redirecionar para produção, foi necessári
 ```
 http://localhost/www/juridico-php/index.php?aba=novo_usuario
 ```
+> * acesso local:
+http://localhost/www/v2/login.php
 
 > * acesso externo: 
 ```

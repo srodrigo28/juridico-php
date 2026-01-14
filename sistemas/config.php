@@ -25,6 +25,13 @@ if ($__isLocal) {
     define('DB_NAME', 'adv');
     define('DB_USER', 'root');
     define('DB_PASS', '');
+
+    // define('DB_HOST', '77.37.126.7');
+    // define('DB_PORT', '3306');
+    // define('DB_NAME', 'adv');
+    // define('DB_USER', 'srodrigo');
+    // define('DB_PASS', '@dV#sRnAt98!');
+
     
     // Habilitar modo debug em ambiente local
     if (!defined('DEBUG_MODE')) {
@@ -49,10 +56,11 @@ define('SALT_SENHA', 'JLP_SISTEMAS_2025_SALT_HASH');
 define('TOKEN_EXPIRY', 24 * 60 * 60); // 24 horas para token de criação de senha
 
 // URLs do sistema (usando a variável já declarada)
-if ($__isLocal) {
-    // Base local
+    if ($__isLocal) {
+    // Base local (ajustada para ambiente local do XAMPP)
     $__scheme = 'http://';
-    $__baseLocal = $__scheme . $__host . '/www/v2/juridico-php';
+    // Se você mantém projeto em c:/xampp/htdocs/www/v2, use esta base
+    $__baseLocal = $__scheme . $__host . '/www/v2';
     define('BASE_URL', $__baseLocal);
     define('LOGIN_URL', BASE_URL . '/login.php');
     define('DASHBOARD_URL', BASE_URL . '/index.php?aba=dashboard');
@@ -484,25 +492,39 @@ function estaLogado() {
  */
 function iniciarSessao() {
     if (session_status() === PHP_SESSION_NONE) {
-        // Configurações de sessão
-        ini_set('session.cookie_httponly', 1);
+            // Configurações de sessão
+            ini_set('session.use_strict_mode', 1);
+
+            // Detectar HTTPS para cookie_secure
+            $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
+                     || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+
+            // Definir vida útil da sessão para 6 horas (21600 segundos)
+            $lifetime = 6 * 60 * 60; // 6 horas
+
+            // Ajustar garbage collector e cookie lifetime
+            ini_set('session.gc_maxlifetime', (string)$lifetime);
+
+            // Usar cookie params antes de iniciar a sessão
+            session_name('MEMBROS_SESSION');
+            session_set_cookie_params([
+                'lifetime' => $lifetime,
+                'path' => '/',
+                'domain' => '',
+                'secure' => $https ? true : false,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+
+            session_start();
         
-        // Detectar HTTPS para cookie_secure
-        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
-                 || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
-        ini_set('session.cookie_secure', $https ? 1 : 0);
-        
-        ini_set('session.use_strict_mode', 1);
-        session_name('MEMBROS_SESSION');
-        session_start();
-        
-        // Regenerar ID da sessão periodicamente (5 minutos)
-        if (!isset($_SESSION['last_regeneration'])) {
-            $_SESSION['last_regeneration'] = time();
-        } elseif (time() - $_SESSION['last_regeneration'] > 300) {
-            session_regenerate_id(true);
-            $_SESSION['last_regeneration'] = time();
-        }
+            // Regenerar ID da sessão periodicamente (5 minutos)
+            if (!isset($_SESSION['last_regeneration'])) {
+                $_SESSION['last_regeneration'] = time();
+            } elseif (time() - $_SESSION['last_regeneration'] > 300) {
+                session_regenerate_id(true);
+                $_SESSION['last_regeneration'] = time();
+            }
     }
 }
 

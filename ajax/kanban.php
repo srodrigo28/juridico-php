@@ -1,5 +1,5 @@
 <?php
-// AJAX CRUD para Kanban
+// AJAX CRUD para Tarefas
 // Garante constante e inclui configs
 if (!defined('SISTEMA_MEMBROS')) {
     define('SISTEMA_MEMBROS', true);

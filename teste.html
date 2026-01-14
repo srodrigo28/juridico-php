@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kanban + Performance (Protótipo)</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js (para gráfico do dashboard) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* pequeno ajuste para scroll horizontal do kanban em telas menores */
+    .kanban-scroll { overflow-x: auto; }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900">
+  <!-- Topbar -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-slate-900 text-white grid place-items-center font-bold">K</div>
+        <div>
+          <div class="font-semibold leading-tight">Kanban + Performance</div>
+          <div class="text-xs text-slate-500 -mt-0.5">Protótipo para refinamento</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="hidden sm:flex items-center gap-2 bg-slate-100 rounded-xl p-1">
+          <button id="btnGerencial" class="px-3 py-1.5 rounded-lg text-sm font-medium">Gerencial</button>
+          <button id="btnColaborador" class="px-3 py-1.5 rounded-lg text-sm font-medium">Colaborador</button>
+        </div>
+
+        <select id="selectUser" class="text-sm bg-white border border-slate-300 rounded-xl px-3 py-2">
+          <!-- preenchido via JS -->
+        </select>
+
+        <button id="btnReset" class="text-sm px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50">
+          Reset demo
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile tabs -->
+    <div class="sm:hidden px-4 pb-3">
+      <div class="flex items-center gap-2 bg-slate-100 rounded-xl p-1">
+        <button id="btnGerencialM" class="flex-1 px-3 py-2 rounded-lg text-sm font-medium">Gerencial</button>
+        <button id="btnColaboradorM" class="flex-1 px-3 py-2 rounded-lg text-sm font-medium">Colaborador</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 z-50">
+      <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm"></div>
+    </div>
+
+    <!-- =========================
+         VIEW: GERENCIAL
+    ========================== -->
+    <section id="viewGerencial" class="space-y-6">
+      <!-- KPIs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="text-xs text-slate-500">Total cadastradas</div>
+          <div id="kpiTotal" class="text-2xl font-semibold mt-1">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="text-xs text-slate-500">Concluídas</div>
+          <div id="kpiDone" class="text-2xl font-semibold mt-1">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="text-xs text-slate-500">Vencidas</div>
+          <div id="kpiOverdue" class="text-2xl font-semibold mt-1">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="text-xs text-slate-500">Urgentes em aberto</div>
+          <div id="kpiUrgOpen" class="text-2xl font-semibold mt-1">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="text-xs text-slate-500">Moderadas em aberto</div>
+          <div id="kpiModOpen" class="text-2xl font-semibold mt-1">0</div>
+        </div>
+      </div>
+
+      <!-- Gráfico + Ranking -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <div class="font-semibold">Resumo de tarefas por mês</div>
+              <div class="text-xs text-slate-500">Filtre por prioridade e veja volume mensal</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="chartPriorityFilter" class="text-sm bg-white border border-slate-300 rounded-xl px-3 py-2">
+                <option value="all">Todas prioridades</option>
+                <option value="1">Urgente</option>
+                <option value="2">Moderada</option>
+                <option value="3">Aguardando momento</option>
+              </select>
+              <select id="chartMonthRange" class="text-sm bg-white border border-slate-300 rounded-xl px-3 py-2">
+                <option value="6">Últimos 6 meses</option>
+                <option value="12" selected>Últimos 12 meses</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <canvas id="tasksChart" height="110"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="font-semibold">Ranking (mês)</div>
+          <div class="text-xs text-slate-500">Por pontos e quantidade</div>
+
+          <div id="rankingList" class="mt-4 space-y-2">
+            <!-- preenchido via JS -->
+          </div>
+
+          <div class="mt-4 text-xs text-slate-500">
+            * Pontos contam apenas tarefas concluídas no mês selecionado pelo sistema (mês atual).
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarefas: tabela rápida -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <div class="font-semibold">Lista rápida de tarefas</div>
+            <div class="text-xs text-slate-500">Visão gerencial para auditoria e volume</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="mgrTaskFilter" class="text-sm bg-white border border-slate-300 rounded-xl px-3 py-2">
+              <option value="all">Todas</option>
+              <option value="open">Em aberto</option>
+              <option value="done">Concluídas</option>
+              <option value="overdue">Vencidas</option>
+              <option value="public">Públicas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-3 overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="text-left text-slate-500 border-b border-slate-200">
+              <tr>
+                <th class="py-2 pr-3">Título</th>
+                <th class="py-2 pr-3">Responsável</th>
+                <th class="py-2 pr-3">Prioridade</th>
+                <th class="py-2 pr-3">Pontos</th>
+                <th class="py-2 pr-3">Vencimento</th>
+                <th class="py-2 pr-3">Status</th>
+              </tr>
+            </thead>
+            <tbody id="mgrTasksTbody" class="divide-y divide-slate-100">
+              <!-- preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         VIEW: COLABORADOR
+    ========================== -->
+    <section id="viewColaborador" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Perfil -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-semibold">Perfil do colaborador</div>
+              <div class="text-xs text-slate-500">Atualize seus dados</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-slate-900 text-white grid place-items-center font-bold" id="avatarBadge">A</div>
+          </div>
+
+          <form id="profileForm" class="mt-4 space-y-3">
+            <div>
+              <label class="text-xs text-slate-500">Foto (URL)</label>
+              <input id="pfFoto" type="url" placeholder="https://..." class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+            </div>
+            <div>
+              <label class="text-xs text-slate-500">Nome</label>
+              <input id="pfNome" type="text" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+            </div>
+            <div>
+              <label class="text-xs text-slate-500">Cargo</label>
+              <input id="pfCargo" type="text" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-500">Telefone</label>
+                <input id="pfTelefone" type="tel" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+              </div>
+              <div>
+                <label class="text-xs text-slate-500">E-mail</label>
+                <input id="pfEmail" type="email" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-500">Data de admissão</label>
+                <input id="pfAdmissao" type="date" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+              </div>
+              <div>
+                <label class="text-xs text-slate-500">Data de nascimento</label>
+                <input id="pfNascimento" type="date" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-slate-900 text-white rounded-xl py-2.5 text-sm font-medium hover:opacity-95">
+              Salvar perfil
+            </button>
+          </form>
+        </div>
+
+        <!-- Métricas pessoais -->
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div>
+              <div class="font-semibold">Seu desempenho</div>
+              <div class="text-xs text-slate-500">Tarefas, pontos e ritmo semanal</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnClaimPublic" class="text-sm px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50">
+                Ver tarefas públicas
+              </button>
+              <button id="btnNewTask" class="text-sm px-3 py-2 rounded-xl bg-slate-900 text-white hover:opacity-95">
+                + Cadastrar tarefa
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+              <div class="text-xs text-slate-500">Pontos (total)</div>
+              <div id="mePoints" class="text-2xl font-semibold mt-1">0</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+              <div class="text-xs text-slate-500">Pendentes</div>
+              <div id="mePending" class="text-2xl font-semibold mt-1">0</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+              <div class="text-xs text-slate-500">Concluídas (semana)</div>
+              <div id="meWeeklyDone" class="text-2xl font-semibold mt-1">0</div>
+            </div>
+          </div>
+
+          <!-- Kanban pessoal -->
+          <div class="mt-5">
+            <div class="flex items-center justify-between">
+              <div class="font-semibold">Seu Kanban</div>
+              <div class="text-xs text-slate-500">Arraste mentalmente 😄 (por enquanto, clique para mudar status)</div>
+            </div>
+
+            <div class="kanban-scroll mt-3">
+              <div class="min-w-[920px] grid grid-cols-4 gap-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium">Em aberto</div>
+                    <span id="countOpen" class="text-xs text-slate-500">0</span>
+                  </div>
+                  <div id="colOpen" class="mt-3 space-y-2"></div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium">Em andamento</div>
+                    <span id="countDoing" class="text-xs text-slate-500">0</span>
+                  </div>
+                  <div id="colDoing" class="mt-3 space-y-2"></div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium">Concluídas</div>
+                    <span id="countDone" class="text-xs text-slate-500">0</span>
+                  </div>
+                  <div id="colDone" class="mt-3 space-y-2"></div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium">Vencidas</div>
+                    <span id="countOver" class="text-xs text-slate-500">0</span>
+                  </div>
+                  <div id="colOver" class="mt-3 space-y-2"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-xs text-slate-500">
+              Regras demo: ao marcar “Concluída”, você ganha os pontos da tarefa.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         MODAL: NOVA TAREFA
+    ========================== -->
+    <div id="modalTask" class="hidden fixed inset-0 z-40">
+      <div class="absolute inset-0 bg-slate-900/40" data-close="modal"></div>
+      <div class="absolute inset-x-0 top-10 mx-auto max-w-xl px-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-semibold">Cadastrar tarefa</div>
+              <div class="text-xs text-slate-500">Atribua a um colaborador ou deixe pública</div>
+            </div>
+            <button class="text-slate-500 hover:text-slate-900" data-close="modal">✕</button>
+          </div>
+
+          <form id="taskForm" class="mt-4 space-y-3">
+            <div>
+              <label class="text-xs text-slate-500">Título</label>
+              <input id="tfTitle" required class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Ex: Revisar proposta"/>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-500">Detalhes</label>
+              <textarea id="tfDetails" required rows="3" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="O que precisa ser feito?"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-500">Pontos</label>
+                <input id="tfPoints" required type="number" min="1" step="1" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm" value="5"/>
+              </div>
+
+              <div>
+                <label class="text-xs text-slate-500">Prioridade</label>
+                <select id="tfPriority" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                  <option value="1">1 - Urgente</option>
+                  <option value="2" selected>2 - Moderada</option>
+                  <option value="3">3 - Aguardando momento</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-500">Data de cadastro</label>
+                <input id="tfCreatedAt" type="date" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+              </div>
+              <div>
+                <label class="text-xs text-slate-500">Data de vencimento</label>
+                <input id="tfDueAt" required type="date" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm"/>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-500">Responsável</label>
+              <select id="tfAssignee" class="mt-1 w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                <!-- preenchido via JS -->
+              </select>
+              <div class="text-xs text-slate-500 mt-1">
+                Dica: selecione “Lista pública” para qualquer colaborador pegar.
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <button type="submit" class="flex-1 bg-slate-900 text-white rounded-xl py-2.5 text-sm font-medium hover:opacity-95">
+                Criar tarefa
+              </button>
+              <button type="button" data-close="modal" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-sm">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+         MODAL: TAREFAS PÚBLICAS
+    ========================== -->
+    <div id="modalPublic" class="hidden fixed inset-0 z-40">
+      <div class="absolute inset-0 bg-slate-900/40" data-close="public"></div>
+      <div class="absolute inset-x-0 top-10 mx-auto max-w-2xl px-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-semibold">Tarefas públicas</div>
+              <div class="text-xs text-slate-500">Pegue uma tarefa e ganhe pontos ao concluir</div>
+            </div>
+            <button class="text-slate-500 hover:text-slate-900" data-close="public">✕</button>
+          </div>
+
+          <div class="mt-4 flex items-center gap-2">
+            <select id="publicPriorityFilter" class="text-sm bg-white border border-slate-300 rounded-xl px-3 py-2">
+              <option value="all">Todas prioridades</option>
+              <option value="1">Urgente</option>
+              <option value="2">Moderada</option>
+              <option value="3">Aguardando</option>
+            </select>
+            <select id="publicStatusFilter" class="text-sm bg-white border border-slate-300 rounded-xl px-3 py-2">
+              <option value="open">Em aberto</option>
+              <option value="all">Todas</option>
+            </select>
+          </div>
+
+          <div id="publicList" class="mt-4 space-y-2"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /***********************
+     * Estado (demo)
+     ***********************/
+    const DEMO_STORAGE_KEY = "kanban_perf_demo_v1";
+
+    const PRIORITY_LABEL = {
+      1: "Urgente",
+      2: "Moderada",
+      3: "Aguardando"
+    };
+
+    const STATUS_LABEL = {
+      open: "Em aberto",
+      doing: "Em andamento",
+      done: "Concluída",
+      overdue: "Vencida"
+    };
+
+    function isoToday() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function monthKey(date) {
+      const d = new Date(date);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      return `${yyyy}-${mm}`;
+    }
+
+    function startOfWeek(d = new Date()) {
+      const date = new Date(d);
+      const day = (date.getDay() + 6) % 7; // Monday=0
+      date.setDate(date.getDate() - day);
+      date.setHours(0,0,0,0);
+      return date;
+    }
+
+    function inCurrentWeek(dateStr) {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      const sow = startOfWeek(new Date());
+      const eow = new Date(sow); eow.setDate(sow.getDate() + 7);
+      return d >= sow && d < eow;
+    }
+
+    function uid(prefix="id") {
+      return prefix + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+
+    function seedDemo() {
+      const today = new Date();
+      const addDays = (n) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() + n);
+        return d.toISOString().slice(0,10);
+      };
+
+      return {
+        currentView: "gerencial",
+        currentUserId: "u1",
+        users: [
+          { id: "u1", foto: "", nome: "Ana Lima", cargo: "Atendimento", telefone: "(11) 99999-1111", email: "ana@empresa.com", admissao: "2023-04-10", nascimento: "1996-08-22" },
+          { id: "u2", foto: "", nome: "Bruno Souza", cargo: "Operações", telefone: "(11) 99999-2222", email: "bruno@empresa.com", admissao: "2022-02-01", nascimento: "1992-01-13" },
+          { id: "u3", foto: "", nome: "Carla Rocha", cargo: "Vendas", telefone: "(11) 99999-3333", email: "carla@empresa.com", admissao: "2024-01-15", nascimento: "1999-11-03" }
+        ],
+        tasks: [
+          { id: uid("t"), title: "Responder clientes pendentes", details: "Fechar fila de atendimento do dia", points: 8, createdAt: addDays(-2), dueAt: addDays(1), priority: 1, assigneeId: "u1", status: "doing", completedAt: "" },
+          { id: uid("t"), title: "Organizar estoque", details: "Contagem e atualização no sistema", points: 10, createdAt: addDays(-10), dueAt: addDays(-1), priority: 2, assigneeId: "u2", status: "overdue", completedAt: "" },
+          { id: uid("t"), title: "Atualizar planilha de leads", details: "Importar leads novos e categorizar", points: 6, createdAt: addDays(-5), dueAt: addDays(3), priority: 2, assigneeId: "u3", status: "open", completedAt: "" },
+          { id: uid("t"), title: "Criar padrão de relatório semanal", details: "Modelo simples para toda equipe", points: 12, createdAt: addDays(-20), dueAt: addDays(-15), priority: 3, assigneeId: "u1", status: "done", completedAt: addDays(-14) },
+          { id: uid("t"), title: "Tarefa pública: checklist de qualidade", details: "Executar checklist no setor e registrar", points: 7, createdAt: addDays(-1), dueAt: addDays(5), priority: 2, assigneeId: "public", status: "open", completedAt: "" },
+          { id: uid("t"), title: "Tarefa pública: padronizar pastas", details: "Organizar pastas compartilhadas", points: 5, createdAt: addDays(-8), dueAt: addDays(-2), priority: 3, assigneeId: "public", status: "overdue", completedAt: "" }
+        ]
+      };
+    }
+
+    let state = loadState();
+
+    function loadState() {
+      const raw = localStorage.getItem(DEMO_STORAGE_KEY);
+      if (!raw) return seedDemo();
+      try { return JSON.parse(raw); } catch { return seedDemo(); }
+    }
+
+    function saveState() {
+      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function resetDemo() {
+      state = seedDemo();
+      saveState();
+      init();
+      toast("Demo resetada.");
+    }
+
+    /***********************
+     * DOM helpers
+     ***********************/
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    function toast(msg) {
+      const t = $("#toast");
+      const box = t.querySelector("div");
+      box.textContent = msg;
+      t.classList.remove("hidden");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => t.classList.add("hidden"), 2200);
+    }
+
+    function setActiveTab(view) {
+      const active = "bg-white shadow-sm border border-slate-200";
+      const inactive = "text-slate-600 hover:text-slate-900";
+
+      const btns = [$("#btnGerencial"), $("#btnColaborador"), $("#btnGerencialM"), $("#btnColaboradorM")].filter(Boolean);
+      btns.forEach(b => b.className = "px-3 py-1.5 sm:py-1.5 rounded-lg text-sm font-medium " + inactive);
+
+      const g = [$("#btnGerencial"), $("#btnGerencialM")].filter(Boolean);
+      const c = [$("#btnColaborador"), $("#btnColaboradorM")].filter(Boolean);
+
+      if (view === "gerencial") g.forEach(b => b.className = "px-3 py-1.5 sm:py-1.5 rounded-lg text-sm font-medium " + active);
+      if (view === "colaborador") c.forEach(b => b.className = "px-3 py-1.5 sm:py-1.5 rounded-lg text-sm font-medium " + active);
+    }
+
+    /***********************
+     * Regras de status (auto vencida)
+     ***********************/
+    function recomputeOverdue() {
+      const today = new Date(isoToday());
+      state.tasks.forEach(t => {
+        if (t.status !== "done") {
+          const due = new Date(t.dueAt);
+          if (due < today) t.status = "overdue";
+          else if (t.status === "overdue") t.status = "open"; // se voltou para dentro do prazo (raro)
+        }
+      });
+    }
+
+    /***********************
+     * Render: selects
+     ***********************/
+    function renderUserSelects() {
+      const selectUser = $("#selectUser");
+      selectUser.innerHTML = state.users.map(u => `<option value="${u.id}">${u.nome} (${u.cargo})</option>`).join("");
+      selectUser.value = state.currentUserId;
+
+      const tfAssignee = $("#tfAssignee");
+      tfAssignee.innerHTML =
+        `<option value="public">Lista pública</option>` +
+        state.users.map(u => `<option value="${u.id}">${u.nome}</option>`).join("");
+    }
+
+    /***********************
+     * KPIs (gerencial)
+     ***********************/
+    function computeKpis() {
+      const total = state.tasks.length;
+      const done = state.tasks.filter(t => t.status === "done").length;
+      const overdue = state.tasks.filter(t => t.status === "overdue").length;
+      const urgOpen = state.tasks.filter(t => (t.priority === 1) && (t.status === "open" || t.status === "doing")).length;
+      const modOpen = state.tasks.filter(t => (t.priority === 2) && (t.status === "open" || t.status === "doing")).length;
+      return { total, done, overdue, urgOpen, modOpen };
+    }
+
+    function renderKpis() {
+      const k = computeKpis();
+      $("#kpiTotal").textContent = k.total;
+      $("#kpiDone").textContent = k.done;
+      $("#kpiOverdue").textContent = k.overdue;
+      $("#kpiUrgOpen").textContent = k.urgOpen;
+      $("#kpiModOpen").textContent = k.modOpen;
+    }
+
+    /***********************
+     * Tabela gerencial
+     ***********************/
+    function formatPriority(p) {
+      const badge = (txt) => `<span class="inline-flex items-center px-2 py-1 rounded-lg text-xs border border-slate-200 bg-slate-50">${txt}</span>`;
+      if (p === 1) return badge("1 · Urgente");
+      if (p === 2) return badge("2 · Moderada");
+      return badge("3 · Aguardando");
+    }
+
+    function formatStatus(s) {
+      const map = {
+        open: "bg-white",
+        doing: "bg-white",
+        done: "bg-white",
+        overdue: "bg-white"
+      };
+      return `<span class="inline-flex items-center px-2 py-1 rounded-lg text-xs border border-slate-200 ${map[s] || "bg-white"}">${STATUS_LABEL[s]}</span>`;
+    }
+
+    function assigneeName(id) {
+      if (id === "public") return "Lista pública";
+      const u = state.users.find(x => x.id === id);
+      return u ? u.nome : "—";
+    }
+
+    function renderMgrTable() {
+      const filter = $("#mgrTaskFilter").value;
+      let tasks = [...state.tasks];
+
+      if (filter === "open") tasks = tasks.filter(t => t.status === "open" || t.status === "doing");
+      if (filter === "done") tasks = tasks.filter(t => t.status === "done");
+      if (filter === "overdue") tasks = tasks.filter(t => t.status === "overdue");
+      if (filter === "public") tasks = tasks.filter(t => t.assigneeId === "public");
+
+      tasks.sort((a,b) => (a.dueAt > b.dueAt ? 1 : -1));
+
+      $("#mgrTasksTbody").innerHTML = tasks.map(t => `
+        <tr>
+          <td class="py-2 pr-3">
+            <div class="font-medium">${escapeHtml(t.title)}</div>
+            <div class="text-xs text-slate-500 line-clamp-1">${escapeHtml(t.details)}</div>
+          </td>
+          <td class="py-2 pr-3">${escapeHtml(assigneeName(t.assigneeId))}</td>
+          <td class="py-2 pr-3">${formatPriority(t.priority)}</td>
+          <td class="py-2 pr-3">${t.points}</td>
+          <td class="py-2 pr-3">${t.dueAt}</td>
+          <td class="py-2 pr-3">${formatStatus(t.status)}</td>
+        </tr>
+      `).join("");
+    }
+
+    /***********************
+     * Ranking mensal
+     ***********************/
+    function currentMonthKey() {
+      return monthKey(new Date().toISOString());
+    }
+
+    function computeMonthlyRanking() {
+      const mk = currentMonthKey();
+      const rows = state.users.map(u => {
+        const doneTasks = state.tasks.filter(t =>
+          t.status === "done" &&
+          t.assigneeId === u.id &&
+          t.completedAt &&
+          monthKey(t.completedAt) === mk
+        );
+        const points = doneTasks.reduce((s,t) => s + Number(t.points || 0), 0);
+        const qty = doneTasks.length;
+        return { user: u, points, qty };
+      });
+
+      rows.sort((a,b) => (b.points - a.points) || (b.qty - a.qty) || a.user.nome.localeCompare(b.user.nome));
+      return rows;
+    }
+
+    function renderRanking() {
+      const rows = computeMonthlyRanking();
+      const maxPts = Math.max(1, ...rows.map(r => r.points));
+      $("#rankingList").innerHTML = rows.map((r, i) => {
+        const w = Math.round((r.points / maxPts) * 100);
+        const initials = (r.user.nome || "?").split(" ").slice(0,2).map(s => s[0]).join("").toUpperCase();
+        return `
+          <div class="border border-slate-200 rounded-2xl p-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white grid place-items-center text-xs font-bold">${initials}</div>
+                <div>
+                  <div class="font-medium">${escapeHtml(r.user.nome)}</div>
+                  <div class="text-xs text-slate-500">${r.qty} tarefa(s) · ${r.points} ponto(s)</div>
+                </div>
+              </div>
+              <div class="text-xs text-slate-500">#${i+1}</div>
+            </div>
+            <div class="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-slate-900" style="width:${w}%"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    /***********************
+     * Gráfico mensal
+     ***********************/
+    let chart;
+
+    function monthsBack(n) {
+      const out = [];
+      const d = new Date();
+      d.setDate(1);
+      for (let i = n-1; i >= 0; i--) {
+        const x = new Date(d);
+        x.setMonth(d.getMonth() - i);
+        out.push(monthKey(x.toISOString()));
+      }
+      return out;
+    }
+
+    function computeMonthlyCounts(monthKeys, priorityFilter) {
+      const counts = monthKeys.map(mk => {
+        const tasksInMonth = state.tasks.filter(t => monthKey(t.createdAt) === mk);
+        const filtered = (priorityFilter === "all")
+          ? tasksInMonth
+          : tasksInMonth.filter(t => String(t.priority) === String(priorityFilter));
+        return filtered.length;
+      });
+      return counts;
+    }
+
+    function renderChart() {
+      const pr = $("#chartPriorityFilter").value;
+      const range = Number($("#chartMonthRange").value || 12);
+      const mks = monthsBack(range);
+      const labels = mks.map(m => m);
+      const data = computeMonthlyCounts(mks, pr);
+
+      const ctx = $("#tasksChart").getContext("2d");
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: pr === "all" ? "Tarefas criadas (todas)" : `Tarefas criadas (${PRIORITY_LABEL[pr]})`,
+            data
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+    }
+
+    /***********************
+     * Colaborador: perfil
+     ***********************/
+    function getCurrentUser() {
+      return state.users.find(u => u.id === state.currentUserId) || state.users[0];
+    }
+
+    function renderProfile() {
+      const u = getCurrentUser();
+      $("#pfFoto").value = u.foto || "";
+      $("#pfNome").value = u.nome || "";
+      $("#pfCargo").value = u.cargo || "";
+      $("#pfTelefone").value = u.telefone || "";
+      $("#pfEmail").value = u.email || "";
+      $("#pfAdmissao").value = u.admissao || "";
+      $("#pfNascimento").value = u.nascimento || "";
+
+      const initials = (u.nome || "?").split(" ").slice(0,2).map(s => s[0]).join("").toUpperCase();
+      $("#avatarBadge").textContent = initials;
+    }
+
+    function renderMyStatsAndBoard() {
+      const u = getCurrentUser();
+      const myTasks = state.tasks.filter(t => t.assigneeId === u.id);
+
+      const pointsTotal = state.tasks
+        .filter(t => t.assigneeId === u.id && t.status === "done")
+        .reduce((s,t) => s + Number(t.points||0), 0);
+
+      const pending = myTasks.filter(t => t.status === "open" || t.status === "doing" || t.status === "overdue").length;
+
+      const weeklyDone = myTasks.filter(t => t.status === "done" && inCurrentWeek(t.completedAt)).length;
+
+      $("#mePoints").textContent = pointsTotal;
+      $("#mePending").textContent = pending;
+      $("#meWeeklyDone").textContent = weeklyDone;
+
+      const buckets = { open: [], doing: [], done: [], overdue: [] };
+      myTasks.forEach(t => buckets[t.status]?.push(t));
+
+      // sort por vencimento
+      Object.keys(buckets).forEach(k => buckets[k].sort((a,b) => (a.dueAt > b.dueAt ? 1 : -1)));
+
+      $("#countOpen").textContent = buckets.open.length;
+      $("#countDoing").textContent = buckets.doing.length;
+      $("#countDone").textContent = buckets.done.length;
+      $("#countOver").textContent = buckets.overdue.length;
+
+      $("#colOpen").innerHTML = buckets.open.map(t => taskCard(t)).join("");
+      $("#colDoing").innerHTML = buckets.doing.map(t => taskCard(t)).join("");
+      $("#colDone").innerHTML = buckets.done.map(t => taskCard(t, true)).join("");
+      $("#colOver").innerHTML = buckets.overdue.map(t => taskCard(t)).join("");
+    }
+
+    function taskCard(t, readonly=false) {
+      const pr = t.priority;
+      const prTxt = pr === 1 ? "1·Urg" : pr === 2 ? "2·Mod" : "3·Ag";
+      const due = t.dueAt;
+
+      const actions = readonly ? "" : `
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs" data-action="toDoing" data-id="${t.id}">
+            Em andamento
+          </button>
+          <button class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs" data-action="toOpen" data-id="${t.id}">
+            Em aberto
+          </button>
+          <button class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-white hover:opacity-95 text-xs px-3 py-1.5" data-action="toDone" data-id="${t.id}">
+            Concluir (+${t.points})
+          </button>
+        </div>
+      `;
+
+      return `
+        <div class="bg-white border border-slate-200 rounded-2xl p-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="font-medium leading-snug">${escapeHtml(t.title)}</div>
+              <div class="text-xs text-slate-500 mt-0.5 line-clamp-2">${escapeHtml(t.details)}</div>
+            </div>
+            <div class="text-xs text-slate-500 whitespace-nowrap">${t.points} pts</div>
+          </div>
+
+          <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
+            <span class="inline-flex items-center px-2 py-1 rounded-lg border border-slate-200 bg-slate-50">${prTxt}</span>
+            <span>Vence: ${due}</span>
+          </div>
+
+          ${actions}
+        </div>
+      `;
+    }
+
+    /***********************
+     * Tarefas públicas
+     ***********************/
+    function openPublicModal() {
+      $("#modalPublic").classList.remove("hidden");
+      renderPublicList();
+    }
+
+    function closePublicModal() {
+      $("#modalPublic").classList.add("hidden");
+    }
+
+    function renderPublicList() {
+      const pr = $("#publicPriorityFilter").value;
+      const st = $("#publicStatusFilter").value;
+
+      let tasks = state.tasks.filter(t => t.assigneeId === "public");
+      if (pr !== "all") tasks = tasks.filter(t => String(t.priority) === String(pr));
+      if (st === "open") tasks = tasks.filter(t => t.status === "open" || t.status === "doing");
+
+      tasks.sort((a,b) => (a.dueAt > b.dueAt ? 1 : -1));
+
+      if (tasks.length === 0) {
+        $("#publicList").innerHTML = `<div class="text-sm text-slate-500">Nenhuma tarefa pública encontrada.</div>`;
+        return;
+      }
+
+      $("#publicList").innerHTML = tasks.map(t => `
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="font-medium">${escapeHtml(t.title)}</div>
+              <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(t.details)}</div>
+              <div class="text-xs text-slate-500 mt-1">Prioridade: ${PRIORITY_LABEL[t.priority]} · Vence: ${t.dueAt} · ${t.points} pts</div>
+            </div>
+            <button class="px-3 py-2 rounded-xl bg-slate-900 text-white text-sm hover:opacity-95"
+              data-action="claimPublic" data-id="${t.id}">
+              Pegar
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    /***********************
+     * Modal: nova tarefa
+     ***********************/
+    function openTaskModal() {
+      $("#modalTask").classList.remove("hidden");
+      $("#tfTitle").value = "";
+      $("#tfDetails").value = "";
+      $("#tfPoints").value = 5;
+      $("#tfPriority").value = "2";
+      $("#tfCreatedAt").value = isoToday();
+      $("#tfDueAt").value = isoToday();
+      $("#tfAssignee").value = state.currentUserId; // padrão: atribuir ao usuário atual
+    }
+
+    function closeTaskModal() {
+      $("#modalTask").classList.add("hidden");
+    }
+
+    /***********************
+     * Ações
+     ***********************/
+    function updateTaskStatus(taskId, newStatus) {
+      const t = state.tasks.find(x => x.id === taskId);
+      if (!t) return;
+
+      t.status = newStatus;
+      if (newStatus === "done") {
+        t.completedAt = isoToday();
+      } else {
+        t.completedAt = "";
+      }
+      saveState();
+      renderAll();
+    }
+
+    function claimPublicTask(taskId) {
+      const t = state.tasks.find(x => x.id === taskId && x.assigneeId === "public");
+      if (!t) return;
+      t.assigneeId = state.currentUserId;
+      t.status = "open";
+      saveState();
+      renderAll();
+      toast("Tarefa pública atribuída a você.");
+    }
+
+    /***********************
+     * Util: escape HTML
+     ***********************/
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    /***********************
+     * Render geral
+     ***********************/
+    function renderView() {
+      const g = $("#viewGerencial");
+      const c = $("#viewColaborador");
+      if (state.currentView === "gerencial") {
+        g.classList.remove("hidden");
+        c.classList.add("hidden");
+      } else {
+        c.classList.remove("hidden");
+        g.classList.add("hidden");
+      }
+      setActiveTab(state.currentView);
+    }
+
+    function renderAll() {
+      recomputeOverdue();
+      renderView();
+      renderUserSelects();
+
+      // Gerencial
+      renderKpis();
+      renderRanking();
+      renderChart();
+      renderMgrTable();
+
+      // Colaborador
+      renderProfile();
+      renderMyStatsAndBoard();
+    }
+
+    function init() {
+      // tabs
+      const goGer = () => { state.currentView = "gerencial"; saveState(); renderAll(); };
+      const goCol = () => { state.currentView = "colaborador"; saveState(); renderAll(); };
+
+      $("#btnGerencial")?.addEventListener("click", goGer);
+      $("#btnGerencialM")?.addEventListener("click", goGer);
+      $("#btnColaborador")?.addEventListener("click", goCol);
+      $("#btnColaboradorM")?.addEventListener("click", goCol);
+
+      $("#btnReset").addEventListener("click", resetDemo);
+
+      // user switch
+      $("#selectUser").addEventListener("change", (e) => {
+        state.currentUserId = e.target.value;
+        saveState();
+        renderAll();
+      });
+
+      // gerencial filters
+      $("#mgrTaskFilter").addEventListener("change", renderMgrTable);
+      $("#chartPriorityFilter").addEventListener("change", renderChart);
+      $("#chartMonthRange").addEventListener("change", renderChart);
+
+      // colaborador buttons
+      $("#btnNewTask").addEventListener("click", openTaskModal);
+      $("#btnClaimPublic").addEventListener("click", openPublicModal);
+
+      // modal close handlers
+      $$("[data-close='modal']").forEach(el => el.addEventListener("click", closeTaskModal));
+      $$("[data-close='public']").forEach(el => el.addEventListener("click", closePublicModal));
+
+      // public filters
+      $("#publicPriorityFilter").addEventListener("change", renderPublicList);
+      $("#publicStatusFilter").addEventListener("change", renderPublicList);
+
+      // profile save
+      $("#profileForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const u = getCurrentUser();
+        u.foto = $("#pfFoto").value.trim();
+        u.nome = $("#pfNome").value.trim();
+        u.cargo = $("#pfCargo").value.trim();
+        u.telefone = $("#pfTelefone").value.trim();
+        u.email = $("#pfEmail").value.trim();
+        u.admissao = $("#pfAdmissao").value;
+        u.nascimento = $("#pfNascimento").value;
+
+        saveState();
+        renderAll();
+        toast("Perfil atualizado.");
+      });
+
+      // task create
+      $("#taskForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const task = {
+          id: uid("t"),
+          title: $("#tfTitle").value.trim(),
+          details: $("#tfDetails").value.trim(),
+          points: Number($("#tfPoints").value || 0),
+          createdAt: $("#tfCreatedAt").value || isoToday(),
+          dueAt: $("#tfDueAt").value,
+          priority: Number($("#tfPriority").value),
+          assigneeId: $("#tfAssignee").value,
+          status: "open",
+          completedAt: ""
+        };
+
+        state.tasks.unshift(task);
+        saveState();
+        closeTaskModal();
+        renderAll();
+        toast("Tarefa criada.");
+      });
+
+      // delegação de ações (kanban + public list)
+      document.body.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-action]");
+        if (!btn) return;
+
+        const action = btn.getAttribute("data-action");
+        const id = btn.getAttribute("data-id");
+
+        if (action === "toDoing") updateTaskStatus(id, "doing");
+        if (action === "toOpen") updateTaskStatus(id, "open");
+        if (action === "toDone") {
+          updateTaskStatus(id, "done");
+          toast("Tarefa concluída! Pontos computados.");
+        }
+        if (action === "claimPublic") {
+          claimPublicTask(id);
+          renderPublicList();
+        }
+      });
+
+      // preencher data default no modal
+      $("#tfCreatedAt").value = isoToday();
+
+      renderAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>

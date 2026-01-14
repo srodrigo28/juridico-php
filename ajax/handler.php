@@ -14,6 +14,8 @@ try {
     
     $action = $_POST['action'] ?? '';
     $usuario_id = $_SESSION['user_id'];
+    // Helpers para processos
+    require_once __DIR__ . '/../includes/processos_helper.php';
     
     switch ($action) {
         // ========== USUÁRIO (Perfil) ==========
@@ -97,8 +99,25 @@ try {
                 $_POST['status'] ?? 'ativo',
                 $_POST['observacoes'] ?? null
             ]);
-            
-            echo json_encode(['success' => true, 'message' => 'Cliente cadastrado com sucesso']);
+            $newId = (int)$pdo->lastInsertId();
+            $nomeCliente = $_POST['nome'] ?? '';
+            echo json_encode(['success' => true, 'message' => 'Cliente cadastrado com sucesso', 'id' => $newId, 'cliente' => ['id' => $newId, 'nome' => $nomeCliente]]);
+            break;
+
+        case 'buscar_clientes':
+            $q = trim($_POST['q'] ?? '');
+            $limit = 20;
+            if ($q === '') {
+                // Retornar os clientes ativos mais recentes
+                $stmt = $pdo->prepare("SELECT id, nome FROM clientes WHERE usuario_id = ? AND status = 'ativo' ORDER BY nome LIMIT ?");
+                $stmt->execute([$usuario_id, $limit]);
+            } else {
+                $like = '%' . str_replace(['%','_'], ['\\%','\\_'], $q) . '%';
+                $stmt = $pdo->prepare("SELECT id, nome FROM clientes WHERE usuario_id = ? AND status = 'ativo' AND nome LIKE ? ORDER BY nome LIMIT ?");
+                $stmt->execute([$usuario_id, $like, $limit]);
+            }
+            $rows = $stmt->fetchAll();
+            echo json_encode(['success' => true, 'clientes' => $rows]);
             break;
 
         case 'obter_cliente':
@@ -167,6 +186,14 @@ try {
             
         // ========== PROCESSOS ==========
         case 'cadastrar_processo':
+            // Validação centralizada (reuso) — retorna erros por campo
+            $val = validar_processo_input($_POST, $pdo, $usuario_id);
+            if (!$val['valid']){
+                // Retornar estrutura de erros para frontend consumir
+                echo json_encode(['success' => false, 'errors' => $val['errors'], 'message' => 'Dados inválidos']);
+                break;
+            }
+
             $pdo->beginTransaction();
             
             $stmt = $pdo->prepare("
@@ -189,6 +216,40 @@ try {
             ]);
             
             $processo_id = $pdo->lastInsertId();
+
+            // Salvar uploads relacionados ao processo (se houver)
+            if (!empty($_FILES['uploads']['name'][0])) {
+                $uploadDir = __DIR__ . '/../public/uploads/processos/';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0755, true);
+                }
+                $ins = $pdo->prepare("INSERT INTO uploads (usuario_id, cliente_id, processo_id, evento_id, nome, arquivo, mime, tamanho, observacoes) VALUES (?, ?, ?, NULL, ?, ?, ?, ?, NULL)");
+                foreach ($_FILES['uploads']['name'] as $idx => $origName) {
+                    $tmp = $_FILES['uploads']['tmp_name'][$idx] ?? null;
+                    $err = $_FILES['uploads']['error'][$idx] ?? UPLOAD_ERR_NO_FILE;
+                    $titulo = $_POST['upload_titulo'][$idx] ?? null;
+                    if ($err === UPLOAD_ERR_OK && $tmp) {
+                        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                        $allowed = ['pdf','png','jpg','jpeg','doc','docx','xls','xlsx'];
+                        if (in_array($ext, $allowed)) {
+                            $newName = uniqid('proc_') . '.' . $ext;
+                            if (move_uploaded_file($tmp, $uploadDir . $newName)) {
+                                $mime = mime_content_type($uploadDir . $newName) ?: null;
+                                $tamanho = filesize($uploadDir . $newName) ?: null;
+                                $ins->execute([
+                                    $_SESSION['user_id'],
+                                    !empty($_POST['cliente_id']) ? (int)$_POST['cliente_id'] : null,
+                                    (int)$processo_id,
+                                    $titulo,
+                                    $newName,
+                                    $mime,
+                                    $tamanho
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
             
             // Processar eventos se houver
             if (isset($_POST['eventos']) && is_array($_POST['eventos'])) {
@@ -241,12 +302,8 @@ try {
 
         case 'obter_processo':
             $processo_id = (int)($_POST['processo_id'] ?? 0);
-            $stmt = $pdo->prepare("SELECT * FROM processos WHERE id = ? AND usuario_id = ?");
-            $stmt->execute([$processo_id, $usuario_id]);
-            $proc = $stmt->fetch();
-            if (!$proc) {
-                throw new Exception('Processo não encontrado ou sem permissão');
-            }
+            $proc = getProcessoById($pdo, $processo_id, $usuario_id);
+            if (!$proc) { throw new Exception('Processo não encontrado ou sem permissão'); }
             echo json_encode(['success' => true, 'processo' => $proc]);
             break;
 
@@ -381,14 +438,50 @@ try {
                 $ordem
             ]);
 
+            // Obter id do evento criado
+            $evento_id = $pdo->lastInsertId();
+
+            // Salvar uploads relacionados ao evento (se houver)
+            if (!empty($_FILES['uploads_evento']['name'][0])) {
+                $uploadDirEvt = __DIR__ . '/../public/uploads/eventos/';
+                if (!is_dir($uploadDirEvt)) {
+                    @mkdir($uploadDirEvt, 0755, true);
+                }
+                $insEvt = $pdo->prepare("INSERT INTO uploads (usuario_id, cliente_id, processo_id, evento_id, nome, arquivo, mime, tamanho, observacoes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)");
+                foreach ($_FILES['uploads_evento']['name'] as $idx => $origName) {
+                    $tmp = $_FILES['uploads_evento']['tmp_name'][$idx] ?? null;
+                    $err = $_FILES['uploads_evento']['error'][$idx] ?? UPLOAD_ERR_NO_FILE;
+                    $titulo = $_POST['upload_titulo_evento'][$idx] ?? null;
+                    if ($err === UPLOAD_ERR_OK && $tmp) {
+                        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                        $allowed = ['pdf','png','jpg','jpeg','doc','docx','xls','xlsx'];
+                        if (in_array($ext, $allowed)) {
+                            $newName = uniqid('evt_') . '.' . $ext;
+                            if (move_uploaded_file($tmp, $uploadDirEvt . $newName)) {
+                                $mime = mime_content_type($uploadDirEvt . $newName) ?: null;
+                                $tamanho = filesize($uploadDirEvt . $newName) ?: null;
+                                $insEvt->execute([
+                                    $_SESSION['user_id'],
+                                    null,
+                                    (int)$processo_id,
+                                    (int)$evento_id,
+                                    $titulo,
+                                    $newName,
+                                    $mime,
+                                    $tamanho
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
             echo json_encode(['success' => true, 'message' => 'Movimentação cadastrada com sucesso']);
             break;
 
         case 'obter_evento':
             $evento_id = (int)($_POST['evento_id'] ?? 0);
-            $stmt = $pdo->prepare("SELECT e.*, p.tribunal, p.usuario_id FROM eventos e INNER JOIN processos p ON e.processo_id = p.id WHERE e.id = ? AND p.usuario_id = ?");
-            $stmt->execute([$evento_id, $usuario_id]);
-            $ev = $stmt->fetch();
+            $ev = getEventoById($pdo, $evento_id, $usuario_id);
             if (!$ev) { throw new Exception('Evento não encontrado ou sem permissão'); }
             $di = new DateTime($ev['data_inicial']);
             $df = new DateTime($ev['data_final']);
@@ -488,76 +581,16 @@ try {
             break;
 
         case 'obter_resumo_processo':
-            // Retorna contagens de eventos do processo (total, pendentes, cumpridos, urgentes)
             $processo_id = (int)($_POST['processo_id'] ?? 0);
-            $stmt = $pdo->prepare("SELECT id FROM processos WHERE id = ? AND usuario_id = ?");
-            $stmt->execute([$processo_id, $usuario_id]);
-            if (!$stmt->fetch()) { throw new Exception('Processo não encontrado ou sem permissão'); }
-
-            $stmt2 = $pdo->prepare("SELECT 
-                    COUNT(*) AS total,
-                    SUM(CASE WHEN status='pendente' THEN 1 ELSE 0 END) AS pendentes,
-                    SUM(CASE WHEN status='cumprido' THEN 1 ELSE 0 END) AS cumpridos,
-                    SUM(CASE WHEN status='pendente' AND data_final <= DATE_ADD(CURDATE(), INTERVAL 14 DAY) THEN 1 ELSE 0 END) AS urgentes
-                FROM eventos WHERE processo_id = ?
-            ");
-            $stmt2->execute([$processo_id]);
-            $res = $stmt2->fetch();
-
-            // Próximo vencimento pendente
-            $stmt3 = $pdo->prepare("SELECT id, descricao, data_final FROM eventos WHERE processo_id = ? AND status = 'pendente' ORDER BY data_final ASC LIMIT 1");
-            $stmt3->execute([$processo_id]);
-            $prox = $stmt3->fetch();
-            $proximo = null;
-            if ($prox) {
-                $hoje = new DateTime();
-                $df = new DateTime($prox['data_final']);
-                $diff = $hoje->diff($df);
-                $dias_restantes = ($df < $hoje) ? -$diff->days : $diff->days;
-                $diasSemana = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
-                $dia_semana = $diasSemana[(int)$df->format('w')];
-                $proximo = [
-                    'id' => (int)$prox['id'],
-                    'descricao' => $prox['descricao'],
-                    'data_final' => $df->format('d/m/Y'),
-                    'dias_restantes' => $dias_restantes,
-                    'dia_semana' => $dia_semana
-                ];
-            }
-            echo json_encode(['success' => true, 'resumo' => [
-                'total' => (int)($res['total'] ?? 0),
-                'pendentes' => (int)($res['pendentes'] ?? 0),
-                'cumpridos' => (int)($res['cumpridos'] ?? 0),
-                'urgentes' => (int)($res['urgentes'] ?? 0),
-            ], 'proximo' => $proximo]);
+            $res = getResumoProcesso($pdo, $processo_id, $usuario_id, 14);
+            if ($res === false) { throw new Exception('Processo não encontrado ou sem permissão'); }
+            echo json_encode(['success' => true, 'resumo' => $res['resumo'], 'proximo' => $res['proximo']]);
             break;
 
         case 'obter_eventos_processo':
-            // Lista completa de eventos/prazos do processo, ordenados por data_final
             $processo_id = (int)($_POST['processo_id'] ?? 0);
-            $stmt = $pdo->prepare("SELECT id FROM processos WHERE id = ? AND usuario_id = ?");
-            $stmt->execute([$processo_id, $usuario_id]);
-            if (!$stmt->fetch()) { throw new Exception('Processo não encontrado ou sem permissão'); }
-
-            $stmt2 = $pdo->prepare("SELECT id, descricao, data_inicial, prazo_dias, tipo_contagem, metodologia, data_final, status
-                                     FROM eventos WHERE processo_id = ? ORDER BY data_final ASC, ordem ASC, id ASC");
-            $stmt2->execute([$processo_id]);
-            $rows = $stmt2->fetchAll();
-            $eventos = [];
-            foreach ($rows as $ev) {
-                $di = new DateTime($ev['data_inicial']);
-                $df = new DateTime($ev['data_final']);
-                $eventos[] = [
-                    'id' => (int)$ev['id'],
-                    'descricao' => $ev['descricao'],
-                    'data_inicial' => $di->format('d/m/Y'),
-                    'prazo_dias' => (int)$ev['prazo_dias'],
-                    'tipo_contagem' => $ev['tipo_contagem'],
-                    'metodologia' => $ev['metodologia'],
-                    'data_final' => $df->format('d/m/Y'),
-                    'status' => $ev['status']
-                ];
-            }
+            $eventos = getEventosPorProcesso($pdo, $processo_id, $usuario_id);
+            if ($eventos === false) { throw new Exception('Processo não encontrado ou sem permissão'); }
             echo json_encode(['success' => true, 'eventos' => $eventos]);
             break;
             

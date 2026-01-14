@@ -1,9 +1,9 @@
 <?php
-// Kanban simples baseado em Bootstrap
+// Tarefas (kanban) simples baseado em Bootstrap
 ?>
 <div class="py-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
-        <h2 class="mb-0">Kanban de Tarefas</h2>
+        <h2 class="mb-0">Gestão de Tarefas</h2>
         <div class="d-flex gap-2">
             <button class="btn btn-primary btn-sm" id="addCardBtn"><i class="bi bi-plus-lg"></i> Novo card</button>
         </div>
@@ -98,7 +98,7 @@
 </div>
 
 <style>
-/* Estilos mínimos para Kanban */
+./* Estilos mínimos para Tarefas (kanban) */
 .kanban-column { height: 60vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: .5rem; }
 .kanban-card { background: #fff; border: 1px solid var(--border-color); border-radius: .5rem; padding: .5rem .75rem; box-shadow: 0 1px 4px rgba(0,0,0,.06); cursor: grab; }
 .kanban-card:active { cursor: grabbing; }
