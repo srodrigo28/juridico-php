@@ -241,7 +241,7 @@ if (!empty($prazos_urgentes)):
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Novo Processo com Prazos 2</h5>
+                <h5 class="modal-title">Novo Processo com Prazos</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -1312,73 +1312,4 @@ try {
 } catch(e) { /* noop */ }
 
 console.log('Script de processos carregado, salvarNovoEvento:', typeof window.salvarNovoEvento);
-</script>
-
-
-<!-- =========================
-     UPLOAD PREVIEW (IMG / PDF)
-     ========================= -->
-<style>
-.upload-group .upload-preview-box {
-  max-height: 260px;
-  overflow: auto;
-  margin-top: .5rem;
-}
-.upload-group .upload-preview-box img {
-  max-width: 100%;
-  height: auto;
-  border-radius: .25rem;
-}
-.upload-group .upload-preview-box iframe {
-  width: 100%;
-  height: 240px;
-  border: 0;
-  border-radius: .25rem;
-  background: #fff;
-}
-</style>
-
-<script>
-(function(){
-  // Preview delegation
-  document.addEventListener('change', function(e){
-    const input = e.target;
-    if (!input.matches('input[type="file"][name="uploads[]"]')) return;
-
-    const group = input.closest('.upload-group');
-    if (!group) return;
-
-    let box = group.querySelector('.upload-preview-box');
-    if (!box) {
-      box = document.createElement('div');
-      box.className = 'upload-preview-box border rounded p-2 bg-light';
-      input.insertAdjacentElement('afterend', box);
-    }
-
-    box.innerHTML = '';
-    if (!input.files || !input.files[0]) return;
-
-    const file = input.files[0];
-    const type = (file.type || '').toLowerCase();
-    const url = URL.createObjectURL(file);
-
-    if (type.startsWith('image/')) {
-      const img = document.createElement('img');
-      img.src = url;
-      img.onload = () => URL.revokeObjectURL(url);
-      box.appendChild(img);
-      return;
-    }
-
-    if (type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      const iframe = document.createElement('iframe');
-      iframe.src = url;
-      iframe.onload = () => setTimeout(()=>URL.revokeObjectURL(url), 3000);
-      box.appendChild(iframe);
-      return;
-    }
-
-    box.innerHTML = '<div class="text-muted small">Este tipo de arquivo não possui pré-visualização.</div>';
-  });
-})();
 </script>

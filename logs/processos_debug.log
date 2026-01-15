@@ -147,3 +147,9 @@
 [2026-01-15 16:05:31] CSRF token missing or mismatch. session=3b68580e2b185eb2d2cb57f22888c5e96cf2f11ee8ada61ba697b496df9740b9 post=5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5
 [2026-01-15 16:05:31] EXCEPTION: Token de segurança inválido TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
 #1 {main}
+[2026-01-15 16:28:33] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 16:28:33] cadastrar_processo: POST={"numero_processo":"pro-jud-2025\/13","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 91","parte_contraria":"Banco X","valor_causa":"1701.09","upload_titulo":["documento xxa"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"14","tipo_contagem":"uteis","metodologia":"inclui_inicio"}},"action":"cadastrar_processo","csrf_token":"aadf4ecb3bca8b3b6e17e6ddbc5dd8371b5b956a992885c684d49dde90455fcb"}
+[2026-01-15 16:28:33] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 16:28:33] cadastrar_processo: Processo inserido ID=17
+[2026-01-15 16:28:33] cadastrar_processo: Processando eventos
+[2026-01-15 16:28:33] cadastrar_processo: SUCESSO processo_id=17
