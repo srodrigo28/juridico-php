@@ -4,6 +4,9 @@ if (!defined('SISTEMA_MEMBROS')) {
     die('Acesso negado');
 }
 
+// Suprimir warnings que corrompem output JSON
+error_reporting(E_ERROR | E_PARSE);
+
 header('Content-Type: application/json');
 
 // Registro de debug temporário para diagnosticar falhas de cadastro via UI
@@ -284,9 +287,9 @@ try {
                     }
                     
                     // Calcular data final
-                    $tipo_contagem = ($evento['tipo_contagem'] === 'corridos') ? 
+                    $tipo_contagem = (($evento['tipo_contagem'] ?? 'uteis') === 'corridos') ? 
                         CalculadoraDatas::CONTAGEM_CORRIDOS : CalculadoraDatas::CONTAGEM_UTEIS;
-                    $metodologia = ($evento['metodologia'] === 'inclui_inicio') ? 
+                    $metodologia = (($evento['metodologia'] ?? 'exclui_inicio') === 'inclui_inicio') ? 
                         CalculadoraDatas::METODOLOGIA_INICIO_INCLUSO : CalculadoraDatas::METODOLOGIA_INICIO_EXCLUSO;
                     
                     $resultado = $calculadora->calcularDataFinal(

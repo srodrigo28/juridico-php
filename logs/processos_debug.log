@@ -125,3 +125,25 @@
 [2026-01-15 13:20:14] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
 [2026-01-15 13:20:22] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
 [2026-01-15 13:20:29] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:22:04] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 13:22:04] cadastrar_processo: POST={"numero_processo":"pro-jud-2025\/4","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 13","parte_contraria":"Banco ABC","valor_causa":"1000.10","upload_titulo":["Vara 13"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"9","tipo_contagem":"uteis"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 13:22:04] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 13:22:04] cadastrar_processo: Processo inserido ID=14
+[2026-01-15 13:22:04] cadastrar_processo: Processando eventos
+[2026-01-15 13:22:05] cadastrar_processo: SUCESSO processo_id=14
+[2026-01-15 15:26:27] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 15:26:27] cadastrar_processo: POST={"numero_processo":"pro-jud-2025\/7","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco Xab","valor_causa":"3846.72","upload_titulo":["documento x"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"13","tipo_contagem":"uteis"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 15:26:27] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 15:26:27] cadastrar_processo: Processo inserido ID=15
+[2026-01-15 15:26:27] cadastrar_processo: Processando eventos
+[2026-01-15 15:26:27] cadastrar_processo: SUCESSO processo_id=15
+[2026-01-15 15:29:32] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 15:29:32] cadastrar_processo: POST={"numero_processo":"pro-jud-20258\/7","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 91","parte_contraria":"Banco Xabab","valor_causa":"1900.10","upload_titulo":["documento x"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"13","tipo_contagem":"uteis"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 15:29:32] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 15:29:32] cadastrar_processo: Processo inserido ID=16
+[2026-01-15 15:29:32] cadastrar_processo: Processando eventos
+[2026-01-15 15:29:32] cadastrar_processo: SUCESSO processo_id=16
+[2026-01-15 16:05:31] ACTION=cadastrar_processo USER=null POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 16:05:31] CSRF token missing or mismatch. session=3b68580e2b185eb2d2cb57f22888c5e96cf2f11ee8ada61ba697b496df9740b9 post=5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5
+[2026-01-15 16:05:31] EXCEPTION: Token de segurança inválido TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}

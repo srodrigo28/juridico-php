@@ -370,7 +370,7 @@ function adicionarEvento() {
     div.innerHTML = `
         <div class="card-body">
             <div class="row g-2">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <input type="text" class="form-control" name="eventos[${contadorEventos}][descricao]" placeholder="Descrição" required>
                     <div class="invalid-feedback">Descrição do evento é obrigatória</div>
                 </div>
@@ -378,16 +378,24 @@ function adicionarEvento() {
                     <input type="date" class="form-control" name="eventos[${contadorEventos}][data_inicial]" value="${getTodayISO()}" required>
                     <div class="invalid-feedback">Data inicial é obrigatória</div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <input type="number" class="form-control" name="eventos[${contadorEventos}][prazo_dias]" min="1" placeholder="Prazo" required>
                     <div class="invalid-feedback">Informe o prazo em dias (>=1)</div>
                 </div>
-                <div class="col-md-2 d-flex gap-2">
+                <div class="col-md-2">
                     <select class="form-select" name="eventos[${contadorEventos}][tipo_contagem]">
                         <option value="uteis">Dias úteis</option>
                         <option value="corridos">Dias corridos</option>
                     </select>
-                    <button type="button" class="btn btn-outline-danger" onclick="document.getElementById('${id}').remove()">Remover</button>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="eventos[${contadorEventos}][metodologia]">
+                        <option value="exclui_inicio">Exclui início</option>
+                        <option value="inclui_inicio">Inclui início</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-outline-danger w-100" onclick="document.getElementById('${id}').remove()"><i class="bi bi-trash"></i></button>
                 </div>
             </div>
         </div>
@@ -573,31 +581,22 @@ window.salvarProcesso = async function(){
     try {
         const r = await fetch('', { method: 'POST', body: fd });
         const j = await r.json();
+        console.log('Resposta cadastrar_processo:', j); // Debug
         if (j.success){
-            // Remover foco de qualquer elemento dentro do modal antes de fechar
+            // Fechar modal de forma mais simples e robusta
             const modalEl = document.getElementById('modalNovoProcesso');
-            if (modalEl) {
-                // Remover foco do elemento ativo dentro do modal
-                if (document.activeElement && modalEl.contains(document.activeElement)) {
-                    document.activeElement.blur();
-                }
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (modalInstance) {
-                    // Esperar o modal fechar completamente antes de mostrar sucesso
-                    modalEl.addEventListener('hidden.bs.modal', function onHidden(){
-                        modalEl.removeEventListener('hidden.bs.modal', onHidden);
-                        mostrarSucesso('Processo cadastrado!');
-                        setTimeout(()=> location.reload(), 1000);
-                    }, { once: true });
-                    modalInstance.hide();
-                } else {
-                    mostrarSucesso('Processo cadastrado!');
-                    setTimeout(()=> location.reload(), 1000);
-                }
-            } else {
-                mostrarSucesso('Processo cadastrado!');
-                setTimeout(()=> location.reload(), 1000);
+            const modalInstance = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+            
+            // Remover foco antes de fechar
+            if (document.activeElement) document.activeElement.blur();
+            
+            if (modalInstance) {
+                modalInstance.hide();
             }
+            
+            // Mostrar sucesso e recarregar (não depender do evento do modal)
+            mostrarSucesso('Processo cadastrado!');
+            setTimeout(()=> location.reload(), 1200);
         } else { 
             if (btn) { btn.disabled = false; btn.innerHTML = 'Salvar Processo'; }
             // Mostrar erros específicos se disponíveis
@@ -609,8 +608,9 @@ window.salvarProcesso = async function(){
             mostrarErro(errorMsg); 
         }
     } catch(e){ 
+        console.error('Erro ao cadastrar processo:', e); // Debug
         if (btn) { btn.disabled = false; btn.innerHTML = 'Salvar Processo'; }
-        mostrarErro('Erro ao cadastrar processo'); 
+        mostrarErro('Erro ao cadastrar processo: ' + (e.message || e)); 
     }
 }
 
