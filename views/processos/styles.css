@@ -1,0 +1,42 @@
+/* /processos/styles.css
+   Estilos específicos do módulo de processos.
+*/
+
+/* Preview de upload */
+.upload-group .upload-preview-box {
+  max-height: 260px;
+  overflow: auto;
+  margin-top: .5rem;
+}
+
+.upload-group .upload-preview-box img {
+  max-width: 100%;
+  height: auto;
+  border-radius: .25rem;
+}
+
+.upload-group .upload-preview-box iframe {
+  width: 100%;
+  height: 240px;
+  border: 0;
+  border-radius: .25rem;
+  background: #fff;
+}
+
+/* Prazos urgentes (se você já usa essas classes) */
+.evento-item {
+  padding: .75rem;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: .5rem;
+  margin-bottom: .75rem;
+}
+
+.evento-urgente {
+  border-color: rgba(255,193,7,.6);
+  background: rgba(255,193,7,.08);
+}
+
+.evento-vencido {
+  border-color: rgba(220,53,69,.4);
+  background: rgba(220,53,69,.05);
+}
