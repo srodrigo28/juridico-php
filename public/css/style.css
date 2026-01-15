@@ -286,6 +286,18 @@ body {
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 }
 
+/* Suporte a modais empilhados (stacked modals) no Bootstrap 5 */
+.modal-backdrop.show + .modal-backdrop.show {
+    z-index: 1055;
+}
+.modal.show + .modal.show,
+#modalNovoEvento.show {
+    z-index: 1060;
+}
+#modalNovoEvento .modal-dialog {
+    z-index: 1061;
+}
+
 .modal-header {
     border-bottom: 2px solid var(--border-color);
     padding: 1.25rem;

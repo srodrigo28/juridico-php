@@ -156,7 +156,7 @@
 					<div class="row mb-3">
 						<div class="col-md-6">
 							<label class="form-label">Data Inicial *</label>
-							<input type="text" class="form-control" name="data_inicial" placeholder="dd/mm/aaaa" required>
+							<input type="date" class="form-control" name="data_inicial" required>
 						</div>
 						<div class="col-md-6">
 							<label class="form-label">Prazo (dias) *</label>
@@ -183,7 +183,7 @@
 						<div class="col-12">
 							<label class="form-label">Data Final</label>
 							<div class="input-group">
-								<input type="text" class="form-control" name="data_final" id="editarEvtDataFinal" placeholder="dd/mm/aaaa">
+								<input type="date" class="form-control" name="data_final" id="editarEvtDataFinal">
 								<button class="btn btn-outline-secondary" type="button" onclick="calcularDataFinalEditarEvento()">
 									<i class="bi bi-calculator"></i> Calcular
 								</button>

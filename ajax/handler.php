@@ -6,10 +6,25 @@ if (!defined('SISTEMA_MEMBROS')) {
 
 header('Content-Type: application/json');
 
+// Registro de debug temporário para diagnosticar falhas de cadastro via UI
+function _log_debug($msg){
+    $path = __DIR__ . '/../logs/processos_debug.log';
+    $t = date('Y-m-d H:i:s');
+    @file_put_contents($path, "[{$t}] " . $msg . "\n", FILE_APPEND | LOCK_EX);
+}
+
+
 try {
+        // Log request basic info for debugging (only for process/event actions)
+        $action_preview = $_POST['action'] ?? '';
+        if (strpos($action_preview, 'process') !== false || strpos($action_preview, 'evento') !== false) {
+            $summary = "ACTION=" . ($action_preview) . " USER=" . ($_SESSION['user_id'] ?? 'null') . " POST_KEYS=" . implode(',', array_keys($_POST));
+            _log_debug($summary);
+        }
     // Validar token CSRF
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
-        throw new Exception('Token de segurança inválido');
+            _log_debug('CSRF token missing or mismatch. session=' . ($_SESSION['csrf_token'] ?? 'null') . ' post=' . ($_POST['csrf_token'] ?? 'null'));
+            throw new Exception('Token de segurança inválido');
     }
     
     $action = $_POST['action'] ?? '';
@@ -186,15 +201,20 @@ try {
             
         // ========== PROCESSOS ==========
         case 'cadastrar_processo':
+            // Log detalhado para debug
+            _log_debug('cadastrar_processo: POST=' . json_encode($_POST, JSON_UNESCAPED_UNICODE));
+            
             // Validação centralizada (reuso) — retorna erros por campo
             $val = validar_processo_input($_POST, $pdo, $usuario_id);
             if (!$val['valid']){
+                _log_debug('cadastrar_processo: VALIDACAO FALHOU=' . json_encode($val['errors'], JSON_UNESCAPED_UNICODE));
                 // Retornar estrutura de erros para frontend consumir
                 echo json_encode(['success' => false, 'errors' => $val['errors'], 'message' => 'Dados inválidos']);
                 break;
             }
 
             $pdo->beginTransaction();
+            _log_debug('cadastrar_processo: Iniciando INSERT processo');
             
             $stmt = $pdo->prepare("
                 INSERT INTO processos (usuario_id, cliente_id, numero_processo, tribunal, vara, 
@@ -216,6 +236,7 @@ try {
             ]);
             
             $processo_id = $pdo->lastInsertId();
+            _log_debug('cadastrar_processo: Processo inserido ID=' . $processo_id);
 
             // Salvar uploads relacionados ao processo (se houver)
             if (!empty($_FILES['uploads']['name'][0])) {
@@ -253,6 +274,7 @@ try {
             
             // Processar eventos se houver
             if (isset($_POST['eventos']) && is_array($_POST['eventos'])) {
+                _log_debug('cadastrar_processo: Processando eventos');
                 $calculadora = new CalculadoraDatas($pdo);
                 $ordem = 1;
                 
@@ -297,6 +319,7 @@ try {
             }
             
             $pdo->commit();
+            _log_debug('cadastrar_processo: SUCESSO processo_id=' . $processo_id);
             echo json_encode(['success' => true, 'message' => 'Processo cadastrado com sucesso', 'processo_id' => $processo_id]);
             break;
 
@@ -793,6 +816,8 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    // Log exception
+    _log_debug('EXCEPTION: ' . $e->getMessage() . ' TRACE: ' . $e->getTraceAsString());
     
     echo json_encode([
         'success' => false,

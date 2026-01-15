@@ -355,9 +355,9 @@ function adicionarUpload() {
 
 
 // Dados auxiliares no front (tribunais e clientes) para montar selects na edição
-// Garantir strings JS válidas usando json_encode
-const TRIBUNAIS = <?= json_encode(array_merge(['NACIONAL'], array_map(function($t){return $t['abrangencia'];}, $tribunais))) ?>;
-const CLIENTES_ATIVOS = <?= json_encode(array_map(function($cli){return ['id'=>(int)$cli['id'],'nome'=>$cli['nome']];}, $lista_clientes)) ?>;
+// Garantir strings JS válidas usando json_encode com escape de caracteres especiais
+const TRIBUNAIS = <?= json_encode(array_merge(['NACIONAL'], array_map(function($t){return $t['abrangencia'];}, $tribunais)), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
+const CLIENTES_ATIVOS = <?= json_encode(array_map(function($cli){return ['id'=>(int)$cli['id'],'nome'=>$cli['nome']];}, $lista_clientes), JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP) ?>;
 
 function adicionarEvento() {
     contadorEventos++;
@@ -461,6 +461,15 @@ function maskCurrencyBR(v){
     ints = ints.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     return (ints || '0') + ',' + cents;
 }
+// Formata valor numérico do banco (ex: 3946.72 ou "3946.72") para formato BR (ex: "3.946,72")
+function formatCurrencyFromDB(v){
+    if (v == null || v === '') return '';
+    // Converte para número se for string
+    let num = typeof v === 'string' ? parseFloat(v) : v;
+    if (isNaN(num)) return '';
+    // Formata com 2 casas decimais, separador decimal = vírgula, separador milhar = ponto
+    return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 // Converte "1.234,56" para "1234.56" para envio ao backend
 function normalizeCurrencyToEN(v){
     if (v == null) return '';
@@ -556,14 +565,53 @@ window.salvarProcesso = async function(){
 
     fd.append('action','cadastrar_processo');
     fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
+    
+    // Prevenir double-submit
+    const btn = document.getElementById('btnSalvarNovoProcesso');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Salvando...'; }
+    
     try {
         const r = await fetch('', { method: 'POST', body: fd });
         const j = await r.json();
         if (j.success){
-            mostrarSucesso('Processo cadastrado!');
-            setTimeout(()=> location.reload(), 1000);
-        } else { mostrarErro(j.error||'Falha ao cadastrar processo'); }
-    } catch(e){ mostrarErro('Erro ao cadastrar processo'); }
+            // Remover foco de qualquer elemento dentro do modal antes de fechar
+            const modalEl = document.getElementById('modalNovoProcesso');
+            if (modalEl) {
+                // Remover foco do elemento ativo dentro do modal
+                if (document.activeElement && modalEl.contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) {
+                    // Esperar o modal fechar completamente antes de mostrar sucesso
+                    modalEl.addEventListener('hidden.bs.modal', function onHidden(){
+                        modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                        mostrarSucesso('Processo cadastrado!');
+                        setTimeout(()=> location.reload(), 1000);
+                    }, { once: true });
+                    modalInstance.hide();
+                } else {
+                    mostrarSucesso('Processo cadastrado!');
+                    setTimeout(()=> location.reload(), 1000);
+                }
+            } else {
+                mostrarSucesso('Processo cadastrado!');
+                setTimeout(()=> location.reload(), 1000);
+            }
+        } else { 
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Salvar Processo'; }
+            // Mostrar erros específicos se disponíveis
+            let errorMsg = j.error || j.message || 'Falha ao cadastrar processo';
+            if (j.errors && typeof j.errors === 'object') {
+                const firstError = Object.values(j.errors)[0];
+                if (firstError) errorMsg = firstError;
+            }
+            mostrarErro(errorMsg); 
+        }
+    } catch(e){ 
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Salvar Processo'; }
+        mostrarErro('Erro ao cadastrar processo'); 
+    }
 }
 
 function getClienteNome(id){
@@ -631,7 +679,17 @@ function initClienteSearch(context){
 document.addEventListener('DOMContentLoaded', function() {
     const novoEvtModalEl = document.getElementById('modalNovoEvento');
     if (novoEvtModalEl) {
-        novoEvtModalEl.addEventListener('show.bs.modal', function(){
+        // Ajustar z-index do backdrop para modais empilhados
+        novoEvtModalEl.addEventListener('show.bs.modal', function(e){
+            // Garantir que este modal fique acima do modal pai
+            setTimeout(() => {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                if (backdrops.length > 1) {
+                    backdrops[backdrops.length - 1].style.zIndex = '1055';
+                }
+                novoEvtModalEl.style.zIndex = '1060';
+            }, 10);
+            
             const pid = document.getElementById('movProcessoId')?.value || '';
             const trib = document.getElementById('movTribunal')?.value || 'NACIONAL';
             const procIdEl = document.getElementById('novoEvtProcessoId');
@@ -643,11 +701,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.reset();
                 const di = form.querySelector('input[name="data_inicial"]');
                 if (di) di.value = getTodayISO();
-                const df = form.querySelector('input[name="data_final"]');
-                if (df) attachDateMaskBR(df);
+                // Nota: data_final é type="date" (nativo), não precisa de máscara BR
+            }
+        });
+        
+        // Ao fechar o modal de Novo Evento, restaurar o foco no modal pai
+        novoEvtModalEl.addEventListener('hidden.bs.modal', function(){
+            const movModal = document.getElementById('modalNovaMovimentacao');
+            if (movModal && movModal.classList.contains('show')) {
+                document.body.classList.add('modal-open');
             }
         });
     }
+    // Preparar modal Novo Processo: reset, adicionar primeiro evento e aplicar máscara de moeda
+    const novoProcModal = document.getElementById('modalNovoProcesso');
+    if (novoProcModal) {
+        novoProcModal.addEventListener('show.bs.modal', function(){
+            const form = document.getElementById('formNovoProcesso');
+            if (form){
+                form.reset();
+                const eventosCont = document.getElementById('eventosContainer');
+                if (eventosCont) {
+                    eventosCont.innerHTML = '';
+                    contadorEventos = 0;
+                    adicionarEvento();
+                }
+                attachProcessMasks(form);
+            }
+        });
+    }
+    // Não abre aqui; o modal será aberto pelo Bootstrap via data attributes
+});
+
+// Popula o modal de movimentações com dados do processo
+function popularModalMovimentacao(processoId, numeroProcesso){
     document.getElementById('movProcessoId').value = processoId;
     document.getElementById('movProcNumero').textContent = numeroProcesso ? `(${numeroProcesso})` : '';
     // Buscar tribunal do processo para cálculo preciso (para uso no modal de Novo Evento)
@@ -670,24 +757,6 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
     // Carregar eventos existentes
     carregarEventosProcesso(processoId);
-    // Preparar modal Novo Processo: reset, adicionar primeiro evento e aplicar máscara de moeda
-    const novoProcModal = document.getElementById('modalNovoProcesso');
-    if (novoProcModal) {
-        novoProcModal.addEventListener('show.bs.modal', function(){
-            const form = document.getElementById('formNovoProcesso');
-            if (form){
-                form.reset();
-                const eventosCont = document.getElementById('eventosContainer');
-                if (eventosCont) {
-                    eventosCont.innerHTML = '';
-                    contadorEventos = 0;
-                    adicionarEvento();
-                }
-                attachProcessMasks(form);
-            }
-        });
-    }
-    // Não abre aqui; o modal será aberto pelo Bootstrap via data attributes
 }
 
 // Abertura programática (compatibilidade)
@@ -784,16 +853,20 @@ function renderEventosLista(lista){
 }
 
 function focusMovForm(){
-    const modal = new bootstrap.Modal(document.getElementById('modalNovoEvento'));
-    // Preencher ids ocultos
+    // Preencher ids ocultos antes de abrir
     document.getElementById('novoEvtProcessoId').value = document.getElementById('movProcessoId').value;
     document.getElementById('novoEvtTribunal').value = document.getElementById('movTribunal').value || 'NACIONAL';
-    // reset e máscaras
+    // reset e inicializar campos
     const form = document.getElementById('formNovoEvento');
-    if (form) { form.reset();
-        const df = form.querySelector('input[name="data_final"]');
-        if (df) attachDateMaskBR(df);
+    if (form) { 
+        form.reset();
+        const di = form.querySelector('input[name="data_inicial"]');
+        if (di) di.value = getTodayISO();
+        // Nota: data_final é type="date" (nativo), não precisa de máscara BR
     }
+    // Abrir modal com opção para backdrop estático (evita fechamento acidental)
+    const modalEl = document.getElementById('modalNovoEvento');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true });
     modal.show();
 }
 
@@ -877,15 +950,13 @@ async function abrirEditarEvento(eventoId){
             const form = document.getElementById('formEditarEvento');
             document.getElementById('editarEvtId').value = ev.id;
             form.descricao.value = ev.descricao||'';
-            form.data_inicial.value = ev.data_inicial||'';
+            // Converter datas BR (dd/mm/yyyy) para ISO (yyyy-mm-dd) para campos type="date"
+            form.data_inicial.value = brToISO(ev.data_inicial||'');
             form.prazo_dias.value = ev.prazo_dias||'';
             form.tipo_contagem.value = ev.tipo_contagem||'uteis';
             form.metodologia.value = ev.metodologia||'exclui_inicio';
-            form.data_final.value = ev.data_final||'';
-            // máscara
-            const di = form.querySelector('input[name="data_inicial"]');
-            const df = form.querySelector('input[name="data_final"]');
-            [di, df].forEach(inp => { if (inp) attachDateMaskBR(inp); });
+            form.data_final.value = brToISO(ev.data_final||'');
+            // Campos type="date" não precisam de máscara
             const modal = new bootstrap.Modal(document.getElementById('modalEditarEvento'));
             modal.show();
         } else { mostrarErro(j.error||'Falha ao obter evento'); }
@@ -896,7 +967,8 @@ function calcularDataFinalEditarEvento(){
     const form = document.getElementById('formEditarEvento');
     const fd = new FormData();
     fd.append('action','calcular_data');
-    fd.append('data_inicial', form.data_inicial.value);
+    // Campo type="date" retorna ISO; backend espera BR
+    fd.append('data_inicial', isoToBR(form.data_inicial.value));
     fd.append('prazo_dias', form.prazo_dias.value);
     fd.append('tipo_contagem', form.tipo_contagem.value);
     fd.append('metodologia', form.metodologia.value);
@@ -906,7 +978,10 @@ function calcularDataFinalEditarEvento(){
         try {
             const r = await fetch('', { method:'POST', body: fd });
             const j = await r.json();
-            if (j.success) { document.getElementById('editarEvtDataFinal').value = j.data_final; }
+            if (j.success) { 
+                // j.data_final vem em BR; converter para ISO para input type="date"
+                document.getElementById('editarEvtDataFinal').value = brToISO(j.data_final); 
+            }
             else { mostrarErro(j.error||'Falha ao calcular'); }
         } catch(e){ mostrarErro('Erro ao calcular data'); }
     })();
@@ -919,6 +994,11 @@ async function salvarEdicaoEvento(){
         return;
     }
     const fd = new FormData(form);
+    // Converter datas de ISO (do input type="date") para BR (backend espera dd/mm/yyyy)
+    fd.set('data_inicial', isoToBR(form.data_inicial.value));
+    if (form.data_final.value) {
+        fd.set('data_final', isoToBR(form.data_final.value));
+    }
     fd.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
     try {
         const r = await fetch('', { method:'POST', body: fd });
@@ -1145,14 +1225,11 @@ async function visualizarProcesso(id){
         form.querySelector('[name="vara"]').value = p.vara || '';
         form.querySelector('[name="tipo_acao"]').value = p.tipo_acao || '';
         form.querySelector('[name="parte_contraria"]').value = p.parte_contraria || '';
+        form.querySelector('[name="valor_causa"]').value = formatCurrencyFromDB(p.valor_causa);
         form.querySelector('[name="status"]').value = p.status||'em_andamento';
         form.querySelector('[name="observacoes"]').textContent = p.observacoes || '';
-        // aplicar máscara no campo de valor e formatar valor inicial
+        // aplicar máscara no campo de valor para edição futura
         attachProcessMasks(form);
-        const valorInicialEl = form.querySelector('[name="valor_causa"]');
-        if (valorInicialEl) {
-            valorInicialEl.value = maskCurrencyBR(valorInicialEl.value);
-        }
         // Configurar botão de Movimentações para abrir modal sobreposto
         const btnMov = document.getElementById('btnAbrirMovimentacoes');
         if (btnMov){

@@ -1,0 +1,127 @@
+[2026-01-15 11:16:28] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 11:16:28] cadastrar_processo: POST={"numero_processo":"processo teste","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco X","valor_causa":"3446.72","upload_titulo":["teste"],"eventos":{"1":{"descricao":"processo inicial","data_inicial":"15\/01\/2026","prazo_dias":"15","tipo_contagem":"corridos"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 11:18:59] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:18:59] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:19:28] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:19:28] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:20:08] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 11:20:08] cadastrar_processo: POST={"numero_processo":"teste 01","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco X","valor_causa":"3446.72","upload_titulo":["teste ab"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"30","tipo_contagem":"corridos"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 11:20:08] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 11:20:08] cadastrar_processo: Processo inserido ID=5
+[2026-01-15 11:20:08] cadastrar_processo: Processando eventos
+[2026-01-15 11:20:08] cadastrar_processo: SUCESSO processo_id=5
+[2026-01-15 11:20:08] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 11:20:08] cadastrar_processo: POST={"numero_processo":"teste 01","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco X","valor_causa":"3446.72","upload_titulo":["teste ab"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"30","tipo_contagem":"corridos"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 11:20:08] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 11:20:08] cadastrar_processo: Processo inserido ID=6
+[2026-01-15 11:20:08] cadastrar_processo: Processando eventos
+[2026-01-15 11:20:08] cadastrar_processo: SUCESSO processo_id=6
+[2026-01-15 11:20:15] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:24:16] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 11:24:16] cadastrar_processo: POST={"numero_processo":"pro-jud-2026","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco X","valor_causa":"3446.72","upload_titulo":["documento x"],"eventos":{"1":{"descricao":"evento cadastrado no processo","data_inicial":"15\/01\/2026","prazo_dias":"10","tipo_contagem":"corridos"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 11:24:16] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 11:24:16] cadastrar_processo: Processo inserido ID=7
+[2026-01-15 11:24:16] cadastrar_processo: Processando eventos
+[2026-01-15 11:24:16] cadastrar_processo: SUCESSO processo_id=7
+[2026-01-15 11:25:38] ACTION=atualizar_status_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,evento_id,status,csrf_token
+[2026-01-15 11:25:49] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:25:49] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:25:56] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:26:36] ACTION=atualizar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,numero_processo,tribunal,cliente_id,vara,tipo_acao,parte_contraria,valor_causa,status,observacoes,csrf_token
+[2026-01-15 11:26:36] ACTION=atualizar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,numero_processo,tribunal,cliente_id,vara,tipo_acao,parte_contraria,valor_causa,status,observacoes,csrf_token
+[2026-01-15 11:26:41] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:26:47] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:26:47] ACTION=obter_eventos_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:27:03] ACTION=atualizar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,numero_processo,tribunal,cliente_id,vara,tipo_acao,parte_contraria,valor_causa,status,observacoes,csrf_token
+[2026-01-15 11:27:17] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:27:17] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:28:37] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 11:28:37] cadastrar_processo: POST={"numero_processo":"pro-jud-2024","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco X","valor_causa":"1500.10","upload_titulo":["documento x"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"15","tipo_contagem":"corridos"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 11:28:37] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 11:28:37] cadastrar_processo: Processo inserido ID=8
+[2026-01-15 11:28:37] cadastrar_processo: Processando eventos
+[2026-01-15 11:28:37] cadastrar_processo: SUCESSO processo_id=8
+[2026-01-15 11:28:58] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:29:05] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:29:11] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 11:29:27] ACTION=atualizar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,numero_processo,tribunal,cliente_id,vara,tipo_acao,parte_contraria,valor_causa,status,observacoes,csrf_token
+[2026-01-15 11:30:03] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:30:03] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:08] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:31:08] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:22] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:31:22] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:22] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:31:22] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:27] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:31:27] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:48] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:31:48] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:48] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,upload_titulo_evento,csrf_token
+[2026-01-15 11:31:48] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:51] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,csrf_token
+[2026-01-15 11:31:51] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:31:55] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,csrf_token
+[2026-01-15 11:31:55] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 11:32:05] ACTION=cadastrar_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,tribunal,descricao,data_inicial,prazo_dias,tipo_contagem,metodologia,data_final,csrf_token
+[2026-01-15 11:32:05] EXCEPTION: Dados insuficientes para cadastrar a movimentação TRACE: #0 C:\xampp\htdocs\www\v2\index.php(44): require_once()
+#1 {main}
+[2026-01-15 12:55:20] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 12:55:20] cadastrar_processo: POST={"numero_processo":"pro-jud-2025\/1","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco Y","valor_causa":"3946.72","upload_titulo":["documento Y"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"30","tipo_contagem":"corridos"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 12:55:20] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 12:55:20] cadastrar_processo: Processo inserido ID=9
+[2026-01-15 12:55:20] cadastrar_processo: Processando eventos
+[2026-01-15 12:55:20] cadastrar_processo: SUCESSO processo_id=9
+[2026-01-15 12:57:47] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 12:57:47] cadastrar_processo: POST={"numero_processo":"pro-jud-2025\/2","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 9","parte_contraria":"Banco ABC","valor_causa":"3746.80","upload_titulo":["teste abc"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"10","tipo_contagem":"uteis"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 12:57:47] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 12:57:47] cadastrar_processo: Processo inserido ID=10
+[2026-01-15 12:57:47] cadastrar_processo: Processando eventos
+[2026-01-15 12:57:47] cadastrar_processo: SUCESSO processo_id=10
+[2026-01-15 12:58:19] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:00:01] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 13:00:01] cadastrar_processo: POST={"numero_processo":"pro-jud-2025\/3","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 19","parte_contraria":"Maria Divina","valor_causa":"5146.72","upload_titulo":["documento x"],"eventos":{"1":{"descricao":"teste evento","data_inicial":"15\/01\/2026","prazo_dias":"9","tipo_contagem":"uteis"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 13:00:01] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 13:00:01] cadastrar_processo: Processo inserido ID=11
+[2026-01-15 13:00:01] cadastrar_processo: Processando eventos
+[2026-01-15 13:00:01] cadastrar_processo: SUCESSO processo_id=11
+[2026-01-15 13:05:14] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 13:05:14] cadastrar_processo: POST={"numero_processo":"pro-jud-2024\/1","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 13","parte_contraria":"Flávio Oliveira","valor_causa":"2446.72","upload_titulo":["Documento 1","Documento 2"],"eventos":{"1":{"descricao":"Start projeto","data_inicial":"15\/01\/2026","prazo_dias":"8","tipo_contagem":"uteis"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 13:05:14] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 13:05:14] cadastrar_processo: Processo inserido ID=12
+[2026-01-15 13:05:14] cadastrar_processo: Processando eventos
+[2026-01-15 13:05:15] cadastrar_processo: SUCESSO processo_id=12
+[2026-01-15 13:05:23] ACTION=cadastrar_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=numero_processo,tribunal,cliente_id,vara,parte_contraria,valor_causa,upload_titulo,eventos,action,csrf_token
+[2026-01-15 13:05:23] cadastrar_processo: POST={"numero_processo":"pro-jud-2024\/1","tribunal":"NACIONAL","cliente_id":"3","vara":"Vara 13","parte_contraria":"Flávio Oliveira","valor_causa":"2446.72","upload_titulo":["Documento 1","Documento 2"],"eventos":{"1":{"descricao":"Start projeto","data_inicial":"15\/01\/2026","prazo_dias":"8","tipo_contagem":"uteis"}},"action":"cadastrar_processo","csrf_token":"5693c646780713f1643baddeb6da7f8e8364e94f448b0d00d24c6e1a07de47a5"}
+[2026-01-15 13:05:23] cadastrar_processo: Iniciando INSERT processo
+[2026-01-15 13:05:23] cadastrar_processo: Processo inserido ID=13
+[2026-01-15 13:05:23] cadastrar_processo: Processando eventos
+[2026-01-15 13:05:23] cadastrar_processo: SUCESSO processo_id=13
+[2026-01-15 13:10:52] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:10:54] ACTION=excluir_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:11:50] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:11:53] ACTION=excluir_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:17:59] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:08] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:11] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:15] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:21] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:21] ACTION=obter_eventos_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:55] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:59] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:19:59] ACTION=obter_eventos_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:20:03] ACTION=obter_evento USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,evento_id,csrf_token
+[2026-01-15 13:20:14] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:20:22] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token
+[2026-01-15 13:20:29] ACTION=obter_processo USER=416ec8bf5be5c47a7d7f42a65a97097f POST_KEYS=action,processo_id,csrf_token

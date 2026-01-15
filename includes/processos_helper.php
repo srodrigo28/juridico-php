@@ -112,13 +112,30 @@ function getResumoProcesso(PDO $pdo, $processoId, $userId, $days = 14){
 /**
  * Validar dados de criação/atualização de processo
  * Retorna array: ['valid' => bool, 'errors' => [field => message]]
+ * @param int|null $processo_id_editando - Se informado, ignora esse ID na verificação de duplicidade (para edição)
  */
-function validar_processo_input(array $data, PDO $pdo, $usuario_id){
+function validar_processo_input(array $data, PDO $pdo, $usuario_id, $processo_id_editando = null){
     $errors = [];
 
     $numero = trim($data['numero_processo'] ?? '');
     if ($numero === '') {
         $errors['numero_processo'] = 'Número do processo é obrigatório.';
+    } else {
+        // Verificar se já existe um processo com este número para o mesmo usuário
+        $sql = "SELECT id FROM processos WHERE numero_processo = ? AND usuario_id = ?";
+        $params = [$numero, $usuario_id];
+        
+        // Se estiver editando, excluir o próprio processo da verificação
+        if ($processo_id_editando !== null) {
+            $sql .= " AND id != ?";
+            $params[] = (int)$processo_id_editando;
+        }
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        if ($stmt->fetch()) {
+            $errors['numero_processo'] = 'Já existe um processo cadastrado com este número.';
+        }
     }
 
     $tribunal = trim($data['tribunal'] ?? '');
